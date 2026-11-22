@@ -21,6 +21,7 @@ import {
   getLiveApps,
   searchApps,
   getApp,
+  getVariant,
 } from '@/lib/registry'
 import { HOME_FAQS } from '@/lib/seo'
 import { createSession, fetchSession } from '@/lib/api'
@@ -51,6 +52,16 @@ const QUICK_START_LABELS: Record<string, string> = {
   'walkie-talkie': 'Open a walkie-talkie',
   'quick-pair': 'Pair a device now',
   'group-meeting': 'Start a meeting room',
+}
+
+function startLabel(id: string): string {
+  const found = getVariant(id)
+  if (!found) return id
+  return QUICK_START_LABELS[id] ?? found.app.name
+}
+
+function startIcon(id: string): string {
+  return getVariant(id)?.variant.icon ?? 'zap'
 }
 
 // The familiar detours, and the tool that removes each one.
@@ -102,8 +113,6 @@ export function DiscoverView() {
   }, [])
 
   const startApps = INSTANT_START_APPS.slice(0, 3)
-    .map((id) => getApp(id))
-    .filter((a) => a != null)
 
   async function joinSession(raw?: string) {
     const normalized = normalizeCode(raw ?? joinCode)
@@ -149,16 +158,16 @@ export function DiscoverView() {
 
             {/* start controls: one filled action, its neighbours quiet */}
             <div className="mt-7 flex flex-wrap gap-2.5">
-              {startApps.map((app, i) => (
+              {startApps.map((id, i) => (
                 <Button
-                  key={app.id}
+                  key={id}
                   size="lg"
                   variant={i === 0 ? 'default' : 'outline'}
                   className={cn('h-11 gap-2', i > 0 && 'bg-transparent')}
-                  onClick={() => void quickStart(app.id)}
+                  onClick={() => void quickStart(id)}
                 >
-                  <AppIcon name={app.icon} className="size-4.5" aria-hidden="true" />
-                  {QUICK_START_LABELS[app.id] ?? app.name}
+                  <AppIcon name={startIcon(id)} className="size-4.5" aria-hidden="true" />
+                  {startLabel(id)}
                 </Button>
               ))}
             </div>
@@ -440,6 +449,11 @@ export function DiscoverView() {
                               <span className="mt-0.5 line-clamp-2 block text-sm text-muted-foreground lg:mt-0 lg:truncate lg:line-clamp-none">
                                 {app.tagline}
                               </span>
+                              {app.variants && app.variants.length > 1 && (
+                                <span className="mt-0.5 block text-[11px] text-muted-foreground/80 lg:mt-0.5">
+                                  {app.variants.map((v) => v.name).join(' · ')}
+                                </span>
+                              )}
                             </span>
                             <span
                               className={cn(
@@ -527,16 +541,16 @@ export function DiscoverView() {
               their browser, with no account and no install.
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">
-              {startApps.map((app, i) => (
+              {startApps.map((id, i) => (
                 <Button
-                  key={app.id}
+                  key={id}
                   size="lg"
                   variant={i === 0 ? 'default' : 'outline'}
                   className={cn('h-11 gap-2', i > 0 && 'bg-transparent')}
-                  onClick={() => void quickStart(app.id)}
+                  onClick={() => void quickStart(id)}
                 >
-                  <AppIcon name={app.icon} className="size-4.5" aria-hidden="true" />
-                  {QUICK_START_LABELS[app.id] ?? app.name}
+                  <AppIcon name={startIcon(id)} className="size-4.5" aria-hidden="true" />
+                  {startLabel(id)}
                 </Button>
               ))}
               <Button

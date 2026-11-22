@@ -21,8 +21,10 @@ function sanitizeChar(raw: string): string {
 
 /** Accepts a raw code, "K7T-29Q", or a pasted join link — returns what fits. */
 export function extractCode(text: string): string {
-  const link = text.match(/[?&](?:join|s)=([A-Za-z0-9-]+)/)
-  const source = link ? link[1] : text
+  // Old links carry the code as a query param; new links are /CODE paths.
+  const param = text.match(/[?&](?:join|s)=([A-Za-z0-9-]+)/)
+  const path = text.match(/\/([A-Za-z0-9]{4,8})(?:[?#].*)?\s*$/)
+  const source = param ? param[1] : path ? path[1] : text
   let out = ''
   for (const ch of source) {
     const c = sanitizeChar(ch)

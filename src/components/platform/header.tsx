@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/platform/theme'
 import { useCommandPalette } from '@/components/platform/command-palette'
 import { usePwaInstall } from '@/hooks/use-pwa-install'
 import { usePlatform } from '@/lib/store'
-import { INSTANT_START_APPS, getApp, getLiveApps } from '@/lib/registry'
+import { INSTANT_START_APPS, getVariant, getLiveApps } from '@/lib/registry'
 import { quickStart } from '@/lib/quick-start'
 import { Button } from '@/components/ui/button'
 import {
@@ -131,11 +131,19 @@ export function Header() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {INSTANT_START_APPS.map((id) => {
-                const app = getApp(id)
-                if (!app) return null
+                const found = getVariant(id)
+                if (!found) return null
+                const { app, variant } = found
                 return (
-                  <DropdownMenuItem key={app.id} onClick={() => void quickStart(app.id)}>
-                    <span className="text-sm font-medium">{app.name}</span>
+                  <DropdownMenuItem key={id} onClick={() => void quickStart(id)}>
+                    <span className="text-sm font-medium">
+                      {app.name}
+                      {app.variants?.length ? (
+                        <span className="ml-1.5 font-normal text-muted-foreground">
+                          · {variant.name}
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="ml-auto text-xs text-muted-foreground">starts now</span>
                   </DropdownMenuItem>
                 )

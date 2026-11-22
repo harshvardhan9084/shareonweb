@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePlatform } from '@/lib/store'
-import { getApp } from '@/lib/registry'
+import { appDisplay, getApp } from '@/lib/registry'
 import { fetchSession, closeSession } from '@/lib/api'
 import { formatCode } from '@/lib/code'
 import { cn, humanError } from '@/lib/utils'
@@ -67,7 +67,7 @@ export function MySessionsView() {
   }
 
   async function copyLink(code: string) {
-    const url = `${window.location.origin}/?join=${code}`
+    const url = `${window.location.origin}/${code}`
     try {
       await navigator.clipboard.writeText(url)
       setCopied(code)
@@ -126,7 +126,7 @@ export function MySessionsView() {
 
       <ul className="mt-6 divide-y border-y">
         {recent.map((r) => {
-          const app = getApp(r.appId)
+          const display = appDisplay(r.appId)
           const expired = isPast(new Date(r.expiresAt))
           const minsLeft = differenceInMinutes(new Date(r.expiresAt), new Date())
           const expiresLabel = expired
@@ -142,7 +142,7 @@ export function MySessionsView() {
                   {r.title ? (
                     <span className="max-w-full truncate" title={r.title}>{r.title}</span>
                   ) : (
-                    <>{app?.name ?? r.appId}</>
+                    <>{display.name}{display.variantName ? ` · ${display.variantName}` : ''}</>
                   )}
                   <span className="font-mono text-xs font-normal text-muted-foreground">
                     {formatCode(r.code)}
@@ -159,8 +159,8 @@ export function MySessionsView() {
                 <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                   {r.title ? (
                     <>
-                      <AppIcon name={app?.icon ?? 'zap'} className="size-3" aria-hidden="true" />
-                      <span>{app?.name ?? r.appId}</span>
+                      <AppIcon name={getApp(r.appId)?.icon ?? 'zap'} className="size-3" aria-hidden="true" />
+                      <span>{display.name}{display.variantName ? ` · ${display.variantName}` : ''}</span>
                       <span>·</span>
                     </>
                   ) : null}

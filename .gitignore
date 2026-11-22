@@ -50,7 +50,6 @@ upload/
 download/
 examples/
 tests/
-worklog.md
 Caddyfile
 local-*
 .claude
@@ -68,3 +67,4 @@ Thumbs.db
 
 # keep local git status clean (relay dir has real content)
 mini-services/.gitkeep
+.git-credentials

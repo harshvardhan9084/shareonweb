@@ -146,7 +146,7 @@ function buildJsonLd(): string {
           applicationCategory: CATEGORY_SCHEMA[a.category] ?? "UtilitiesApplication",
           ...(a.status === "live"
             ? {
-                url: `${SITE_URL}/?app=${a.id}`,
+                url: `${SITE_URL}/${a.id}`,
                 offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
               }
             : {}),

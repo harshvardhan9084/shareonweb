@@ -2,8 +2,9 @@
 
 import { create } from 'zustand'
 import type { SessionInfo, DeviceType } from '@/lib/types'
-import { getApp } from '@/lib/registry'
+import { getApp, resolveAppId } from '@/lib/registry'
 import { appMeta } from '@/lib/seo'
+import { CODE_PATH_RE } from '@/lib/code'
 import { SITE_NAME, SITE_TITLE } from '@/lib/site'
 
 export type View =
@@ -12,6 +13,27 @@ export type View =
   | { name: 'session'; code: string }
   | { name: 'sessions' }
   | { name: 'help' }
+
+/**
+ * Parse a location pathname into a view. Session codes and tool slugs share
+ * one namespace (/beam is a tool, /K7T29Q is a session), resolved here from
+ * the registry; anything that is neither returns null so callers decide
+ * (the server 404s; the shell falls back to home).
+ */
+export function parsePath(pathname: string): View | null {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  if (path === '/') return { name: 'home' }
+  if (path === '/sessions') return { name: 'sessions' }
+  if (path === '/help') return { name: 'help' }
+  const slug = decodeURIComponent(path.slice(1))
+  if (slug.includes('/')) return null
+  const resolved = resolveAppId(slug.toLowerCase())
+  if (resolved) return { name: 'app', appId: resolved }
+  if (CODE_PATH_RE.test(slug.toUpperCase())) {
+    return { name: 'session', code: slug.toUpperCase() }
+  }
+  return null
+}
 
 export interface RecentSession {
   code: string
@@ -28,11 +50,12 @@ const NAME_KEY = 'sow.profile.name'
 const LEGACY_NAME_KEY = 'relay.profile.name'
 const MAX_RECENT = 20
 
+/** Real paths: /beam for tools, /K7T29Q for sessions, /help, /sessions. */
 function urlForView(v: View): string {
   if (v.name === 'home') return '/'
-  if (v.name === 'app') return `/?app=${encodeURIComponent(v.appId)}`
-  if (v.name === 'session') return `/?s=${encodeURIComponent(v.code)}`
-  return `/?view=${v.name}`
+  if (v.name === 'app') return `/${v.appId}`
+  if (v.name === 'session') return `/${v.code}`
+  return `/${v.name}`
 }
 
 /** Every view change lands at the top of the page — never mid-scroll. */
@@ -49,6 +72,8 @@ export function syncTitle(v: View) {
     if (app) title = appMeta(app).title
   } else if (v.name === 'session') {
     title = 'Join a ShareOnWeb session'
+  } else if (v.name === 'sessions') {
+    title = 'My Sessions · ShareOnWeb'
   } else if (v.name === 'help') {
     title = `Help Center · ${SITE_NAME}`
   }
@@ -146,10 +171,12 @@ export const usePlatform = create<PlatformStore>((set, get) => ({
   },
 
   openApp: (appId) => {
-    set({ activeAppId: appId, view: { name: 'app', appId } })
+    // Variant ids ('drop', 'video-call') land on the merged tool's page.
+    const id = resolveAppId(appId) ?? appId
+    set({ activeAppId: id, view: { name: 'app', appId: id } })
     if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/?app=${encodeURIComponent(appId)}`)
-      syncTitle({ name: 'app', appId })
+      window.history.pushState(null, '', `/${id}`)
+      syncTitle({ name: 'app', appId: id })
       scrollTop()
     }
   },

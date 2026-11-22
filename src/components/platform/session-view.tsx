@@ -9,7 +9,7 @@ import { hasHostedRelay, relayMisconfigured, resolveRelayUrl, warmRelay } from '
 import { closeSession, renameSession } from '@/lib/api'
 import { formatCode, joinUrl } from '@/lib/code'
 import { loadProfileName, saveProfileName, usePlatform } from '@/lib/store'
-import { getApp } from '@/lib/registry'
+import { getApp, getVariant } from '@/lib/registry'
 import type {
   AppEvent,
   ChatMsg,
@@ -121,6 +121,11 @@ export function SessionView({ session }: { session: SessionInfo }) {
   const addRecent = usePlatform((s) => s.addRecent)
 
   const app = getApp(session.appId)
+  // Sessions are created under variant ids ('drop', 'video-call', …); the
+  // panel and its config must switch on that raw id, while display copy
+  // resolves to the merged tool ("Beam").
+  const rawId = session.appId
+  const variantInfo = getVariant(session.appId)
 
   const clientRef = useRef<RoomClient | null>(null)
   const [clientReady, setClientReady] = useState(false)
@@ -668,6 +673,11 @@ export function SessionView({ session }: { session: SessionInfo }) {
         <Button variant="ghost" size="sm" className="-ml-1 h-8 gap-1.5 text-muted-foreground" onClick={leave}>
           <ArrowLeft className="size-4" aria-hidden="true" /> {app.name}
         </Button>
+        {variantInfo?.app.variants?.length ? (
+          <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground" title={variantInfo.variant.tagline}>
+            {variantInfo.variant.name}
+          </span>
+        ) : null}
         <span
           className={cn(
             'ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-300',
@@ -749,7 +759,14 @@ export function SessionView({ session }: { session: SessionInfo }) {
       <Card className="mt-4">
         <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
           <div className="min-w-0">
-            <p className="text-sm font-semibold">{app.name}</p>
+            <p className="text-sm font-semibold">
+              {app.name}
+              {variantInfo?.app.variants?.length ? (
+                <span className="ml-1.5 font-normal text-muted-foreground">
+                  · {variantInfo.variant.name}
+                </span>
+              ) : null}
+            </p>
               <Popover open={titleOpen} onOpenChange={(o) => { setTitleOpen(o); if (o) setTitleDraft(title ?? '') }}>
                 <PopoverTrigger asChild>
                   <button
@@ -985,13 +1002,13 @@ export function SessionView({ session }: { session: SessionInfo }) {
         {/* Until the client exists, or while Canvas/Notepad wait for the join
             snapshot, hold the room with the calm gate instead of a hole. */}
         {(!clientReady ||
-          ((app.id === 'canvas' || app.id === 'shared-docs') && !roomStateLoaded)) && (
+          ((rawId === 'canvas' || rawId === 'shared-docs') && !roomStateLoaded)) && (
           <SessionGate appId={app.id} code={session.code} compact />
         )}
-        {clientReady && app.id === 'beam' && (
+        {clientReady && rawId === 'beam' && (
           <BeamPanel client={clientRef.current} texts={texts} sentIdsRef={sentIdsRef} onSend={sendText} onClear={clearTexts} connected={connState === 'connected'} />
         )}
-        {clientReady && app.id === 'drop' && (
+        {clientReady && rawId === 'drop' && (
           <DropPanel
             files={panelFiles}
             onSendFiles={sendFiles}
@@ -1001,7 +1018,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && app.id === 'folder-share' && (
+        {clientReady && rawId === 'folder-share' && (
           <FolderPanel
             files={panelFiles}
             onSendItems={sendFiles}
@@ -1011,10 +1028,10 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'canvas' && (
+        {clientReady && roomStateLoaded && rawId === 'canvas' && (
           <CanvasPanel client={clientRef.current} initialStrokes={initialStrokes} connected={connState === 'connected'} />
         )}
-        {clientReady && app.id === 'roundtable' && (
+        {clientReady && rawId === 'roundtable' && (
           <RoundtablePanel
             client={clientRef.current}
             chat={chat}
@@ -1024,7 +1041,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'shared-docs' && (
+        {clientReady && roomStateLoaded && rawId === 'shared-docs' && (
           <NotePanel
             client={clientRef.current}
             initialDoc={initialDoc}
@@ -1033,7 +1050,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && app.id === 'screen-share' && (
+        {clientReady && (rawId === 'screen-share' || rawId === 'screen-to-phone') && (
           <ScreenPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1041,25 +1058,17 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && app.id === 'screen-to-phone' && (
-          <ScreenPanel
-            client={clientRef.current}
-            selfId={selfId}
-            participants={participants}
-            connected={connState === 'connected'}
-          />
-        )}
-        {clientReady && callConfigFor(app.id) && (
+        {clientReady && callConfigFor(rawId) && (
           <CallPanel
             client={clientRef.current}
-            config={callConfigFor(app.id)!}
+            config={callConfigFor(rawId)!}
             selfId={selfId}
             participants={participants}
             chat={chat}
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'code-editor' && (
+        {clientReady && roomStateLoaded && rawId === 'code-editor' && (
           <CodeEditorPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1071,7 +1080,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             device={device}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'live-present' && (
+        {clientReady && roomStateLoaded && rawId === 'live-present' && (
           <PresentPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1085,7 +1094,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             sessionCode={session.code}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'presentation-clicker' && (
+        {clientReady && roomStateLoaded && rawId === 'presentation-clicker' && (
           <ClickerPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1097,7 +1106,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             device={device}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'co-browse' && (
+        {clientReady && roomStateLoaded && rawId === 'co-browse' && (
           <CoBrowsePanel
             client={clientRef.current}
             selfId={selfId}
@@ -1109,7 +1118,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             device={device}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'location-share' && (
+        {clientReady && roomStateLoaded && rawId === 'location-share' && (
           <LocationPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1122,7 +1131,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
             sessionCode={session.code}
           />
         )}
-        {clientReady && roomStateLoaded && app.id === 'live-captions' && (
+        {clientReady && roomStateLoaded && rawId === 'live-captions' && (
           <CaptionsPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1135,7 +1144,7 @@ export function SessionView({ session }: { session: SessionInfo }) {
           />
         )}
         {clientReady && roomStateLoaded &&
-          (app.id === 'remote-assist' || app.id === 'guided-pointer' || app.id === 'support-session') && (
+          (rawId === 'remote-assist' || rawId === 'guided-pointer' || rawId === 'support-session') && (
           <AssistPanel
             client={clientRef.current}
             selfId={selfId}
@@ -1145,10 +1154,10 @@ export function SessionView({ session }: { session: SessionInfo }) {
             isHost={participants[0]?.id === selfId}
             profileName={profileName}
             device={device}
-            variant={app.id as 'remote-assist' | 'guided-pointer' | 'support-session'}
+            variant={rawId as 'remote-assist' | 'guided-pointer' | 'support-session'}
           />
         )}
-        {clientReady && app.id === 'quick-pair' && (
+        {clientReady && rawId === 'quick-pair' && (
           <QuickPairPanel
             client={clientRef.current}
             selfId={selfId}

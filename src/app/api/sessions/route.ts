@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sessionStore } from '@/lib/session-store'
-import { getLiveAppIds } from '@/lib/registry'
+import { getCreatableAppIds } from '@/lib/registry'
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +8,9 @@ export async function POST(request: Request) {
     const appId = typeof body.appId === 'string' ? body.appId.trim() : ''
     const title = typeof body.title === 'string' ? body.title.trim().slice(0, 80) : undefined
 
-    if (!appId || !getLiveAppIds().includes(appId)) {
+    // Sessions are created under variant ids ('drop', 'video-call', …) —
+    // every mode of every merged tool is a legal session app.
+    if (!appId || !getCreatableAppIds().includes(appId)) {
       return NextResponse.json(
         { error: 'Unknown app. Pick one of the live tools on Discover.' },
         { status: 400 },

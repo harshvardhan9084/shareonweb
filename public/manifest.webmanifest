@@ -17,17 +17,17 @@
   ],
   "shortcuts": [
     {
-      "name": "Send text now",
-      "short_name": "Text",
-      "description": "Open a Beam session and share text across devices",
-      "url": "/?app=beam",
+      "name": "Send files now",
+      "short_name": "Files",
+      "description": "Open a Beam session and move files between devices",
+      "url": "/beam",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Send files now",
-      "short_name": "Files",
-      "description": "Open a Drop session and move files between devices",
-      "url": "/?app=drop",
+      "name": "Call now",
+      "short_name": "Call",
+      "description": "Open a video call room and share the link",
+      "url": "/call",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

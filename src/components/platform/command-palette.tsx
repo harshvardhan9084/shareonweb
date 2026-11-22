@@ -46,12 +46,18 @@ export const useCommandPalette = create<PaletteStore>((set) => ({
 }))
 
 const QUICK_START_LABELS: Record<string, string> = {
-  beam: 'Share text across devices now',
-  drop: 'Send files between devices now',
+  beam: 'Send files between devices now',
+  call: 'Start a video call now',
+  screen: 'Share my screen now',
+  camera: 'Share my camera live now',
+  voice: 'Open a walkie-talkie now',
+  notepad: 'Write a note together now',
+  present: 'Present slides live now',
   canvas: 'Draw together on a board now',
   roundtable: 'Open a discussion room now',
-  'shared-docs': 'Write a note together now',
-  'screen-share': 'Share my screen now',
+  'co-browse': 'Browse a page together now',
+  'location-share': 'Share my live location now',
+  'live-captions': 'Start live captions now',
 }
 
 export function CommandPalette() {
