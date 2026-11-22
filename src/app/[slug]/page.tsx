@@ -9,8 +9,8 @@ import { SITE_URL, SITE_NAME } from '@/lib/site'
 import { appMeta } from '@/lib/seo'
 
 // One dynamic segment resolves the shared namespace:
-//   /beam        -> the Beam tool page (statically generated, indexable)
-//   /drop        -> a legacy variant slug, redirects to /beam
+//   /share       -> the Share tool page (statically generated, indexable)
+//   /beam,/drop  -> legacy slugs, redirect to /share
 //   /K7T29Q      -> a session path (private, never indexed, client-hydrated)
 //   /garbage     -> a real 404
 // Static tool routes take precedence; session paths render dynamically.
@@ -39,7 +39,7 @@ function toolJsonLd(appId: string): string {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'ShareOnWeb', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 1, name: 'Toolhive', item: `${SITE_URL}/` },
         {
           '@type': 'ListItem',
           position: 2,
@@ -130,7 +130,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   // Session deep links are private and ephemeral — never indexed.
   if (CODE_PATH_RE.test(slug.toUpperCase())) {
     return {
-      title: 'Join a ShareOnWeb session',
+      title: 'Join a Toolhive session',
       robots: { index: false, follow: false },
     }
   }

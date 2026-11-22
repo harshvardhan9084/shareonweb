@@ -16,7 +16,7 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <BrandMark className="size-6" />
               <span className="font-display text-base font-semibold tracking-tight">
-                ShareOnWeb
+                Toolhive
               </span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
@@ -80,7 +80,7 @@ export function Footer() {
 
         <div className="mt-8 border-t pt-5 text-xs text-muted-foreground">
           <span>
-            ShareOnWeb works device to device. Nothing you share is stored beyond the life of
+            Toolhive works device to device. Nothing you share is stored beyond the life of
             its session.
           </span>
         </div>

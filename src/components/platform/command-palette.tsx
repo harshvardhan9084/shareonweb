@@ -47,6 +47,15 @@ export const useCommandPalette = create<PaletteStore>((set) => ({
 
 const QUICK_START_LABELS: Record<string, string> = {
   beam: 'Send files between devices now',
+  share: 'Send files between devices now',
+  zip: 'Zip or unzip an archive now',
+  image: 'Compress or convert images now',
+  hash: 'Hash and verify a file now',
+  encode: 'Encode or decode Base64 now',
+  json: 'Format or validate JSON now',
+  text: 'Count and transform text now',
+  password: 'Generate a strong password now',
+  qr: 'Create a QR code now',
   call: 'Start a video call now',
   screen: 'Share my screen now',
   camera: 'Share my camera live now',
@@ -157,7 +166,11 @@ export function CommandPalette() {
               value={`start ${app.name} ${QUICK_START_LABELS[app.id] ?? ''} ${app.id}`}
               onSelect={() => {
                 setOpen(false)
-                void quickStart(app.id)
+                if (app.kind === 'instant') {
+                  usePlatform.getState().openApp(app.id)
+                } else {
+                  void quickStart(app.id)
+                }
               }}
             >
               <AppIcon name={app.icon} className="size-4 text-primary" />

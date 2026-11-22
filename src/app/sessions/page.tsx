@@ -5,7 +5,7 @@ import { AppShell } from '@/components/platform/app-shell'
 // the page is never indexed.
 
 export const metadata: Metadata = {
-  title: 'My Sessions · ShareOnWeb',
+  title: 'My Sessions · Toolhive',
   robots: { index: false, follow: false },
 }
 

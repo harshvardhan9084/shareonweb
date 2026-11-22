@@ -1,16 +1,17 @@
-// The ShareOnWeb tool catalog.
+// The Toolhive tool catalog.
 //
 // IMPORTANT DESIGN PRINCIPLES:
-// 1. ShareOnWeb is a HUB of practical tools, organized around human
+// 1. Toolhive is a HUB of practical tools, organized around human
 //    intentions — not around WebRTC capabilities. Nobody searches for a
 //    DataChannel. They search for "send a file from my phone to my laptop
 //    without uploading it." Every entry starts from that intention.
-// 2. Related tools are SUBMERGED into one tool with modes (variants): Beam is
+// 2. Related tools are SUBMERGED into one tool with modes (variants): Share is
 //    one tool that sends text, files, folders and pairs devices — it is not
-//    four separate apps. Each variant keeps its own session id so sessions,
-//    panels and history keep working unchanged.
-// 3. Every tool lives at its own real URL (/beam, /call) and every session at
-//    its own path (/K7T29Q). No query-param orphan links.
+//    four separate apps — and inside a session every mode is reachable with
+//    the same code. Each variant keeps its legacy session id for old rooms.
+// 3. Every tool lives at its own real URL (/share, /call) and every session
+//    at its own path (/K7T29Q). No query-param orphan links. Instant tools
+//    (kind: 'instant') are whole tools on one page with no session at all.
 
 export type AppCategory =
   | 'communicate'
@@ -18,6 +19,7 @@ export type AppCategory =
   | 'collaborate'
   | 'remote'
   | 'utilities'
+  | 'instant'
 
 export type AppStatus = 'live' | 'soon'
 
@@ -35,11 +37,19 @@ export interface AppVariant {
   deviceNote?: string
 }
 
+/**
+ * 'session' tools open a live room with a code; 'instant' tools run entirely
+ * on this device — no session, no code, files never leave the browser.
+ */
+export type AppKind = 'session' | 'instant'
+
 export interface AppDef {
   id: string
   name: string
   category: AppCategory
   status: AppStatus
+  /** Session tools open rooms; instant tools process locally. Default: 'session'. */
+  kind?: AppKind
   /** One-liner written as the intention it serves. */
   tagline: string
   /** Longer explanation shown on the tool's landing page. */
@@ -71,23 +81,24 @@ export interface CategoryDef {
 }
 
 export const CATEGORIES: CategoryDef[] = [
-  { id: 'share', label: 'Share', purpose: 'Between your own devices, or to someone else', icon: 'transfer' },
+  { id: 'share', label: 'Transfer', purpose: 'Between your own devices, or to someone else', icon: 'transfer' },
   { id: 'communicate', label: 'Talk & Meet', purpose: 'Calls, meetings, classrooms', icon: 'video' },
   { id: 'collaborate', label: 'Create Together', purpose: 'Boards, notes, slides, decisions', icon: 'brush' },
   { id: 'remote', label: 'Remote & Support', purpose: 'Screens, assistance, browsing together', icon: 'help' },
   { id: 'utilities', label: 'Everyday Utilities', purpose: 'Cameras, microphones, location, captions', icon: 'radio' },
+  { id: 'instant', label: 'Instant Tools', purpose: 'One device, done in seconds — files never leave your browser', icon: 'zap' },
 ]
 
 export const APPS: AppDef[] = [
   // ------------------------------------------------------------------ share
   {
-    id: 'beam',
-    name: 'Beam',
+    id: 'share',
+    name: 'Share',
     category: 'share',
     status: 'live',
     tagline: 'Send text, files and whole folders between your devices — no uploads, no cables.',
     description:
-      'The everything-transfer tool: paste a link on your phone and it lands on your laptop; drag in photos and they arrive instantly; hand over a whole folder with its structure intact. Everything travels through the live session, directly between the devices in it, and is discarded when the session ends. One QR scan pairs two devices for all of it.',
+      'The everything-transfer tool: paste a link on your phone and it lands on your laptop; drag in photos and they arrive instantly; hand over a whole folder with its structure intact. One session does all of it — text, files and folders live side by side inside the same room, so you never juggle codes. Everything travels through the live session, directly between the devices in it, and is discarded when the session ends. One QR scan pairs two devices for all of it.',
     icon: 'transfer',
     intents: [
       'send photos from my phone to my laptop',
@@ -106,7 +117,7 @@ export const APPS: AppDef[] = [
       'send a wifi password to a guest',
     ],
     features: [
-      'Text, files and folders — pick the mode that fits, or pair first and do it all',
+      'Text, files and folders inside one session — one code does everything',
       'Phone to computer, computer to phone, or any mix of devices',
       'Up to 50 MB per file, no compression, no re-encoding',
       'Folder structure preserved, download everything back as one ZIP',
@@ -120,7 +131,7 @@ export const APPS: AppDef[] = [
       'Send. It is already there.',
     ],
     deviceNote:
-      'Keep the tab open on both devices while a transfer runs. If the connection dips, ShareOnWeb reconnects and you can resend anything.',
+      'Keep the tab open on both devices while a transfer runs. If the connection dips, Toolhive reconnects and you can resend anything.',
     variants: [
       {
         id: 'beam',
@@ -950,6 +961,257 @@ export const APPS: AppDef[] = [
       'Turn on translation to read the room in your language',
     ],
   },
+
+  // ------------------------------------------------------------ instant tools
+  // kind: 'instant' — no session, no code, no pairing. Everything runs on
+  // this device with Canvas/WebCrypto/JSZip; files never leave the browser.
+  {
+    id: 'zip',
+    name: 'Zip & Unzip',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Pack a folder into a ZIP, or unpack any archive — right here in the browser.',
+    description:
+      'Turn a pile of files or a whole folder into one ZIP, or open a ZIP you received and pull everything out, structure intact. Nothing is uploaded: the archive is built and read on this device, so a 500 MB folder takes seconds and stays private.',
+    icon: 'folder',
+    intents: [
+      'zip files online',
+      'unzip online free',
+      'compress folder into zip',
+      'extract zip without software',
+      'open archive in browser',
+      'download all attachments as zip',
+    ],
+    features: [
+      'Pack any number of files, or a whole folder with its structure',
+      'Unpack ZIPs and see every entry before extracting',
+      'Download one entry or everything at once',
+      'Runs entirely on this device — nothing is uploaded',
+      'No size walls: the only limit is this device\u2019s memory',
+    ],
+    howItWorks: [
+      'Drop files or a folder in — or drop a ZIP to unpack',
+      'Review the list, rename the archive if you like',
+      'Download the ZIP, or extract the contents',
+    ],
+  },
+  {
+    id: 'image',
+    name: 'Image Toolkit',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Compress, convert and resize images — batch, local, instant.',
+    description:
+      'One image workbench: shrink photos to a target size or quality, convert between PNG, JPEG and WebP, and resize or rescale whole batches at once. Every pixel is processed on this device with the browser\u2019s own encoder — your photos are never uploaded to anyone.',
+    icon: 'image',
+    intents: [
+      'compress image online',
+      'convert png to jpg',
+      'convert to webp',
+      'resize image online',
+      'reduce photo file size',
+      'batch image converter',
+      'make image smaller kb',
+    ],
+    features: [
+      'Compress with a quality slider or aim at an exact target size',
+      'Convert between PNG, JPEG and WebP, in batches',
+      'Resize by pixels or percentage with aspect-ratio lock',
+      'Before/after preview with the real file-size saving',
+      'Everything processed locally — no uploads, ever',
+    ],
+    howItWorks: [
+      'Drop one or many images in',
+      'Pick compress, convert or resize and set the options',
+      'Download results one by one or all at once',
+    ],
+  },
+  {
+    id: 'hash',
+    name: 'Hash & Verify',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'MD5 and SHA checksums for any file or text — verify a download in seconds.',
+    description:
+      'Drop a file or paste text and get its MD5, SHA-1, SHA-256 or SHA-512 checksum instantly, then compare it against the hash the publisher published to prove the download is intact and untampered. Hashing runs on this device; the file never leaves it.',
+    icon: 'fingerprint',
+    intents: [
+      'md5 checksum online',
+      'sha256 file hash',
+      'verify download checksum',
+      'file hash generator',
+      'check iso hash',
+      'text hash online',
+    ],
+    features: [
+      'MD5, SHA-1, SHA-256 and SHA-512 in one pass',
+      'Works for files of any type and for plain text',
+      'Verify mode: paste the expected hash and get a clear match / no-match',
+      'Huge files stream in chunks — no freeze, no upload',
+      'Computed locally; nothing is sent anywhere',
+    ],
+    howItWorks: [
+      'Drop the file, or switch to Text and paste',
+      'All four checksums appear instantly',
+      'Paste the expected hash to verify the match',
+    ],
+  },
+  {
+    id: 'encode',
+    name: 'Base64 Encode & Decode',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Turn text or files into Base64 and back — data URLs included.',
+    description:
+      'Encode text to Base64 or decode it back, with full Unicode support, and turn any file into a data URL you can paste into HTML, CSS or JSON. Decoding a Base64 file back to a download works too. All of it happens on this device.',
+    icon: 'braces',
+    intents: [
+      'base64 encode online',
+      'base64 decode online',
+      'text to base64',
+      'base64 to file',
+      'data url generator',
+      'file to base64',
+    ],
+    features: [
+      'Text \u2192 Base64 and Base64 \u2192 text, Unicode-safe',
+      'File \u2192 Base64 / data URL for HTML, CSS and JSON',
+      'Decode a Base64 file back into a downloadable file',
+      'Swap direction in one click; copy results instantly',
+      'No server involved — private by construction',
+    ],
+    howItWorks: [
+      'Paste text or drop a file',
+      'Pick the direction: encode or decode',
+      'Copy the result or download it as a file',
+    ],
+  },
+  {
+    id: 'json',
+    name: 'JSON Formatter',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Format, validate and minify JSON — with the exact error position.',
+    description:
+      'Paste JSON and get it pretty-printed, minified or verified. Broken JSON is not just \u201cinvalid\u201d: the formatter points at the exact line and column and shows the parser\u2019s message, so a stray comma takes seconds to find. Nothing is sent anywhere.',
+    icon: 'braces',
+    intents: [
+      'json formatter online',
+      'json validator',
+      'pretty print json',
+      'minify json',
+      'fix json error',
+      'json beautifier',
+    ],
+    features: [
+      'Pretty-print with 2 or 4 space indent, or minify',
+      'Validate with exact line and column of the error',
+      'Sort keys alphabetically for diffing and comparing',
+      'Live stats: size before and after, key count, depth',
+      'Runs locally — paste API responses without worry',
+    ],
+    howItWorks: [
+      'Paste or drop JSON',
+      'Pick format, minify or validate',
+      'Copy the result; errors point at the exact spot',
+    ],
+  },
+  {
+    id: 'text',
+    name: 'Text Kit',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Count words, switch case, sort and clean lines — one quick page.',
+    description:
+      'The everyday text workbench: live word, character, sentence and reading-time counts; upper/lower/Title/camel/snake/kebab case conversion; and one-click line cleanup — sort, dedupe, trim, reverse, number. Paste, transform, copy. Nothing leaves the page.',
+    icon: 'type',
+    intents: [
+      'word counter',
+      'character counter',
+      'case converter online',
+      'remove duplicate lines',
+      'sort lines alphabetically',
+      'reading time calculator',
+    ],
+    features: [
+      'Live counts: words, characters, sentences, paragraphs, reading time',
+      'Case tools: UPPER, lower, Title, Sentence, camel, snake, kebab',
+      'Line ops: sort, dedupe, trim, remove empties, reverse, number',
+      'Find and replace with plain or regex patterns',
+      'All transformations preview live and copy in one tap',
+    ],
+    howItWorks: [
+      'Paste or type your text',
+      'Pick a transform — the result updates live',
+      'Copy it back out with one click',
+    ],
+  },
+  {
+    id: 'password',
+    name: 'Password Generator',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Strong passwords and passphrases from real browser randomness.',
+    description:
+      'Generate passwords and passphrases with the browser\u2019s cryptographic random source \u2014 length, symbols, digits and ambiguity exclusions under your control, a live strength estimate, and a memorable word-based mode when you need to type it on a TV remote. Generated on this device, never transmitted, never stored.',
+    icon: 'key',
+    intents: [
+      'password generator',
+      'strong password online',
+      'random passphrase',
+      'memorable password generator',
+      'secure random password',
+    ],
+    features: [
+      'Cryptographic randomness from the browser, not Math.random',
+      'Length, digits, symbols and look-alike exclusion toggles',
+      'Passphrase mode: memorable words with separators and numbering',
+      'Live strength estimate with entropy explained',
+      'Bulk-generate a list; copy any of them with one tap',
+    ],
+    howItWorks: [
+      'Set the length and character mix',
+      'Generate \u2014 every password is freshly random',
+      'Copy it straight into your password manager',
+    ],
+  },
+  {
+    id: 'qr',
+    name: 'QR Generator',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'QR codes for links, text, Wi\u2011Fi and contact cards \u2014 download as PNG.',
+    description:
+      'Make a QR code for anything: a URL, plain text, your Wi\u2011Fi network (guests join without you reading the password aloud), or a contact card a phone camera saves directly. Choose the size and error-correction level and download a crisp PNG. Generated on this device.',
+    icon: 'qr',
+    intents: [
+      'qr code generator',
+      'wifi qr code',
+      'vcard qr code',
+      'create qr for link',
+      'free qr code download',
+    ],
+    features: [
+      'URL and plain-text QR codes',
+      'Wi\u2011Fi mode: guests scan and join the network instantly',
+      'vCard mode: scans straight into contacts',
+      'Size and error-correction control, crisp PNG download',
+      'Rendered locally \u2014 the content never touches a server',
+    ],
+    howItWorks: [
+      'Pick the type: link, text, Wi\u2011Fi or contact card',
+      'Fill in the details',
+      'Download the PNG or scan it right off the screen',
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -957,11 +1219,11 @@ export const APPS: AppDef[] = [
 //
 // Sessions are created under VARIANT ids ('drop', 'video-call', …), which are
 // also the stable ids stored in the database and in on-device history. The
-// catalog only shows the 12 merged tools. These helpers translate between the
+// catalog only shows the merged tools. These helpers translate between the
 // two namespaces in one place.
 // ---------------------------------------------------------------------------
 
-/** variant/session id -> top-level tool id (e.g. 'drop' -> 'beam'). */
+/** variant/session id -> top-level tool id (e.g. 'drop' -> 'share'). */
 export const APP_ALIASES: Record<string, string> = (() => {
   const map: Record<string, string> = {}
   for (const app of APPS) {
@@ -970,7 +1232,7 @@ export const APP_ALIASES: Record<string, string> = (() => {
   return map
 })()
 
-/** Exact match against the 12 top-level tools (used for /slug routing). */
+/** Exact match against the top-level tools (used for /slug routing). */
 export function getTopApp(id: string): AppDef | undefined {
   const lower = id.toLowerCase()
   return APPS.find((a) => a.id === lower)
@@ -1044,7 +1306,11 @@ export function getCreatableAppIds(): string[] {
   const ids: string[] = []
   for (const app of APPS) {
     if (app.status !== 'live') continue
+    if (app.kind === 'instant') continue
     if (app.variants?.length) {
+      // Sessions may be created under the tool id itself (one session serves
+      // every mode) or under a variant id (legacy clients and direct links).
+      ids.push(app.id)
       for (const v of app.variants) ids.push(v.id)
     } else {
       ids.push(app.id)
@@ -1080,6 +1346,7 @@ export const CATEGORY_ACCENT: Record<AppCategory, string> = {
   collaborate: '#7c3aed',
   remote: '#d97706',
   utilities: '#dc2626',
+  instant: '#0d9488',
 }
 
 /** Intention chips shown under the Discover search box. */
@@ -1092,6 +1359,10 @@ export const INTENTION_CHIPS: { label: string; appId: string }[] = [
   { label: 'Show my screen to someone', appId: 'screen-share' },
   { label: 'Use my phone as a webcam', appId: 'phone-webcam' },
   { label: 'Help my parents fix their computer', appId: 'remote-assist' },
+  { label: 'Unzip an archive right now', appId: 'zip' },
+  { label: 'Compress photos before emailing', appId: 'image' },
+  { label: 'Check a download checksum', appId: 'hash' },
+  { label: 'Generate a strong password', appId: 'password' },
 ]
 
 /**
@@ -1102,10 +1373,10 @@ export const INSTANT_START_APPS = [
   'drop',
   'video-call',
   'screen-share',
-  'beam',
+  'zip',
   'folder-share',
   'roundtable',
-  'audio-call',
+  'image',
   'walkie-talkie',
 ]
 

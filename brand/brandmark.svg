@@ -1,22 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- ShareOnWeb "network diamond" mark (v3, from the user's reference):
-       four blue nodes + blue hub circle, green edges and junctions.
-       Glyph-only, full colour on transparent. Mirror of the BrandMark
-       component in src/components/platform/app-icon.tsx — keep in sync.
-       Brand blue #079fc2 · brand green #00866d. -->
-  <g fill="none" stroke="#00866d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M256 134 L256 172"/>
-    <path d="M256 172 L136 234"/>
-    <path d="M256 172 L376 234"/>
-    <path d="M136 234 L256 414"/>
-    <path d="M376 234 L256 414"/>
+  <!-- Toolhive hive mark (v4): three honeycomb cells — a filled node on top,
+       two green cells beneath. Glyph-only, full colour on transparent.
+       Mirror of the BrandMark component in
+       src/components/platform/app-icon.tsx — keep in sync.
+       Brand cyan #079fc2 · brand green #00866d. -->
+  <path d="M170 178 L213 103 L299 103 L342 178 L299 252 L213 252 Z" fill="#079fc2"/>
+  <g fill="none" stroke="#00866d" stroke-width="16" stroke-linejoin="round">
+    <path d="M80 336 L123 261 L209 261 L252 336 L209 411 L123 411 Z"/>
+    <path d="M260 336 L303 261 L389 261 L432 336 L389 411 L303 411 Z"/>
   </g>
-  <rect x="220" y="62" width="72" height="72" rx="8" fill="#079fc2"/>
-  <rect x="60" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
-  <rect x="380" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
-  <rect x="220" y="378" width="72" height="72" rx="8" fill="#079fc2"/>
-  <rect x="243" y="159" width="26" height="26" rx="6" fill="#00866d"/>
-  <rect x="123" y="221" width="26" height="26" rx="6" fill="#00866d"/>
-  <rect x="363" y="221" width="26" height="26" rx="6" fill="#00866d"/>
-  <circle cx="256" cy="274" r="46" fill="#079fc2"/>
 </svg>

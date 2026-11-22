@@ -12,9 +12,9 @@ import { normalizeOriginOr } from '@/lib/normalize-url'
 const RAW_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
 export const SITE_URL = normalizeOriginOr(RAW_SITE_URL, 'https://shareonweb.vercel.app')
 
-export const SITE_NAME = 'ShareOnWeb'
+export const SITE_NAME = 'Toolhive'
 
-export const SITE_TITLE = 'ShareOnWeb: open a session, share the code'
+export const SITE_TITLE = 'Toolhive — instant web tools, live device-to-device sessions'
 
 export const SITE_DESCRIPTION =
-  'Send files between your phone and your computer, share text instantly, draw together, call across devices. Every session opens with a six-character code. No accounts, sessions expire on their own.'
+  'A hive of everyday tools that just work: zip and unzip, compress and convert images, hash and verify files, format JSON, generate passwords and QR codes — all instantly, all on your device. Need two devices? Share files, text, screens and calls live over peer-to-peer sessions with a six-character code. No accounts, no uploads, no ads.'

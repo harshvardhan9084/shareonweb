@@ -3,7 +3,7 @@
 // Discover — the index. Do-it-first: the working controls (start a session,
 // search the catalog, join with a code) sit in the first viewport. Below the
 // action, the page follows the classic flow — problem, value, how it works,
-// the catalog, trust, answers, one last call — adapted to ShareOnWeb rather
+// the catalog, trust, answers, one last call — adapted to Toolhive rather
 // than copied from a template. The tool directory renders as individual cards
 // on small screens (a dense paragraph of links is unreadable) and as hairline
 // rows on large ones. Doctrine: DESIGN.md at the repo root.
@@ -41,6 +41,10 @@ import { cn } from '@/lib/utils'
 
 const QUICK_START_LABELS: Record<string, string> = {
   beam: 'Share text now',
+  zip: 'Zip or unzip now',
+  image: 'Compress images now',
+  hash: 'Hash a file now',
+  password: 'Generate a password now',
   drop: 'Send files now',
   'folder-share': 'Send a folder now',
   canvas: 'Draw together now',
@@ -149,11 +153,13 @@ export function DiscoverView() {
           {/* left: the claim and the working controls */}
           <div>
             <h1 className="max-w-[26ch] font-display text-[clamp(2.5rem,5.2vw,3.75rem)] font-semibold leading-[1.05] tracking-[-0.02em]">
-              Everything starts with a{' '}
-              <span className="whitespace-nowrap">six-character</span> code.
+              Every tool you need,
+              <span className="whitespace-nowrap"> already open.</span>
             </h1>
             <p className="mt-4 max-w-[52ch] text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Calls, file drops, boards and screens, straight between browsers. No accounts.
+              Zip, convert, compress, hash, format, generate — instantly, right in your browser.
+              Need two devices? Share files, screens and calls live with a code. No accounts,
+              no ads, nothing uploaded.
             </p>
 
             {/* start controls: one filled action, its neighbours quiet */}
@@ -321,7 +327,7 @@ export function DiscoverView() {
           </h2>
           <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-muted-foreground">
             Moving one photo, sharing one link, meeting for five minutes: each usually drags a
-            cable, an upload or a sign-up behind it. ShareOnWeb strips that back to a single
+            cable, an upload or a sign-up behind it. Toolhive strips that back to a single
             idea: open a session, hand over a code, and the work happens live between the
             browsers in the room.
           </p>

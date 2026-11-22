@@ -604,7 +604,7 @@ export function ClickerPanel({
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {remoteCount > 0
                     ? `${remoteCount} other device${remoteCount === 1 ? '' : 's'} in the session can drive this deck.`
-                    : 'Open ShareOnWeb on your phone, join this session and switch to the remote, which becomes the controller.'}
+                    : 'Open Toolhive on your phone, join this session and switch to the remote, which becomes the controller.'}
                 </p>
               </CardContent>
             </Card>

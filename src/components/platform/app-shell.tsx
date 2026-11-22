@@ -14,10 +14,12 @@ import { fetchSession } from '@/lib/api'
 import { normalizeCode } from '@/lib/code'
 import { warmRelay } from '@/lib/relay-endpoint'
 import type { View } from '@/lib/store'
+import { getTopApp } from '@/lib/registry'
 import { Header } from '@/components/platform/header'
 import { Footer } from '@/components/platform/footer'
 import { DiscoverView } from '@/components/platform/discover-view'
 import { AppLandingView } from '@/components/platform/app-landing-view'
+import { InstantSurface } from '@/components/instant/instant-surface'
 import { SessionGate } from '@/components/platform/session-gate'
 import { humanError } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -245,7 +247,11 @@ export function AppShell({ initialView }: { initialView?: View }) {
         ) : shownView.name === 'home' ? (
           <DiscoverView />
         ) : shownView.name === 'app' ? (
-          <AppLandingView appId={shownView.appId} />
+          getTopApp(shownView.appId)?.kind === 'instant' ? (
+            <InstantSurface appId={shownView.appId} />
+          ) : (
+            <AppLandingView appId={shownView.appId} />
+          )
         ) : shownView.name === 'session' ? (
           activeSession && activeSession.code === shownView.code ? (
             <SessionView session={activeSession} />

@@ -261,6 +261,21 @@ export class RoomClient {
     if (!this.joined) throw new Error('Not connected to the session yet.')
   }
 
+  /**
+   * Hard-reset the transport and reconnect from scratch. Automatic
+   * reconnection can get stuck (relay asleep after a long idle period,
+   * engine backoff against a dead socket); this closes the underlying
+   * engine connection and dials again — same room, same code.
+   */
+  forceReconnect() {
+    try {
+      this.socket.io.engine?.close()
+    } catch {
+      // engine may already be down; the connect() below re-dials anyway
+    }
+    if (!this.socket.connected) this.socket.connect()
+  }
+
   // ----------------------------------------------------------------- actions
   async sendText(id: string, content: string) {
     this.assertJoined()

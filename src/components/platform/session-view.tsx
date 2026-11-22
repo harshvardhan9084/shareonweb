@@ -9,7 +9,7 @@ import { hasHostedRelay, relayMisconfigured, resolveRelayUrl, warmRelay } from '
 import { closeSession, renameSession } from '@/lib/api'
 import { formatCode, joinUrl } from '@/lib/code'
 import { loadProfileName, saveProfileName, usePlatform } from '@/lib/store'
-import { getApp, getVariant } from '@/lib/registry'
+import { getApp, getTopApp, getVariant, resolveAppId } from '@/lib/registry'
 import type {
   AppEvent,
   ChatMsg,
@@ -25,22 +25,21 @@ import type {
 } from '@/lib/types'
 import { BrandMark } from '@/components/platform/app-icon'
 import { SessionGate } from '@/components/platform/session-gate'
-import { BeamPanel } from '@/components/session/beam-panel'
-import { DropPanel, type RoomFile } from '@/components/session/drop-panel'
-import { FolderPanel } from '@/components/session/folder-panel'
+import type { RoomFile } from '@/components/session/drop-panel'
 import { CanvasPanel } from '@/components/session/canvas-panel'
 import { RoundtablePanel } from '@/components/session/roundtable-panel'
-import { ScreenPanel } from '@/components/session/screen-panel'
-import { NotePanel } from '@/components/session/note-panel'
-import { CallPanel, callConfigFor } from '@/components/session/call-panel'
-import { CodeEditorPanel } from '@/components/session/code-editor-panel'
-import { PresentPanel } from '@/components/session/present-panel'
-import { ClickerPanel } from '@/components/session/clicker-panel'
 import { CoBrowsePanel } from '@/components/session/cobrowse-panel'
 import { LocationPanel } from '@/components/session/location-panel'
 import { CaptionsPanel } from '@/components/session/captions-panel'
-import { AssistPanel } from '@/components/session/assist-panel'
-import { QuickPairPanel } from '@/components/session/quick-pair-panel'
+import {
+  MediaFamilyPanel,
+  NotepadFamilyPanel,
+  PresentFamilyPanel,
+  ScreenFamilyPanel,
+  ShareFamilyPanel,
+  shareModeForAppId,
+} from '@/components/session/family-panels'
+import { quickStart } from '@/lib/quick-start'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -123,8 +122,10 @@ export function SessionView({ session }: { session: SessionInfo }) {
   const app = getApp(session.appId)
   // Sessions are created under variant ids ('drop', 'video-call', …); the
   // panel and its config must switch on that raw id, while display copy
-  // resolves to the merged tool ("Beam").
+  // resolves to the merged tool ("Share").
   const rawId = session.appId
+  /** The tool this session's appId belongs to — one code, every mode of it. */
+  const toolId = resolveAppId(rawId) ?? rawId
   const variantInfo = getVariant(session.appId)
 
   const clientRef = useRef<RoomClient | null>(null)
@@ -132,6 +133,9 @@ export function SessionView({ session }: { session: SessionInfo }) {
   const [profileName, setProfileName] = useState<string>('')
   const [device] = useState<DeviceType>(() => detectDevice())
   const [connState, setConnState] = useState<ConnState>('connecting')
+  /** Seconds since the line dropped (while reconnecting/offline), for the honest dead-end. */
+  const [downSeconds, setDownSeconds] = useState(0)
+  const downSinceRef = useRef<number | null>(null)
   // True browser connectivity, separate from the relay link: the connection
   // banner must never claim "you lost your internet" while the machine is
   // online and only the relay is out of reach (hosted relays wake up, and
@@ -238,8 +242,11 @@ export function SessionView({ session }: { session: SessionInfo }) {
         setConnState(state)
         if (state === 'connected') {
           wasConnectedRef.current = true
+          downSinceRef.current = null
+          setDownSeconds(0)
         } else if ((state === 'reconnecting' || state === 'offline') && wasConnectedRef.current) {
           pendingRejoinRef.current = true
+          downSinceRef.current ??= Date.now()
         }
       }),
       client.on('state', (snap) => {
@@ -368,8 +375,24 @@ export function SessionView({ session }: { session: SessionInfo }) {
     if (texts.length > 0 || files.length > 0) hadContentRef.current = true
   }, [texts, files])
 
+  // While the line is down, keep an honest clock: after 90 seconds the banner
+  // escalates from "reconnecting…" to actionable options (dial again / new
+  // session) instead of spinning forever — the user's explicit requirement.
+  useEffect(() => {
+    if (connState !== 'reconnecting' && connState !== 'offline') {
+      setDownSeconds(0)
+      return
+    }
+    const tick = () => {
+      setDownSeconds(downSinceRef.current ? Math.floor((Date.now() - downSinceRef.current) / 1000) : 0)
+    }
+    tick()
+    const t = setInterval(tick, 1000)
+    return () => clearInterval(t)
+  }, [connState])
+
   // Files with a purpose `slot` (presentation slides) are managed by their own
-  // tool — keep them out of the general file lists (Drop / Folder Share / Beam).
+  // tool — keep them out of the general file lists (the Share tool panels).
   const panelFiles = useMemo(() => files.filter((f) => f.slot !== 'presentation'), [files])
 
   // ------------------------------------------------------------- session actions
@@ -993,39 +1016,55 @@ export function SessionView({ session }: { session: SessionInfo }) {
                 pauses until the line is back.`
               )}
             </p>
+            {downSeconds >= 90 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <p className="w-full text-xs font-medium opacity-90">
+                  Been trying for {Math.floor(downSeconds / 60)} min {downSeconds % 60} s — the relay
+                  may be asleep or down. Nothing was lost on this device.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => clientRef.current?.forceReconnect()}
+                >
+                  <RefreshCw className="size-3.5" aria-hidden="true" /> Dial again now
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => void quickStart(rawId)}>
+                  Start a fresh session
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* -------------------------------------------------------------- panel */}
       <div className="mt-5">
-        {/* Until the client exists, or while Canvas/Notepad wait for the join
-            snapshot, hold the room with the calm gate instead of a hole. */}
+        {/* Family resolution: the session's stored appId (a variant id from a
+            legacy session, or the tool id itself) picks the initial mode, but
+            every mode of the tool lives inside this one session — one code
+            covers them all. */}
         {(!clientReady ||
-          ((rawId === 'canvas' || rawId === 'shared-docs') && !roomStateLoaded)) && (
+          ((rawId === 'canvas' || resolveAppId(rawId) === 'notepad') && !roomStateLoaded)) && (
           <SessionGate appId={app.id} code={session.code} compact />
         )}
-        {clientReady && rawId === 'beam' && (
-          <BeamPanel client={clientRef.current} texts={texts} sentIdsRef={sentIdsRef} onSend={sendText} onClear={clearTexts} connected={connState === 'connected'} />
-        )}
-        {clientReady && rawId === 'drop' && (
-          <DropPanel
+        {clientReady && resolveAppId(rawId) === 'share' && (
+          <ShareFamilyPanel
+            client={clientRef.current}
+            texts={texts}
+            sentIdsRef={sentIdsRef}
             files={panelFiles}
+            connected={connState === 'connected'}
+            onSendText={sendText}
+            onClearTexts={clearTexts}
             onSendFiles={sendFiles}
-            onRemove={removeFile}
-            onRetry={retryFile}
+            onSendFolder={sendFiles}
+            onRemoveFile={removeFile}
+            onRetryFile={retryFile}
             onRetryAll={retryFailedFiles}
-            connected={connState === 'connected'}
-          />
-        )}
-        {clientReady && rawId === 'folder-share' && (
-          <FolderPanel
-            files={panelFiles}
-            onSendItems={sendFiles}
-            onRemove={removeFile}
-            onRetry={retryFile}
-            onRetryAll={retryFailedFiles}
-            connected={connState === 'connected'}
+            initialMode={shareModeForAppId(rawId)}
+            showInviteOnMount={rawId === 'quick-pair'}
+            onRequestInvite={() => setQrOpen(true)}
           />
         )}
         {clientReady && roomStateLoaded && rawId === 'canvas' && (
@@ -1041,69 +1080,59 @@ export function SessionView({ session }: { session: SessionInfo }) {
             connected={connState === 'connected'}
           />
         )}
-        {clientReady && roomStateLoaded && rawId === 'shared-docs' && (
-          <NotePanel
+        {clientReady && (toolId === 'call' || toolId === 'camera' || toolId === 'voice') && (
+          <MediaFamilyPanel
             client={clientRef.current}
-            initialDoc={initialDoc}
-            participants={participants}
-            selfId={selfId}
-            connected={connState === 'connected'}
-          />
-        )}
-        {clientReady && (rawId === 'screen-share' || rawId === 'screen-to-phone') && (
-          <ScreenPanel
-            client={clientRef.current}
-            selfId={selfId}
-            participants={participants}
-            connected={connState === 'connected'}
-          />
-        )}
-        {clientReady && callConfigFor(rawId) && (
-          <CallPanel
-            client={clientRef.current}
-            config={callConfigFor(rawId)!}
             selfId={selfId}
             participants={participants}
             chat={chat}
             connected={connState === 'connected'}
+            styles={getTopApp(toolId)?.variants ?? []}
+            initialStyleId={rawId}
+            toolName={app.name}
           />
         )}
-        {clientReady && roomStateLoaded && rawId === 'code-editor' && (
-          <CodeEditorPanel
+        {clientReady && toolId === 'screen' &&
+          (roomStateLoaded || rawId === 'screen-share' || rawId === 'screen-to-phone') && (
+          <ScreenFamilyPanel
             client={clientRef.current}
             selfId={selfId}
             participants={participants}
-            initialEvents={initialEvents}
             connected={connState === 'connected'}
+            initialAppId={rawId}
+            initialEvents={initialEvents}
             isHost={participants[0]?.id === selfId}
             profileName={profileName}
             device={device}
           />
         )}
-        {clientReady && roomStateLoaded && rawId === 'live-present' && (
-          <PresentPanel
+        {clientReady && roomStateLoaded && toolId === 'notepad' && (
+          <NotepadFamilyPanel
             client={clientRef.current}
             selfId={selfId}
             participants={participants}
-            initialEvents={initialEvents}
             connected={connState === 'connected'}
+            initialAppId={rawId}
+            initialDoc={initialDoc}
+            initialEvents={initialEvents}
+            isHost={participants[0]?.id === selfId}
+            profileName={profileName}
+            device={device}
+          />
+        )}
+        {clientReady && roomStateLoaded && toolId === 'present' && (
+          <PresentFamilyPanel
+            client={clientRef.current}
+            selfId={selfId}
+            participants={participants}
+            connected={connState === 'connected'}
+            initialAppId={rawId}
+            initialEvents={initialEvents}
             isHost={participants[0]?.id === selfId}
             profileName={profileName}
             device={device}
             files={files}
             sessionCode={session.code}
-          />
-        )}
-        {clientReady && roomStateLoaded && rawId === 'presentation-clicker' && (
-          <ClickerPanel
-            client={clientRef.current}
-            selfId={selfId}
-            participants={participants}
-            initialEvents={initialEvents}
-            connected={connState === 'connected'}
-            isHost={participants[0]?.id === selfId}
-            profileName={profileName}
-            device={device}
           />
         )}
         {clientReady && roomStateLoaded && rawId === 'co-browse' && (
@@ -1141,38 +1170,6 @@ export function SessionView({ session }: { session: SessionInfo }) {
             isHost={participants[0]?.id === selfId}
             profileName={profileName}
             device={device}
-          />
-        )}
-        {clientReady && roomStateLoaded &&
-          (rawId === 'remote-assist' || rawId === 'guided-pointer' || rawId === 'support-session') && (
-          <AssistPanel
-            client={clientRef.current}
-            selfId={selfId}
-            participants={participants}
-            initialEvents={initialEvents}
-            connected={connState === 'connected'}
-            isHost={participants[0]?.id === selfId}
-            profileName={profileName}
-            device={device}
-            variant={rawId as 'remote-assist' | 'guided-pointer' | 'support-session'}
-          />
-        )}
-        {clientReady && rawId === 'quick-pair' && (
-          <QuickPairPanel
-            client={clientRef.current}
-            selfId={selfId}
-            participants={participants}
-            initialEvents={initialEvents}
-            connected={connState === 'connected'}
-            isHost={participants[0]?.id === selfId}
-            profileName={profileName}
-            device={device}
-            texts={texts}
-            onSendText={sendText}
-            onClearTexts={clearTexts}
-            files={panelFiles}
-            onSendFiles={sendFiles}
-            onRemoveFile={removeFile}
           />
         )}
       </div>

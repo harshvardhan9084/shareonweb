@@ -3,7 +3,7 @@
 // engines reward specific, honest phrasing, and each tool page should read
 // like its own product. All claims here mirror actual app behavior.
 //
-// Keys are tool ids ('beam', 'call', …). Mode-specific FAQs stay keyed under
+// Keys are tool ids ('share', 'call', …). Mode-specific FAQs stay keyed under
 // the variant ids ('drop', 'video-call', …) and surface when that mode is
 // picked on the tool's landing page.
 
@@ -16,7 +16,15 @@ export interface Faq {
 
 /** Hand-tuned search titles (the blue link) — intent-first, tool-named. */
 const SEO_TITLES: Record<string, string> = {
-  beam: 'Beam — send text, files and folders between devices instantly',
+  share: 'Share — send text, files and folders between devices instantly',
+  zip: 'Zip & Unzip — pack and unpack archives right in your browser',
+  image: 'Image Toolkit — compress, convert and resize images online free',
+  hash: 'Hash & Verify — MD5 and SHA-256 checksums for any file',
+  encode: 'Base64 Encode & Decode — text and files, data URLs included',
+  json: 'JSON Formatter — format, validate and minify with error positions',
+  text: 'Text Kit — word counter, case converter, line cleanup',
+  password: 'Password Generator — strong, random, built in your browser',
+  qr: 'QR Generator — links, text, Wi-Fi and contact cards as QR codes',
   call: 'Call — video and voice rooms with a link, no accounts',
   screen: 'Screen — share your screen live, or see theirs, from the browser',
   camera: 'Camera — live camera sharing, phone webcam, baby monitor',
@@ -32,8 +40,24 @@ const SEO_TITLES: Record<string, string> = {
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
 const SEO_DESCRIPTIONS: Record<string, string> = {
-  beam:
-    'Move text, files and whole folders between your phone and computer directly, up to 50 MB per file. One QR scan pairs two devices. Nothing stored, no account.',
+  share:
+    'Move text, files and whole folders between your phone and computer directly, up to 50 MB per file. One code serves text, files and folders. Nothing stored.',
+  zip:
+    'Pack files or a whole folder into a ZIP, or extract any archive with its structure intact. Runs entirely in your browser — nothing is ever uploaded.',
+  image:
+    'Compress photos to a target size, convert between PNG, JPEG and WebP, resize whole batches. Processed locally by your browser — no uploads, no sign-up.',
+  hash:
+    'Get MD5, SHA-1, SHA-256 and SHA-512 checksums for any file or text, then verify against the published hash. Computed on your device, instantly.',
+  encode:
+    'Encode text to Base64 and back, turn files into data URLs, decode Base64 files into downloads. Unicode-safe and entirely client-side.',
+  json:
+    'Format, minify, sort and validate JSON with the exact line and column of any error. Perfect for API responses — nothing is sent anywhere.',
+  text:
+    'Count words, characters and reading time; switch case; sort, dedupe and clean up lines; find and replace with regex. One quick, private page.',
+  password:
+    'Generate strong passwords and memorable passphrases with real browser randomness — length, symbols and look-alike controls, entropy shown.',
+  qr:
+    'Create QR codes for links, text, Wi-Fi networks and contact cards. Pick size and error correction, download a crisp PNG. Rendered locally.',
   call:
     'One-click video or voice rooms for two people or a small group: meetings, interviews, classrooms, webinars. Everyone joins from a browser. Nothing recorded.',
   screen:
@@ -65,18 +89,18 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
  */
 export const APP_FAQS: Record<string, Faq[]> = {
   // ------------------------------------------------------------- tool-level
-  beam: [
+  share: [
     {
       q: 'Are my files uploaded to a server?',
       a: 'No. Text, files and folders travel through the live session directly between the devices in it, and they are discarded when the session ends. The 50 MB per-file limit exists because the transfer runs peer-to-peer.',
     },
     {
       q: 'What happens if the connection drops mid-transfer?',
-      a: 'ShareOnWeb reconnects on its own, and failed files stay queued on your side so you can resend them with one tap once the link is back.',
+      a: 'Toolhive reconnects on its own, and failed files stay queued on your side so you can resend them with one tap once the link is back.',
     },
     {
-      q: 'How do I send text, a file and a folder without re-inviting myself?',
-      a: 'Start with the Quick Pair mode: scan the QR with your other device and both stay in one session where you can beam text and files from a single surface.',
+      q: 'Do text, files and folders need separate codes?',
+      a: 'No — one session serves all of them. Inside the room you switch between Text, Files and Folder tabs freely; the code stays the same.',
     },
   ],
   call: [
@@ -214,7 +238,7 @@ export const APP_FAQS: Record<string, Faq[]> = {
   drop: [
     {
       q: 'What happens if a file fails halfway?',
-      a: 'ShareOnWeb reconnects on its own, and the failed file stays queued on your side so you can resend it with one tap once the link is back.',
+      a: 'Toolhive reconnects on its own, and the failed file stays queued on your side so you can resend it with one tap once the link is back.',
     },
     {
       q: 'Why is there a 50 MB per-file limit?',
@@ -238,7 +262,7 @@ export const APP_FAQS: Record<string, Faq[]> = {
     },
     {
       q: 'Does it use Bluetooth?',
-      a: 'No. Pairing runs over the web like everything else on ShareOnWeb: the second device joins through a link or QR, so it works across networks, not just in the same room.',
+      a: 'No. Pairing runs over the web like everything else on Toolhive: the second device joins through a link or QR, so it works across networks, not just in the same room.',
     },
   ],
   'video-call': [
@@ -364,7 +388,7 @@ export const APP_FAQS: Record<string, Faq[]> = {
 /** Home-page FAQs: the questions a first-time visitor asks. */
 export const HOME_FAQS: Faq[] = [
   {
-    q: 'Is ShareOnWeb really free?',
+    q: 'Is Toolhive really free?',
     a: 'Yes. There are no accounts, no plans and no paywalls: every tool opens straight into a working session.',
   },
   {
@@ -373,7 +397,7 @@ export const HOME_FAQS: Faq[] = [
   },
   {
     q: 'Where does my content go?',
-    a: 'It stays inside the live session. Text, files, boards and chats travel between the devices in the session and are discarded when the session ends or expires. Files sent with Beam never touch a cloud server.',
+    a: 'It stays inside the live session. Text, files, boards and chats travel between the devices in the session and are discarded when the session ends or expires. Files sent with Share never touch a cloud server.',
   },
   {
     q: 'Does it work on phones?',
@@ -396,7 +420,7 @@ export function appMeta(app: AppDef): {
   keywords: string[]
 } {
   return {
-    title: `${SEO_TITLES[app.id] ?? app.name} · ShareOnWeb`,
+    title: `${SEO_TITLES[app.id] ?? app.name} · Toolhive`,
     description:
       SEO_DESCRIPTIONS[app.id] ?? `${app.tagline} ${app.description}`.slice(0, 158),
     keywords: [

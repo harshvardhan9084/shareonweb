@@ -10,12 +10,17 @@ import { usePlatform } from '@/lib/store'
 import { toast } from 'sonner'
 
 /**
- * One-click session start. Accepts either a tool id ('beam') or a variant id
- * ('drop'): tools with modes start their default mode; explicit variants win.
+ * One-click session start. Accepts either a tool id ('share') or a variant id
+ * ('drop'): tools with modes start the tool's session (one session serves
+ * every mode); instant tools never create sessions — they just open.
  */
 export async function quickStart(appOrVariantId: string): Promise<boolean> {
+  const app = getApp(appOrVariantId)
+  if (app?.kind === 'instant') {
+    usePlatform.getState().openApp(app.id)
+    return true
+  }
   try {
-    const app = getApp(appOrVariantId)
     const appId =
       app && !app.variants?.some((v) => v.id === appOrVariantId)
         ? defaultVariantId(app)

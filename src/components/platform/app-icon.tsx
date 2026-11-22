@@ -7,15 +7,19 @@ import {
   ArrowRightLeft,
   AudioLines,
   Baby,
+  Braces,
   Brush,
   Briefcase,
   Camera,
   Captions,
   Code,
   FileText,
+  Fingerprint,
   FolderUp,
   GraduationCap,
   HandHelping,
+  Image,
+  KeyRound,
   LifeBuoy,
   MapPin,
   MessagesSquare,
@@ -33,6 +37,7 @@ import {
   RadioTower,
   Smartphone,
   Sparkles,
+  Type,
   Users,
   Video,
   Waypoints,
@@ -73,6 +78,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   audiolines: AudioLines,
   smartphone: Smartphone,
   monitorsmartphone: MonitorSmartphone,
+  // instant tool icons
+  image: Image,
+  fingerprint: Fingerprint,
+  braces: Braces,
+  type: Type,
+  key: KeyRound,
   // category + brand icons
   way: Waypoints,
   screencast: Monitor,
@@ -83,11 +94,11 @@ export function AppIcon({ name, className }: { name: string; className?: string 
   return <Icon className={className} aria-hidden="true" />
 }
 
-// The ShareOnWeb "network diamond" mark (v3): four blue nodes + a blue hub
-// circle, green edges and junctions — the drawing from the user's reference.
-// Drawn inline (not an <img>) so the favicon, the PWA icons and the in-app
-// marks are the same drawing. Source of truth: brand/*.svg (see
-// brand/README.md); geometry mirrored there — keep both in sync.
+// The Toolhive "hive" mark (v4): three honeycomb cells — a filled cyan cell
+// on top, two green cells beneath. Drawn inline (not an <img>) so the
+// favicon, the PWA icons and the in-app marks are the same drawing. Source
+// of truth: brand/*.svg (see brand/README.md); geometry mirrored there —
+// keep both in sync.
 // Colours come from tokens.css (--brand-node / --brand-edge) so dark mode can
 // brighten them; "mono" swaps everything for currentColor.
 export function BrandMark({
@@ -101,21 +112,11 @@ export function BrandMark({
   const edge = variant === 'mono' ? 'currentColor' : 'var(--brand-edge)'
   return (
     <svg viewBox="0 0 512 512" className={className} aria-hidden="true" focusable="false">
-      <g fill="none" stroke={edge} strokeWidth="14" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M256 134 L256 172" />
-        <path d="M256 172 L136 234" />
-        <path d="M256 172 L376 234" />
-        <path d="M136 234 L256 414" />
-        <path d="M376 234 L256 414" />
+      <path d="M170 178 L213 103 L299 103 L342 178 L299 252 L213 252 Z" fill={node} />
+      <g fill="none" stroke={edge} strokeWidth="16" strokeLinejoin="round">
+        <path d="M80 336 L123 261 L209 261 L252 336 L209 411 L123 411 Z" />
+        <path d="M260 336 L303 261 L389 261 L432 336 L389 411 L303 411 Z" />
       </g>
-      <rect x="220" y="62" width="72" height="72" rx="8" fill={node} />
-      <rect x="60" y="248" width="72" height="72" rx="8" fill={node} />
-      <rect x="380" y="248" width="72" height="72" rx="8" fill={node} />
-      <rect x="220" y="378" width="72" height="72" rx="8" fill={node} />
-      <rect x="243" y="159" width="26" height="26" rx="6" fill={edge} />
-      <rect x="123" y="221" width="26" height="26" rx="6" fill={edge} />
-      <rect x="363" y="221" width="26" height="26" rx="6" fill={edge} />
-      <circle cx="256" cy="274" r="46" fill={node} />
     </svg>
   )
 }
@@ -135,7 +136,7 @@ export function BrandLockup({
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <BrandMark className={markClassName} />
-      <span className={cn(wordClassName, 'text-[var(--brand-wordmark)]')}>ShareOnWeb</span>
+      <span className={cn(wordClassName, 'text-[var(--brand-wordmark)]')}>Toolhive</span>
     </span>
   )
 }

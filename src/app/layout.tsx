@@ -77,7 +77,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "ShareOnWeb — practical tools that run straight between browsers",
+        alt: "Toolhive — practical tools that run straight between browsers",
       },
     ],
   },
@@ -135,7 +135,7 @@ function buildJsonLd(): string {
     {
       "@type": "ItemList",
       "@id": `${SITE_URL}/#tools`,
-      name: "ShareOnWeb tools",
+      name: "Toolhive tools",
       itemListElement: APPS.map((a, i) => ({
         "@type": "ListItem",
         position: i + 1,

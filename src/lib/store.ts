@@ -16,7 +16,7 @@ export type View =
 
 /**
  * Parse a location pathname into a view. Session codes and tool slugs share
- * one namespace (/beam is a tool, /K7T29Q is a session), resolved here from
+ * one namespace (/share is a tool, /K7T29Q is a session), resolved here from
  * the registry; anything that is neither returns null so callers decide
  * (the server 404s; the shell falls back to home).
  */
@@ -50,7 +50,7 @@ const NAME_KEY = 'sow.profile.name'
 const LEGACY_NAME_KEY = 'relay.profile.name'
 const MAX_RECENT = 20
 
-/** Real paths: /beam for tools, /K7T29Q for sessions, /help, /sessions. */
+/** Real paths: /share for tools, /K7T29Q for sessions, /help, /sessions. */
 function urlForView(v: View): string {
   if (v.name === 'home') return '/'
   if (v.name === 'app') return `/${v.appId}`
@@ -71,9 +71,9 @@ export function syncTitle(v: View) {
     const app = getApp(v.appId)
     if (app) title = appMeta(app).title
   } else if (v.name === 'session') {
-    title = 'Join a ShareOnWeb session'
+    title = 'Join a Toolhive session'
   } else if (v.name === 'sessions') {
-    title = 'My Sessions · ShareOnWeb'
+    title = 'My Sessions · Toolhive'
   } else if (v.name === 'help') {
     title = `Help Center · ${SITE_NAME}`
   }

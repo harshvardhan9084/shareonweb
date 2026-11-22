@@ -8,7 +8,7 @@ const CODE_LENGTH = 6
 /**
  * What a session path segment looks like: 6–8 characters from the code
  * alphabet (no I, L, O, 0, 1). Used by routing to tell /K7T29Q (a session)
- * apart from /beam (a tool) — and by 404 logic for anything else.
+ * apart from /share (a tool) — and by 404 logic for anything else.
  */
 export const CODE_PATH_RE = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,8}$/
 
