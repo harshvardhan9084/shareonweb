@@ -1,0 +1,132 @@
+/* Hallmark · shape: app screen · theme: custom ShareOnWeb v2 (tinted paper family, emerald signal) · genre: modern-minimal · surface: app shell · posture: committed · nav: top bar, wordmark and text links, one filled action · footer: mast with wordmark over links · hero: workbench, do-it-first console · redesign: structural de-slop pass per DESIGN.md */
+/* Hallmark · waive 29 · backdrop-blur glass kept on the sticky app header and video-stage chips · legibility over moving app content is chrome, not decoration */
+/* Hallmark · waive 28b · live screen and camera tiles carry no poster frame · a live stream has no still image; the app already fills empty tiles with skeleton and avatar states */
+/* Hallmark · answered F1 · apostrophes in UI copy use the typographic form · enforced across copy in this round's humanizer pass */
+
+/*
+ * ShareOnWeb design tokens — single source of truth for every colour and font.
+ * Every component reads these through Tailwind theme utilities (bg-background,
+ * text-muted-foreground, bg-stage, text-warning, ...). No literal colours in
+ * component code; add a token here instead.
+ *
+ * v2 doctrine (see DESIGN.md at the repo root):
+ * - The neutral ramp is tinted toward the anchor hue (163). No pure white,
+ *   no untinted grey, no pure black.
+ * - The accent is a signal (one filled control, focus, live dot), not a fill.
+ * - Fonts: --font-display (Bricolage Grotesque), --font-body (Hanken Grotesk),
+ *   --font-geist-mono stays for codes and figures only.
+ */
+
+:root {
+  --radius: 0.75rem;
+
+  /* paper and ink, tinted toward hue 163 */
+  --background: oklch(0.977 0.008 163);
+  --foreground: oklch(0.215 0.017 163);
+  --card: oklch(0.995 0.004 163);
+  --card-foreground: oklch(0.215 0.017 163);
+  --popover: oklch(0.995 0.004 163);
+  --popover-foreground: oklch(0.215 0.017 163);
+
+  /* accent signal */
+  --primary: oklch(0.55 0.145 163.225);
+  --primary-foreground: oklch(0.985 0.005 163);
+  --ring: oklch(0.60 0.15 162.48);
+
+  /* tinted neutral ramp */
+  --secondary: oklch(0.94 0.014 163);
+  --secondary-foreground: oklch(0.24 0.015 163);
+  --muted: oklch(0.945 0.012 163);
+  --muted-foreground: oklch(0.485 0.022 163);
+  --accent: oklch(0.935 0.016 163);
+  --accent-foreground: oklch(0.24 0.015 163);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.895 0.018 163);
+  --input: oklch(0.895 0.018 163);
+
+  /* video stage: deliberately dark in both modes (camera/screen surfaces) */
+  --stage: oklch(0.16 0.012 163);
+  --stage-soft: oklch(0.215 0.014 163);
+  --stage-raised: oklch(0.27 0.016 163);
+  --stage-foreground: oklch(0.97 0.006 163);
+  --stage-muted: oklch(0.72 0.014 163);
+  --stage-border: oklch(1 0 0 / 12%);
+
+  /* status colours */
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-foreground: oklch(0.205 0.02 70);
+  --positive: oklch(0.62 0.16 162.48);
+
+  /* charts */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* sidebar */
+  --sidebar: oklch(0.96 0.01 163);
+  --sidebar-foreground: oklch(0.215 0.017 163);
+  --sidebar-primary: oklch(0.24 0.015 163);
+  --sidebar-primary-foreground: oklch(0.985 0.005 163);
+  --sidebar-accent: oklch(0.935 0.016 163);
+  --sidebar-accent-foreground: oklch(0.24 0.015 163);
+  --sidebar-border: oklch(0.895 0.018 163);
+  --sidebar-ring: oklch(0.72 0.014 163);
+
+  /*
+   * Brand mark (v3 "network diamond") — logo identity colours, not UI chrome.
+   * The UI keeps the emerald signal above; the logo carries the reference
+   * palette (#079fc2 nodes / #00866d edges). Dark mode brightens both so the
+   * mark keeps its contrast on deep surfaces.
+   */
+  --brand-node: #079fc2;
+  --brand-edge: #00866d;
+  --brand-tint: #f2f9fb;
+  --brand-wordmark: #00866d;
+}
+
+.dark {
+  /* dark paper is derived, not inverted: same hue, deep tinted surfaces */
+  --background: oklch(0.16 0.012 163);
+  --foreground: oklch(0.93 0.008 163);
+  --card: oklch(0.20 0.014 163);
+  --card-foreground: oklch(0.93 0.008 163);
+  --popover: oklch(0.205 0.014 163);
+  --popover-foreground: oklch(0.93 0.008 163);
+
+  --primary: oklch(0.70 0.16 163);
+  --primary-foreground: oklch(0.16 0.02 163);
+  --secondary: oklch(0.26 0.014 163);
+  --secondary-foreground: oklch(0.93 0.008 163);
+  --muted: oklch(0.245 0.013 163);
+  --muted-foreground: oklch(0.72 0.016 163);
+  --accent: oklch(0.27 0.015 163);
+  --accent-foreground: oklch(0.93 0.008 163);
+  --destructive: oklch(0.704 0.191 22.216);
+  /* dark-mode warning TEXT must be bright to stay readable on dark paper */
+  --warning-foreground: oklch(0.86 0.09 70);
+  --border: oklch(0.80 0.02 163 / 13%);
+  --input: oklch(0.80 0.02 163 / 17%);
+  --ring: oklch(0.70 0.16 163);
+
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 163);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
+  --sidebar: oklch(0.20 0.014 163);
+  --sidebar-foreground: oklch(0.93 0.008 163);
+  --sidebar-primary: oklch(0.30 0.016 163);
+  --sidebar-primary-foreground: oklch(0.93 0.008 163);
+  --sidebar-accent: oklch(0.27 0.015 163);
+  --sidebar-accent-foreground: oklch(0.93 0.008 163);
+  --sidebar-border: oklch(0.80 0.02 163 / 13%);
+  --sidebar-ring: oklch(0.556 0.014 163);
+
+  /* brand mark on deep surfaces: brightened to keep the reference contrast */
+  --brand-node: #2ab3d6;
+  --brand-edge: #1cab8d;
+  --brand-wordmark: #3cc9a9;
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- ShareOnWeb "relay" mark: origin node, 45-degree shaft, arrowhead. -->
+  <rect width="512" height="512" rx="112" fill="#009966"/>
+  <g fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 150 L388 388"/>
+    <path d="M388 292 L388 388 L292 388"/>
+  </g>
+  <circle cx="150" cy="150" r="56" fill="#ffffff"/>
+</svg>

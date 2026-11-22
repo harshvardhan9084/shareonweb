@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable icon: full-bleed brand tint; v3 glyph scaled to 72% so it
+       stays inside the 80% safe zone under any Android mask. -->
+  <rect width="512" height="512" fill="#f2f9fb"/>
+  <g transform="translate(71.68 71.68) scale(0.72)">
+    <g fill="none" stroke="#00866d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M256 134 L256 172"/>
+      <path d="M256 172 L136 234"/>
+      <path d="M256 172 L376 234"/>
+      <path d="M136 234 L256 414"/>
+      <path d="M376 234 L256 414"/>
+    </g>
+    <rect x="220" y="62" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="60" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="380" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="220" y="378" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="243" y="159" width="26" height="26" rx="6" fill="#00866d"/>
+    <rect x="123" y="221" width="26" height="26" rx="6" fill="#00866d"/>
+    <rect x="363" y="221" width="26" height="26" rx="6" fill="#00866d"/>
+    <circle cx="256" cy="274" r="46" fill="#079fc2"/>
+  </g>
+</svg>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>You're offline · ShareOnWeb</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    display: grid;
+    place-items: center;
+    background: #f2f9fb;
+    color: #0e3a30;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0c1f1a; color: #e6f2ee; }
+    .card { border-color: rgba(230, 242, 238, 0.16); }
+    p { color: #b8cfc8; }
+  }
+  .card {
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid rgba(14, 58, 48, 0.14);
+    border-radius: 16px;
+    padding: 40px 32px;
+    background: transparent;
+  }
+  .mark { display: block; margin: 0 auto 20px; }
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    color: #00866d;
+  }
+  p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: #55746a;
+    margin-bottom: 24px;
+  }
+  a {
+    display: inline-block;
+    background: #00866d;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+  }
+  a:hover { background: #006d58; }
+  .hint { margin: 16px 0 0; font-size: 12px; }
+</style>
+</head>
+<body>
+<main class="card">
+  <svg class="mark" width="64" height="64" viewBox="0 0 512 512" aria-hidden="true">
+    <g fill="none" stroke="#00866d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M256 134 L256 172"/>
+      <path d="M256 172 L136 234"/>
+      <path d="M256 172 L376 234"/>
+      <path d="M136 234 L256 414"/>
+      <path d="M376 234 L256 414"/>
+    </g>
+    <rect x="220" y="62" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="60" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="380" y="248" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="220" y="378" width="72" height="72" rx="8" fill="#079fc2"/>
+    <rect x="243" y="159" width="26" height="26" rx="6" fill="#00866d"/>
+    <rect x="123" y="221" width="26" height="26" rx="6" fill="#00866d"/>
+    <rect x="363" y="221" width="26" height="26" rx="6" fill="#00866d"/>
+    <circle cx="256" cy="274" r="46" fill="#079fc2"/>
+  </svg>
+  <h1>You're offline</h1>
+  <p>ShareOnWeb sessions run live between browsers, so joining needs a connection.
+     Check your network — then pick up where you left off. Nothing was lost:
+     nothing you share is stored on our side anyway.</p>
+  <a href="/">Try again</a>
+  <p class="hint">This page opens by itself again the moment the connection returns.</p>
+</main>
+<script>
+  window.addEventListener('online', function () {
+    location.replace('/')
+  })
+</script>
+</body>
+</html>

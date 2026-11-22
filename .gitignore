@@ -1,0 +1,71 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# next.js
+/.next/
+/out/
+/build
+
+# production / misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+.eslintcache
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+server.log
+
+# env files (values live in the hosting dashboards, never in git)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# testing
+/coverage
+
+# local runtime data — SQLite lives here in dev, never commit it
+/db/*.db
+/db/*.db-journal
+
+# sandbox & agent working artifacts — these are NOT part of the product
+.zscripts/
+agent-ctx/
+tool-results/
+upload/
+download/
+examples/
+tests/
+scripts/
+worklog.md
+Caddyfile
+local-*
+.claude
+.z-ai-config
+skills/
+
+# brand QA snapshots + superseded icon versions (live sources: brand/ and brand/v2/)
+brand/preview/
+brand/v1/
+
+# editors / OS
+.idea/
+.vscode/
+Thumbs.db
+
+# keep local git status clean (relay dir has real content)
+mini-services/.gitkeep

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Glyph-only brand mark (currentColor) for in-app tiles. -->
+  <g fill="none" stroke="currentColor" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 150 L388 388"/>
+    <path d="M388 292 L388 388 L292 388"/>
+  </g>
+  <circle cx="150" cy="150" r="56" fill="currentColor"/>
+</svg>

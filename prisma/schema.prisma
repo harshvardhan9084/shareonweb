@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A temporary working session for one of the platform apps.
+// Sessions are anonymous: no user accounts, they simply expire.
+model Session {
+  id        String    @id @default(cuid())
+  code      String    @unique // 6-character join code, e.g. "K7T2-9Q" stored as "K7T29Q"
+  appId     String // which app this session belongs to (e.g. "beam", "drop")
+  title     String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime // sessions auto-expire (default 24h)
+  closed    Boolean   @default(false)
+  closedAt  DateTime?
+}

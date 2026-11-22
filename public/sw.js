@@ -1,0 +1,171 @@
+// ShareOnWeb service worker — the offline shell.
+//
+// Caches the app shell (landing HTML, immutable build assets, brand icons) so
+// a repeat visit or installed PWA opens instantly on a weak network and the
+// shell still opens with no connection at all. Live traffic is never touched:
+// the relay socket (which rides this origin via the gateway query), session
+// join links and every API call pass straight through — ShareOnWeb runs
+// between live browsers, and nothing here pretends otherwise.
+//
+// Bump VERSION whenever the precache list or a strategy changes; activation
+// deletes every older cache.
+const VERSION = 'sow-shell-v4'
+
+const SHELL_ASSETS = [
+  '/',
+  '/offline.html',
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-512.png',
+  '/icons/apple-touch-icon.png',
+]
+
+const IMMUTABLE_PREFIXES = ['/_next/static/', '/icons/']
+const IMMUTABLE_EXACT = ['/favicon.svg', '/manifest.webmanifest']
+const NAV_TIMEOUT_MS = 6000
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(VERSION)
+      // cache:'reload' bypasses the HTTP cache so the shell is stored fresh.
+      await Promise.allSettled(
+        SHELL_ASSETS.map((asset) => cache.add(new Request(asset, { cache: 'reload' }))),
+      )
+      await self.skipWaiting()
+    })(),
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      for (const key of await caches.keys()) {
+        if (key !== VERSION) await caches.delete(key)
+      }
+      await self.clients.claim()
+    })(),
+  )
+})
+
+// Navigations cannot be fetched by re-passing the navigate-mode Request (plus
+// init, which Chromium rejects), so network-first fetches go by URL string.
+// Cached responses are rebuilt before being returned: some Chromium versions
+// refuse raw cache.match Response objects as navigation bodies.
+async function fetchWithTimeout(url, ms) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ms)
+  try {
+    return await fetch(url, { signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function cachedHtml(cache, key) {
+  const hit = await cache.match(key)
+  if (!hit) return null
+  return new Response(await hit.arrayBuffer(), {
+    status: hit.status,
+    headers: {
+      'Content-Type': hit.headers.get('Content-Type') || 'text/html; charset=utf-8',
+    },
+  })
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request
+  if (request.method !== 'GET') return
+
+  const url = new URL(request.url)
+  if (url.origin !== self.location.origin) return
+
+  // Always live: relay socket polling (gateway query), the socket.io path and
+  // the API routes. A cached handshake would fake a session that isn't there.
+  if (
+    url.searchParams.has('XTransformPort') ||
+    url.pathname.startsWith('/socket.io') ||
+    url.pathname.startsWith('/api/')
+  ) {
+    return
+  }
+
+  // Navigations: network first with a short timeout, then the best cached
+  // surface. Tool and home navigations refresh the shell cache as they pass;
+  // session links never enter the cache (ephemeral by design) and fall back
+  // to the honest offline page instead of a stale session view.
+  if (request.mode === 'navigate') {
+    const isSessionLink = url.searchParams.has('s') || url.searchParams.has('join')
+    const navUrl = url.pathname + url.search
+    event.respondWith(
+      (async () => {
+        // Network first — but a broken upstream (5xx, e.g. the gateway's 502
+        // when the app server is down) is as useless as no network, so it
+        // also falls back to the cache. Honest 4xx pages pass through.
+        let fresh = null
+        try {
+          fresh = await fetchWithTimeout(navUrl, NAV_TIMEOUT_MS)
+        } catch {
+          fresh = null
+        }
+        if (fresh && fresh.ok && !isSessionLink) {
+          const cache = await caches.open(VERSION)
+          cache.put(navUrl, fresh.clone())
+        }
+        if (fresh && (fresh.ok || fresh.status < 500)) return fresh
+        const cache = await caches.open(VERSION)
+        // A session link offline must never fake a room: the SPA would sit on
+        // a join that cannot happen. Serve the honest offline page instead.
+        if (isSessionLink) {
+          return (
+            (await cachedHtml(cache, '/offline.html')) ||
+            new Response('You are offline. ShareOnWeb sessions need a connection.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          )
+        }
+        return (
+          (await cachedHtml(cache, navUrl)) ||
+          (await cachedHtml(cache, '/')) ||
+          (await cachedHtml(cache, '/offline.html')) ||
+          new Response('You are offline.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+          })
+        )
+      })(),
+    )
+    return
+  }
+
+  // Immutable static assets: cache first, fill on first use.
+  if (
+    IMMUTABLE_EXACT.includes(url.pathname) ||
+    IMMUTABLE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))
+  ) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(VERSION)
+        const hit = await cache.match(request)
+        if (hit) {
+          return new Response(await hit.arrayBuffer(), {
+            status: hit.status,
+            headers: {
+              'Content-Type': hit.headers.get('Content-Type') || 'application/octet-stream',
+            },
+          })
+        }
+        try {
+          const fresh = await fetch(request)
+          if (fresh.ok) cache.put(request, fresh.clone())
+          return fresh
+        } catch {
+          return Response.error()
+        }
+      })(),
+    )
+  }
+})
