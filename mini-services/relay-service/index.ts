@@ -820,7 +820,10 @@ io.on("connection", (socket) => {
     if (!stroke) {
       stroke = {
         strokeId,
-        ownerId: socket.id,
+        // Key ownership by the STABLE per-tab clientId, not the volatile
+        // socket.id — a reconnect (new socket.id) or reload must not forfeit
+        // undo rights over strokes that are still on the board.
+        ownerId: ctx.participant.clientId,
         color: typeof payload?.color === "string" ? payload.color : "#000000",
         size: Number.isFinite(Number(payload?.size)) ? Number(payload?.size) : 4,
         mode: payload?.mode === "erase" ? "erase" : "draw",
@@ -853,7 +856,7 @@ io.on("connection", (socket) => {
     const strokeId = typeof payload?.strokeId === "string" ? payload.strokeId : "";
     const idx = strokeId ? ctx.room.strokes.findIndex((s) => s.strokeId === strokeId) : -1;
     let removed = false;
-    if (idx >= 0 && ctx.room.strokes[idx].ownerId === socket.id) {
+    if (idx >= 0 && ctx.room.strokes[idx].ownerId === ctx.participant.clientId) {
       ctx.room.strokes.splice(idx, 1);
       removed = true;
       socket.to(ctx.code).emit("draw:undo", { strokeId }); // EXCEPT sender

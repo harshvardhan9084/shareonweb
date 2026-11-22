@@ -67,11 +67,19 @@ export function startRelayWatchdog(): void {
           cwd: RELAY_DIR,
           detached: true,
           stdio: 'ignore',
-          env: { ...process.env, SOW_RELAY_WATCHDOG: '1' },
+          // The relay must bind :3003 no matter what PORT the app host
+          // injected into this process (an inherited PORT=3000 made the
+          // child fight the Next server for its own port and die on boot).
+          env: { ...process.env, SOW_RELAY_WATCHDOG: '1', PORT: String(RELAY_PORT) },
         })
         child.unref()
         child.on('error', (err) => {
           console.error('[relay-watchdog] spawn failed:', err)
+        })
+        child.on('exit', (code, signal) => {
+          console.error(
+            `[relay-watchdog] spawned relay exited early: code=${code} signal=${signal}`,
+          )
         })
       } catch (err) {
         console.error('[relay-watchdog] spawn threw:', err)

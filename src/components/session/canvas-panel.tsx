@@ -5,8 +5,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RoomClient } from '@/lib/room-client'
+import { getClientId } from '@/lib/room-client'
 import { uid } from '@/components/platform/session-view'
-import type { Stroke } from '@/lib/types'
+import type { RoomSnapshot, Stroke } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Toggle } from '@/components/ui/toggle'
@@ -42,7 +43,9 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
   const currentRef = useRef<Stroke | null>(null)
   const pendingRef = useRef<number[][]>([])
   const lastEmitRef = useRef(0)
-  const mySocketIdsRef = useRef<Set<string>>(new Set())
+  // strokeIds this tab drew — survives reconnects and reloads (stable
+  // clientId on the relay side), so Undo keeps working after either.
+  const myStrokeIdsRef = useRef<Set<string>>(new Set())
 
   const [color, setColor] = useState(COLORS[0])
   const [size, setSize] = useState(4)
@@ -92,7 +95,14 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
 
   // Canvas sizing (DPR aware) + initial strokes.
   useEffect(() => {
-    strokesRef.current = [...initialStrokes]
+    strokesRef.current = initialStrokes.map((s) => ({ ...s, points: [...s.points] }))
+    // Claim strokes this tab drew before a reload — the first snapshot can
+    // arrive before this panel subscribes to 'state', so the mount prop is
+    // the only chance to attribute them (stable clientId tagging).
+    const mine = getClientId()
+    myStrokeIdsRef.current = new Set(
+      strokesRef.current.filter((s) => s.ownerId === mine).map((s) => s.strokeId),
+    )
     setStrokeCount(strokesRef.current.length)
     const wrap = wrapRef.current
     const canvas = canvasRef.current
@@ -111,6 +121,33 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
     ro.observe(wrap)
     return () => ro.disconnect()
   }, [])
+
+  /** Adopt the server's board as the single source of truth. */
+  const reconcile = useCallback(
+    (snapStrokes: Stroke[]) => {
+      const current = currentRef.current
+      strokesRef.current = snapStrokes.map((s) => ({ ...s, points: [...s.points] }))
+      // An in-flight stroke may not be in the snapshot yet (its segments are
+      // still flushing / were lost with a relay restart) — keep it alive; the
+      // next flush re-creates it server-side under the same strokeId.
+      if (current && !strokesRef.current.some((s) => s.strokeId === current.strokeId)) {
+        strokesRef.current.push(current)
+      }
+      const present = new Set(strokesRef.current.map((s) => s.strokeId))
+      myStrokeIdsRef.current = new Set(
+        [...myStrokeIdsRef.current].filter((id) => present.has(id)),
+      )
+      // Re-claim strokes this tab drew in a previous connection/reload —
+      // the relay now tags them with the stable clientId.
+      const mine = getClientId()
+      for (const s of strokesRef.current) {
+        if (s.ownerId === mine) myStrokeIdsRef.current.add(s.strokeId)
+      }
+      setStrokeCount(strokesRef.current.length)
+      redraw()
+    },
+    [redraw],
+  )
 
   // Remote strokes from the relay.
   useEffect(() => {
@@ -137,12 +174,21 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
       setStrokeCount(0)
       redraw()
     })
+    // Mid-session resync: every (re)join answers with an authoritative
+    // snapshot. Without this, strokes drawn by others during an outage never
+    // appear, and after a relay restart this board keeps ghost strokes that
+    // no longer exist server-side while new joiners see an empty board.
+    const off4 = client.on('state', (payload) => {
+      const snap = payload as RoomSnapshot
+      reconcile(Array.isArray(snap.strokes) ? snap.strokes : [])
+    })
     return () => {
       off1()
       off2()
       off3()
+      off4()
     }
-  }, [client, redraw])
+  }, [client, redraw, reconcile])
 
   // -------------------------------------------------------------- drawing
   function normPoint(e: React.PointerEvent<HTMLCanvasElement>): [number, number] {
@@ -189,7 +235,7 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
     const p = normPoint(e)
     const stroke: Stroke = {
       strokeId: uid(),
-      ownerId: 'me',
+      ownerId: getClientId(),
       color: colorRef.current,
       size: sizeRef.current,
       mode: eraseRef.current ? 'erase' : 'draw',
@@ -197,6 +243,7 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
     }
     currentRef.current = stroke
     strokesRef.current.push(stroke)
+    myStrokeIdsRef.current.add(stroke.strokeId)
     pendingRef.current = [p]
     setStrokeCount(strokesRef.current.length)
     drawIncremental([p[0] - 0.001, p[1] - 0.001], p, stroke)
@@ -229,21 +276,19 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
     if (!client) return
     for (let i = strokesRef.current.length - 1; i >= 0; i--) {
       const s = strokesRef.current[i]
-      if (s.ownerId === 'me') {
-        try {
-          const removed = await client.undoStroke(s.strokeId)
-          strokesRef.current = strokesRef.current.filter((x) => x.strokeId !== s.strokeId)
-          setStrokeCount(strokesRef.current.length)
-          redraw()
-          if (!removed) {
-            // Server could not remove it (e.g. reconnect changed our id) —
-            // stay consistent locally anyway; others may still see it.
-          }
-        } catch {
-          toast.error('Could not undo, check the connection.')
-        }
+      if (!myStrokeIdsRef.current.has(s.strokeId)) continue
+      try {
+        await client.undoStroke(s.strokeId)
+      } catch {
+        toast.error('Could not undo, check the connection.')
         return
       }
+      // Acked (removed or already gone server-side) — drop it locally too.
+      strokesRef.current = strokesRef.current.filter((x) => x.strokeId !== s.strokeId)
+      myStrokeIdsRef.current.delete(s.strokeId)
+      setStrokeCount(strokesRef.current.length)
+      redraw()
+      return
     }
   }
 
@@ -252,6 +297,7 @@ export function CanvasPanel({ client, initialStrokes, connected }: CanvasPanelPr
     try {
       await client.clearDrawing()
       strokesRef.current = []
+      myStrokeIdsRef.current.clear()
       setStrokeCount(0)
       redraw()
       toast.success('Board cleared for everyone.')

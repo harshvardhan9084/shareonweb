@@ -50,7 +50,6 @@ upload/
 download/
 examples/
 tests/
-scripts/
 worklog.md
 Caddyfile
 local-*
