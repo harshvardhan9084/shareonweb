@@ -9,6 +9,10 @@ import { useEffect } from 'react'
 
 export function SwRegister() {
   useEffect(() => {
+    // Hydration marker for QA (and curious humans): this app-wide client
+    // component mounts exactly once React has hydrated the page, so flipping
+    // the data attribute is a reliable "interactive now" signal.
+    document.documentElement.dataset.hydrated = '1'
     if (process.env.NODE_ENV !== 'production') return
     if (!('serviceWorker' in navigator)) return
 

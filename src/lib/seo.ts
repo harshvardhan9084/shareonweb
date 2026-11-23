@@ -54,6 +54,9 @@ const SEO_TITLES: Record<string, string> = {
   jwt: 'JWT Inspector — decode JSON Web Tokens and verify signatures locally',
   'hash-file-batch': 'Batch Checksums — MD5 & SHA-256 for many files, with sha256sum-compatible lists',
   cron: 'Cron Studio — parse, explain and preview cron expressions in your browser',
+  diff: 'Text Diff — compare two texts line by line and export a patch that applies',
+  uuid: 'ID Generator — UUID v4, UUID v7 and ULID in bulk, with an inspector',
+  'convert-units': 'Unit Converter — 73 units, number bases and Roman numerals, exact and local',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -134,6 +137,12 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Checksum many files or a whole folder with MD5, SHA-1 and SHA-256, export sha256sum-compatible lists and verify pasted checksums visually. Nothing uploads.',
   cron:
     'Read a cron expression in plain English, preview its next fire times from your device clock and simulate its per day/week/month load. Hand-written parser, real Vixie rules, nothing uploaded.',
+  diff:
+    'Compare two texts with a real patience diff — word-level highlights inside edited lines, side-by-side or inline, and a unified patch export that applies with git apply. Nothing is uploaded.',
+  uuid:
+    'Generate UUID v4, UUID v7 and ULID in bulk from your browser’s crypto engine, with a monotonic ULID mode and an inspector that decodes versions, variants and embedded timestamps.',
+  'convert-units':
+    'Convert 73 units across 10 categories through exact published factors, switch numbers between bases 2–36 with two’s-complement views and read strict Roman numerals. All computed in your browser.',
 }
 
 /**
@@ -703,6 +712,70 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Does this tool run my job when the time comes?',
       a: 'No. It only computes when a schedule would fire — nothing executes here, no process starts and no notification is scheduled. It is a reading lamp for crontab lines: paste an expression from your server, check the next runs against your calendar, then fix or keep it. The per day/week/month load numbers are simulations over one representative window, and nothing is uploaded while you do any of it.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ diff
+  diff: [
+    {
+      q: 'Which diff algorithm does this use?',
+      a: 'A patience diff — the strategy git diff --patience uses. Lines that appear exactly once on both sides act as anchors, the longest increasing subsequence of those anchors forms the diff’s spine, and the segments between anchors are diffed recursively. It avoids the classic LCS failure where every line of a rearranged file shows as changed, and it falls back to a block replace only when nothing unique remains, so the result is always a correct diff.',
+    },
+    {
+      q: 'Will the exported patch really apply?',
+      a: 'Yes — it is a standard unified diff with @@ hunk headers, three context lines and correct no-newline-at-EOF handling. It was validated against git apply: every generated patch applies cleanly and reconstructs the target byte for byte, including files without a trailing newline. Save it with the Download button and run git apply the-name.patch in the folder that holds the original file.',
+    },
+    {
+      q: 'What do the ignore options actually change?',
+      a: 'They change how lines are compared, not what is shown: ignore-case compares lines lowercased, ignore-whitespace collapses runs of spaces and tabs before comparing, and ignore-blank-lines removes empty lines from the comparison entirely. The displayed text is always your original, unmodified text — only the matching is relaxed.',
+    },
+    {
+      q: 'Is there a size limit?',
+      a: 'A million characters per side, stated in the page rather than failing silently past it. The diff runs synchronously in this tab, and patience diffs stay fast even on large rearranged files; if you regularly need to diff more than that, git diff --no-index on real files is the better tool — this page aims at the paste-two-snippets moment.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ uuid
+  uuid: [
+    {
+      q: 'Which format should I pick?',
+      a: 'v4 when you just need uniqueness. v7 when the IDs land in a database or a sorted list — the first 48 bits are the creation time in Unix milliseconds, so indexing by ID is roughly indexing by time. ULID when a 26-character, case-insensitive, slightly shorter form is convenient; it carries the same timestamp idea with 80 random bits behind it.',
+    },
+    {
+      q: 'Are these cryptographically random?',
+      a: 'Yes. The randomness comes from crypto.getRandomValues, the browser’s CSPRNG — not Math.random. A v4 UUID carries 122 random bits shaped by the RFC’s version and variant bits, so the chance of two colliding is about one in 5.3 × 10³⁶. Generated IDs are not secrets, but they are unguessable in practice.',
+    },
+    {
+      q: 'What does the monotonic ULID option do?',
+      a: 'Normally two ULIDs generated within the same millisecond differ only by their random half, so their order is a coin flip. Monotonic mode keeps the millisecond and increments the random part, making every ID strictly greater than the previous one — the property database indexes want when you insert faster than the clock ticks.',
+    },
+    {
+      q: 'What does the inspector tell me?',
+      a: 'Paste any UUID or ULID and it decodes the version nibble and the variant bits, and — for time-ordered IDs — the timestamp hidden inside, shown as a real date. For v1 it recovers the 60-bit Gregorian timestamp; for v7 the Unix milliseconds; for ULIDs the first ten Crockford characters. It also rejects impossible ULIDs, like ones containing I, L, O or U, with the reason.',
+    },
+  ],
+
+  // ---------------------------------------------------------- convert-units
+  'convert-units': [
+    {
+      q: 'How precise are the conversions?',
+      a: 'Every category converts through a table of exact published factors — the international inch is exactly 0.0254 m and the avoirdupois pound exactly 0.45359237 kg — not rounded chart values. You control the display precision from 4 to 12 significant digits (7 by default), and when the ratio between two units terminates cleanly (1 in = 2.54 cm, 1 KB = 0.9765625 KiB) the page says “exactly”; when it would be a repeating decimal, it stays silent rather than pretending. Underneath, arithmetic is IEEE-754 double precision, so roughly the first 15 digits are trustworthy — honest for every everyday conversion.',
+    },
+    {
+      q: 'Why is temperature handled differently?',
+      a: 'Because degrees are affine, not proportional: 0 °C is not “zero temperature”, it is 273.15 kelvins. Multiplying by a factor cannot map one scale onto the other, so temperature is special-cased with its own formulas — °F = °C × 9/5 + 32, K = °C + 273.15, °R = °F + 459.67 — instead of sitting in the factor table. The classic converter bug of “multiplying Celsius by 1.8” cannot happen here.',
+    },
+    {
+      q: 'What is the difference between KB and KiB?',
+      a: 'Two families share the “kilo” name: decimal units step by 10³ (KB, MB, GB — what drive makers quote) and binary units step by 2¹⁰ (KiB, MiB, GiB — what memory actually counts and what Windows reports, mislabeled, as “MB”). The table keeps both side by side with the labels intact, and the exact line shows the honest gap: 1 KB = 0.9765625 KiB, exactly.',
+    },
+    {
+      q: 'Why do Roman numerals stop at 3999?',
+      a: 'The classical subtractive grammar has no symbol larger than M (1000) and M may repeat at most three times, so the largest expressible number is MMMCMXCIX — 3999. Larger values were written with a bar over the numeral (the vinculum, ×1000), which plain text cannot carry. The page states the limit instead of inventing notation, and the strict parser rejects anything that breaks the classical rules — IIII, VX, IC — naming the rule that was broken.',
+    },
+    {
+      q: 'Does anything get uploaded?',
+      a: 'No. Every conversion — units, bases, Roman numerals — is computed in this tab with plain arithmetic; there is no session, no account and no upload code on the page at all. Close the tab and nothing remains: no history, no storage, nothing on a server to trust or delete.',
     },
   ],
 

@@ -15,7 +15,7 @@ export const SITE_URL = normalizeOriginOr(RAW_SITE_URL, 'https://shareonweb.verc
 // Kontivo — an invented brand word (not a dictionary term, not an existing
 // product name). It evokes "context": every tool here opens aware of your
 // context — this device, this session, these files — and forgets it when
-// you leave. Third name in the project's history: ShareOnWeb → Kontivo →
+// you leave. Third name in the project's history: ShareOnWeb → Toolhive →
 // Kontivo. The domain stays shareonweb.vercel.app.
 export const SITE_NAME = 'Kontivo'
 

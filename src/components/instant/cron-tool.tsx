@@ -34,7 +34,7 @@ import { PrivacyStrip } from '@/components/instant/instant-kit'
 // ------------------------------------------------------------------ types ---
 
 type FieldKind = 'second' | 'minute' | 'hour' | 'dom' | 'month' | 'dow'
-type Mode = 'auto' | 'five' | 'six'
+export type Mode = 'auto' | 'five' | 'six'
 
 interface Term {
   lo: number
@@ -330,7 +330,7 @@ function parseField(raw: string, kind: FieldKind): FieldResult {
   }
 }
 
-function parseCron(input: string, mode: Mode): CronParse {
+export function parseCron(input: string, mode: Mode): CronParse {
   const trimmed = input.trim()
   if (!trimmed) {
     return { ok: false, empty: true, sixField: false, fields: [], globalErrors: [], notes: [] }
@@ -430,7 +430,7 @@ function parseCron(input: string, mode: Mode): CronParse {
 
 // ----------------------------------------------------------------- engine ---
 
-function buildEngine(p: CronParse): CronEngine {
+export function buildEngine(p: CronParse): CronEngine {
   const get = (k: FieldKind): FieldResult => {
     const f = p.fields.find((x) => x.kind === k)
     if (!f) throw new Error(`missing field ${k}`)
@@ -467,7 +467,7 @@ function dayMatches(e: CronEngine, y: number, mo: number, d: number, dow: number
   return domOk || dowOk
 }
 
-function nextFireTimes(e: CronEngine, from: Date, n: number, maxDays = 366): Date[] {
+export function nextFireTimes(e: CronEngine, from: Date, n: number, maxDays = 366): Date[] {
   const out: Date[] = []
   const fromT = from.getTime()
   for (let i = 0; i <= maxDays && out.length < n; i++) {
@@ -534,7 +534,7 @@ interface LoadEstimate {
 }
 
 /** Simulate one representative day, week and month from the per-day counts. */
-function loadEstimate(e: CronEngine, from: Date): LoadEstimate | null {
+export function loadEstimate(e: CronEngine, from: Date): LoadEstimate | null {
   const { perDay, capped } = loadCounts(e, from)
   const tomorrow = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 1).getTime()
   // Prefer a full day after today; today counts too if it is all we have.
@@ -697,7 +697,7 @@ function describeMonth(mon: FieldResult): string | null {
   return `in ${listJoin(names)}`
 }
 
-function describeCron(p: CronParse): string {
+export function describeCron(p: CronParse): string {
   const get = (k: FieldKind): FieldResult => p.fields.find((f) => f.kind === k) as FieldResult
   const hr = get('hour')
   const min = get('minute')

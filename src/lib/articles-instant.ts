@@ -1,6 +1,6 @@
 import type { AppArticle } from '@/lib/article-types'
 
-// Long-form articles for the 19 instant tools. Every fact here reflects the
+// Long-form articles for the instant tools. Every fact here reflects the
 // real implementation: the browser engines used, the honest limits (memory,
 // formats, DRM, encryption), and the privacy model (files never leave the
 // device because there is no upload code at all).
@@ -1113,6 +1113,133 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
         paragraphs: [
           'There is no upload code on this page. The expression is parsed in this tab, the fire times are computed in your local timezone against your device clock \u2014 the only clock that matters here, so a wrong device clock shifts every computed run with it. Nothing is stored; close the tab and it is gone.',
           'Timezones are the honest limit worth repeating: your crontab fires in the timezone of the machine it runs on, which may not be the one in your pocket. And @reboot cannot be previewed at all, since firing at boot has no wall-clock time behind it \u2014 the other @-shortcuts expand to their expressions automatically.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- diff
+  diff: {
+    lede: [
+      'Text Diff compares two texts and shows exactly what changed: lines added, lines removed, and the words that moved inside edited lines. It runs a real patience diff \u2014 the same strategy as git diff --patience \u2014 in this tab as you type, in a side-by-side or inline view, and it can export the result as a standard unified patch that applies with git apply or patch.',
+      'The algorithm is the interesting part. A naive line diff struggles the moment files get rearranged: whole sections show as deleted and re-added in red and green walls. Patience diff takes the lines that appear exactly once on both sides as anchors, keeps the ones whose order agrees (the longest increasing subsequence), and diffs only between anchors \u2014 so moved blocks stay recognizable as blocks, and the fallback for hopelessly different segments is a plain block replace, bounded so it can never blow up.',
+    ],
+    sections: [
+      {
+        heading: 'How the pairing works',
+        paragraphs: [
+          'The diff is computed on normalized lines according to your options \u2014 ignore case, ignore whitespace, ignore blank lines \u2014 but always displayed as your original text. Each deletion run is paired with the insertion run that follows it, so a rewritten line shows as one edited row instead of a separate remove and add; remaining unpaired lines show as pure additions or deletions. Live counters keep score: added, removed, unchanged and a similarity percentage, all recomputed on every keystroke.',
+          'Edited rows get a second, word-level pass: the two versions of the line are tokenized into words and punctuation, diffed with the same patience strategy, and the exact changed words are highlighted \u2014 so you see that a line changed because one word moved, without reading both versions letter by letter.',
+        ],
+      },
+      {
+        heading: 'The patch export, and why it is trustworthy',
+        paragraphs: [
+          'The Copy patch and Download .patch buttons emit a standard unified diff: file headers, @@ hunk headers with correct start-and-count math, three context lines around each change, and proper \\ No newline at end of file markers when a side lacks the trailing newline. Hunk starts are computed the way the patch(1) format requires \u2014 an insertion-first hunk points at the line before which content lands \u2014 which is exactly where hand-rolled diff exporters usually go wrong.',
+          'This exporter was validated against git apply itself: across hand-built edge cases (insertions and deletions at both ends, multiple hunks, repeated identical lines, files with and without trailing newlines) and a randomized fuzz round, every generated patch applied cleanly and reconstructed the target file byte for byte. When two texts differ only in the trailing newline, the patch says so with the marker instead of claiming the files are identical.',
+        ],
+      },
+      {
+        heading: 'When it beats opening a terminal',
+        paragraphs: [
+          'The moment is familiar: someone pastes two versions of a config, a paragraph, a JSON file, a contract clause, and asks what changed. Installing or reaching for git is heavier than the question; screenshotting two texts side by side answers nothing. This page answers it as you paste, on any device, including a phone.',
+        ],
+        list: [
+          'Compare two versions of a config file before you overwrite the live one',
+          'See which sentences moved in a rewritten document or contract clause',
+          'Check a teammate\u2019s claimed change against the actual before/after',
+          'Produce a patch a colleague can apply with git apply, without a git repo',
+        ],
+      },
+      {
+        heading: 'What happens to your texts',
+        paragraphs: [
+          'Nothing. The diff runs in this tab on text the browser already holds; there is no upload code on the page at all, so the network panel stays empty except for the page itself. Paste source code, keys in config files, unpublished prose \u2014 nothing leaves the device, and nothing is stored once the tab closes.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'The cap is one million characters per side, stated rather than discovered; beyond it the page says so instead of pretending. The ignore options change what counts as equal \u2014 the displayed text is always your original. And a patience diff is correct but not always minimal: where git\u2019s default might find a shorter edit script in pathological cases, this one finds the more readable one, which is the point.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- uuid
+  uuid: {
+    lede: [
+      'ID Generator makes the three identifiers modern systems actually exchange \u2014 UUID v4, UUID v7 and ULID \u2014 from the browser\u2019s own crypto engine, in bulk, with an inspector that decodes any of them back into their parts. Open the page and ten IDs are already on screen; change the format or count and they regenerate instantly.',
+      'The three formats answer different needs. UUID v4 is pure randomness \u2014 122 bits shaped by the RFC\u2019s version and variant bits \u2014 and fits anywhere uniqueness is enough. UUID v7 (RFC 9562) embeds a 48-bit Unix-millisecond timestamp ahead of the random bits, so IDs sort by creation time, which is why databases increasingly prefer it for primary keys. ULID packs the same timestamp idea into 26 Crockford-base32 characters with 80 random bits behind it, plus an optional monotonic mode.',
+    ],
+    sections: [
+      {
+        heading: 'Where the randomness comes from',
+        paragraphs: [
+          'Every bit of randomness is drawn from crypto.getRandomValues, the browser\u2019s cryptographically secure random source \u2014 not Math.random, which is predictable and has burned real applications that treated its output as unique. For v4 the sixteen random bytes are then shaped: six bits are overwritten with the version (4) and variant (10xx) markers that make a UUID decodable, leaving 122 random bits \u2014 the reason two v4 IDs collide with roughly one chance in 5.3 \u00d7 10\u00b3\u2076.',
+          'v7 and ULID spend some of that budget on time. The first 48 bits are the current Unix millisecond count, big-endian, so lexicographic order is chronological order; the remaining bits stay random. That is the whole trick behind \u201csortable IDs\u201d: a database index on the ID column becomes an index on creation time for free, and page splits in B-trees stop thrashing because new rows always land on the right edge.',
+        ],
+      },
+      {
+        heading: 'Monotonic ULIDs, honestly implemented',
+        paragraphs: [
+          'Two ULIDs generated in the same millisecond normally differ only in their random halves, so their sort order is a coin flip. Monotonic mode fixes exactly that: within the same millisecond the generator increments its random part instead of re-rolling it, making every ID strictly greater than the previous one \u2014 the guarantee database inserts want when rows arrive faster than the clock ticks. The increment lives in an 80-bit space, so the counter cannot realistically wrap.',
+        ],
+        list: [
+          'UUID v4 \u2014 uniqueness anywhere, no clock involved',
+          'UUID v7 \u2014 time-ordered per RFC 9562, the modern database default',
+          'ULID \u2014 26 characters, Crockford base32, no I/L/O/U to misread',
+          'Monotonic ULID \u2014 strictly increasing even inside a tight loop',
+        ],
+      },
+      {
+        heading: 'The inspector: what an ID actually carries',
+        paragraphs: [
+          'Paste any UUID or ULID and the inspector reads its structure instead of checking a regex. For UUIDs it reports the version nibble \u2014 v1 through v8, each named \u2014 and the variant bits, and for time-based versions it decodes the embedded timestamp into a real date: v1\u2019s 60-bit Gregorian ticks, v7\u2019s Unix milliseconds. For ULIDs it validates the 26 characters against the Crockford alphabet (rejecting I, L, O and U with the reason) and splits the timestamp part from the randomness part.',
+        ],
+      },
+      {
+        heading: 'What happens on this page',
+        paragraphs: [
+          'Everything runs in this tab: the crypto engine generates the bytes, the formatter shapes them, and the inspector decodes what you paste \u2014 there is no upload code on the page at all. Generated IDs are not secrets, but they are still never sent anywhere; close the tab and nothing remains.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------- convert-units
+  'convert-units': {
+    lede: [
+      'Unit Converter is three converters sharing one page. The unit side carries 73 units across ten categories — length, mass, temperature, volume, data, speed, area, time, pressure, energy — and converts through a table of exact published factors rather than rounded chart values. The number side switches an integer between bases 2 and 36 with bit length, byte length and two\u2019s-complement views, and the Roman side reads numerals under the strict classical grammar, rejecting forgeries with the precise rule they break.',
+      'Everything is computed in this tab: no session, no account, no upload code at all. Type in either field and the other side answers as you type. An \u201cexactly\u201d note appears only when the ratio between two units genuinely terminates — silence is honest where a wrong \u201cexactly\u201d is not.',
+    ],
+    sections: [
+      {
+        heading: 'Why a factor table beats a screenshot',
+        paragraphs: [
+          'A screenshot of a conversion chart gives one pair at a time, pre-rounded; a search box answers like a fortune cookie, confident and unsourced. A factor table converts every pair in a category with one multiplication: the value times the from-unit\u2019s factor, divided by the to-unit\u2019s. Because the factors are definitions rather than measurements — the international inch is exactly 0.0254 m, the avoirdupois pound exactly 0.45359237 kg, the US gallon exactly 231 cubic inches — the result inherits their exactness, and the page can prove a relation like 1 in = 2.54 cm instead of merely asserting it.',
+          'Precision is a control, not a promise: 4 to 12 significant digits, 7 by default, with exponential notation beyond 1e15 where plain decimals would sprawl. Temperature is deliberately not in the factor table at all — degrees are affine, not proportional, so °F = °C × 9/5 + 32 is special-cased with its own formulas. The classic converter bug of multiplying Celsius by 1.8 and calling it Fahrenheit cannot happen here.',
+        ],
+      },
+      {
+        heading: 'The kilobyte mess, with both families labeled',
+        paragraphs: [
+          'Data units are the one place where two honest systems collide. Decimal units step by 10³ — KB, MB, GB, TB — and that is what drive makers quote. Binary units step by 2¹⁰ — KiB, MiB, GiB, TiB — and that is what memory is actually built from and what Windows reports, mislabeled, as \u201cMB\u201d. Neither family is wrong; they disagree by about 2.4% at gigabyte scale and 7% at terabyte scale, which is why a \u201c1 TB\u201d drive shows up as 931 GiB.',
+          'The table keeps both families side by side with their labels intact, so a spec sheet and an OS readout can be compared without a detour through a forum thread — and the exact line states the gap precisely: 1 KB = 0.9765625 KiB.',
+        ],
+      },
+      {
+        heading: 'Bases, and what two\u2019s complement means',
+        paragraphs: [
+          'The rows for bases 2, 8, 10 and 16 are live: edit any one and the others follow, plus a fifth row that speaks any base from 2 to 36. The guard is stated rather than hidden — values beyond 2^53 − 1 (9,007,199,254,740,991) are refused, because plain double-precision numbers stop being exact there, and fractional input is declined with a note that fractional bases are not supported either. Invalid digits are named, not coerced.',
+          'Below the rows the page shows what a computer sees: bit length, byte length, and the two\u2019s-complement view in signed 8/16/32/64-bit widths — how negative integers are actually stored, where −1 becomes FF, FFFF, FFFFFFFF. A value that does not fit a width says how many signed bits it needs instead of wrapping silently; the 64-bit view itself is built with string arithmetic so it stays exact for every value the guard allows.',
+        ],
+      },
+      {
+        heading: 'Roman grammar, privacy, and the honest limits',
+        paragraphs: [
+          'Roman numerals are a grammar, not an alphabet, and the parser enforces it: thousands, then hundreds (CM, CD, D, C), then tens (XC, XL, L, X), then ones (IX, IV, V, I), each place once. IIII, VX and IC are rejected with the precise rule they break, never coerced into a number. The range stops at 3999 — MMMCMXCIX — because classical notation has no symbol above M, and plain text cannot carry the vinculum bar that meant ×1000.',
+          'Privacy needs one line: there is no upload code on this page, so nothing can be sent anywhere. The limits are stated too — double-precision arithmetic is trustworthy to roughly 15 significant digits, bases stop at 2^53 − 1, Roman numerals stop at 3999 — and the page says so out loud instead of letting you discover each one the hard way.',
         ],
       },
     ],

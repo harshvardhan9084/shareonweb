@@ -150,6 +150,16 @@ The only backend besides the Next.js API routes: an independent Bun process.
 | `instant/frame-grab-tool.tsx` | Frame grabber: single stills and batch sweeps from video, contact sheet, PNG/ZIP export (browser decoder + canvas). |
 | `instant/recorder-tool.tsx` | Screen/mic recorder: getDisplayMedia/getUserMedia + MediaRecorder, pause/resume, muted preview, local WebM download. |
 | `instant/upscaler-tool.tsx` | Image upscaler: stepped high-quality resampling + unsharp mask, before/after comparison, PNG/JPEG/WebP export. |
+| `instant/archive-tool.tsx` | Archive Explorer: hand-written ustar reader/writer for .tar/.tar.gz/.tgz/.gz with header checksum verification, entry listing, selection → ZIP, folder → tar.gz, single-file gzip. |
+| `instant/file-tools-tool.tsx` | File Workshop: split (Blob slices + SHA-256 manifest), verified rejoin, bulk rename (find/replace, numbering, case), extension changer, duplicate finder (content hash, labeled fingerprint above 256 MB). |
+| `instant/encrypt-tool.tsx` | Encrypt: AES-256-GCM with PBKDF2-SHA256 (310k iterations), non-extractable WebCrypto keys, KENC1 container for files, Base64 container for text, breach-list password check. |
+| `instant/meta-scrub-tool.tsx` | Metadata Cleaner: hand-written JPEG EXIF (IFD0/Exif/GPS) and PNG chunk (tEXt/zTXt/iTXt/eXIf + CRC) decoders; lossless scrub (JPEG structural segments, PNG critical chunks) with an in-memory proof re-parse. |
+| `instant/jwt-tool.tsx` | JWT Inspector: header/payload decode with exact error positions, claim verdicts as local dates, HS*/RS*/PS*/ES* signature verification via WebCrypto. |
+| `instant/hash-file-batch-tool.tsx` | Batch Checksums: MD5/SHA-1/SHA-256 for many files (WebCrypto ≤ 64 MB, streamed above; incremental MD5), GNU two-space .sha256 export, visual sha256sum -c verification. |
+| `instant/cron-tool.tsx` | Cron Studio: hand-written parser for 5-field crontab and 6-field seconds-first syntax, plain-English sentence, next fire times (366-day cap) and simulated load; Quartz-only syntax refused with explanations. |
+| `instant/diff-tool.tsx` | Text Diff: patience diff with LIS anchors and word-level intra-line highlights, side-by-side/inline views, live stats, unified patch export validated byte-exact against git apply (incl. no-newline EOF markers). |
+| `instant/uuid-tool.tsx` | ID Generator: UUID v4/v7 (RFC 4122/9562) and ULID (Crockford base32, optional monotonic) from crypto.getRandomValues in bulk, plus an inspector decoding version/variant/embedded timestamps. |
+| `instant/convert-units-tool.tsx` | Unit & Number Converter: exact published factors for 8 categories, temperature via real formulas, kB/MB vs KiB/MiB kept separate, BigInt number bases 2–36, strict classical Roman numerals. |
 
 ## `src/components/ui/` — shadcn/ui primitives
 
@@ -231,7 +241,7 @@ the app: `accordion`, `alert`, `alert-dialog`, `aspect-ratio`, `avatar`, `badge`
 | File | Contents |
 | --- | --- |
 | `brand/logo.svg` | Primary wordmark/lockup SVG (source of truth for the brand). |
-| `brand/brandmark.svg` | Symbol-only mark in full color. |
+| `brand/brandmark.svg` | Symbol-only mark in full color (v5 "focus frame": four context brackets around a filled node). |
 | `brand/brandmark-mono.svg` | Monochrome variant of the mark. |
 | `brand/apple-touch.svg` | iOS home-screen icon source. |
 | `brand/maskable.svg` | Android adaptive/maskable icon source (safe-zone padding). |

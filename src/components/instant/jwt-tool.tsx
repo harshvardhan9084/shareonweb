@@ -588,9 +588,13 @@ export function JwtTool() {
           }
 
           const algo =
-            info.family === 'ps'
-              ? { name: 'RSA-PSS', saltLength: info.salt }
-              : { name: info.family === 'rs' ? 'RSASSA-PKCS1-v1_5' : 'ECDSA' }
+            info.family === 'hmac'
+              ? { name: 'HMAC' }
+              : info.family === 'ps'
+                ? { name: 'RSA-PSS', saltLength: info.salt }
+                : info.family === 'rs'
+                  ? { name: 'RSASSA-PKCS1-v1_5' }
+                  : { name: 'ECDSA' }
           const ok = await crypto.subtle.verify(algo, key, sig as unknown as BufferSource, data as unknown as BufferSource)
           if (runId.current !== id) return
           if (ok) {

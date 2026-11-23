@@ -38,6 +38,9 @@ import { MetaScrubTool } from '@/components/instant/meta-scrub-tool'
 import { JwtTool } from '@/components/instant/jwt-tool'
 import { BatchHashTool } from '@/components/instant/hash-file-batch-tool'
 import { CronTool } from '@/components/instant/cron-tool'
+import { DiffTool } from '@/components/instant/diff-tool'
+import { UuidTool } from '@/components/instant/uuid-tool'
+import { ConvertUnitsTool } from '@/components/instant/convert-units-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -67,6 +70,9 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   jwt: JwtTool,
   'hash-file-batch': BatchHashTool,
   cron: CronTool,
+  diff: DiffTool,
+  uuid: UuidTool,
+  'convert-units': ConvertUnitsTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

@@ -188,4 +188,76 @@ console.log('wrote sample.epub')
   console.log('wrote anim.gif (16 frames)')
 }
 
+// sample.tar.gz — real tarball with two files and a folder, for Archive Explorer.
+{
+  const { execFileSync } = await import('node:child_process')
+  const rmSync = (p) => fs.rmSync(p, { recursive: true, force: true })
+  rmSync(join(OUT, 'tardir'))
+  fs.mkdirSync(join(OUT, 'tardir', 'docs'), { recursive: true })
+  fs.writeFileSync(join(OUT, 'tardir', 'readme.txt'), 'Kontivo archive fixture — top-level file.\n')
+  fs.writeFileSync(join(OUT, 'tardir', 'docs', 'notes.md'), '# Notes\n\nNested inside the docs folder for structure checks.\n')
+  execFileSync('tar', ['-czf', join(OUT, 'sample.tar.gz'), '-C', join(OUT, 'tardir'), 'readme.txt', 'docs'])
+  rmSync(join(OUT, 'tardir'))
+  console.log('wrote sample.tar.gz (2 files + 1 folder)')
+}
+
+// photo-text.png — photo.png with two tEXt chunks inserted before IEND,
+// so Metadata Cleaner has real PNG text records to show and scrub.
+{
+  const img = fs.readFileSync(join(OUT, 'photo.png'))
+  // CRC32 (PNG polynomial), bit-by-bit — fine for three chunks
+  const crcTable = new Int32Array(256)
+  for (let n = 0; n < 256; n++) {
+    let c = n
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+    crcTable[n] = c
+  }
+  const crc32 = (buf) => {
+    let c = 0xffffffff
+    for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8)
+    return (c ^ 0xffffffff) >>> 0
+  }
+  const chunk = (type, data) => {
+    const head = Buffer.alloc(4)
+    head.writeUInt32BE(data.length)
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data])
+    const crc = Buffer.alloc(4)
+    crc.writeUInt32BE(crc32(body))
+    return Buffer.concat([head, body, crc])
+  }
+  const text = (kw, value) => chunk('tEXt', Buffer.concat([Buffer.from(kw, 'ascii'), Buffer.alloc(1, 0), Buffer.from(value, 'latin1')]))
+  // split at IEND: everything before it, then our chunks, then IEND
+  const iend = img.indexOf(Buffer.from([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44])) // length 0 + "IEND"
+  const out = Buffer.concat([
+    img.subarray(0, iend),
+    text('Software', 'Kontivo QA'),
+    text('Comment', 'metadata fixture for the scrubber'),
+    img.subarray(iend),
+  ])
+  fs.writeFileSync(join(OUT, 'photo-text.png'), out)
+  console.log('wrote photo-text.png (photo.png + 2 tEXt chunks)')
+}
+
+// jwt-sample.txt — a real HS256 JWT signed here, with iat/exp relative to now,
+// so the inspector shows live expiry distances when the QA runs.
+{
+  const { createHmac } = await import('node:crypto')
+  const b64url = (buf) => Buffer.from(buf).toString('base64url')
+  const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const now = Math.floor(Date.now() / 1000)
+  const payload = b64url(
+    JSON.stringify({
+      sub: 'kontivo-qa',
+      name: 'Kontivo QA Token',
+      role: 'fixture',
+      iat: now,
+      exp: now + 3600,
+      iss: 'kontivo-fixtures',
+    }),
+  )
+  const sig = b64url(createHmac('sha256', 'kontivo-qa-signing-secret').update(`${header}.${payload}`).digest())
+  fs.writeFileSync(join(OUT, 'jwt-sample.txt'), `${header}.${payload}.${sig}\n`)
+  console.log('wrote jwt-sample.txt (HS256, 1 h expiry)')
+}
+
 console.log('fixtures ready in ' + OUT)
