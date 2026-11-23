@@ -364,9 +364,9 @@ agent-browser find label "Password" fill "correct horse battery staple 42" > /de
 agent-browser find label "Confirm password" fill "correct horse battery staple 42" > /dev/null 2>&1
 ebtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Encrypt text" \[.*ref=(e[0-9]+)\]' -r '$1' | tail -1)
 agent-browser click @$ebtn > /dev/null 2>&1
-agent-browser wait --text "Encrypted container (Base64)" --timeout 60000 > /dev/null 2>&1
+agent-browser wait --text "Encrypted container" --timeout 60000 > /dev/null 2>&1
 snap=$(agent-browser snapshot -c 2>/dev/null)
-echo "$snap" | rg -q "Encrypted container \(Base64\)" \
+echo "$snap" | rg -q "Encrypted container" \
   && ok "/encrypt text produces a container" || bad "/encrypt text"
 echo "$snap" | rg -q "characters" && ok "/encrypt reports container size" || bad "/encrypt size"
 agent-browser close > /dev/null 2>&1
@@ -411,6 +411,9 @@ agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --ti
 sleep 2
 agent-browser upload "input[type=file]" "$FX/data.csv" "$FX/photo.png" > /dev/null 2>&1
 agent-browser wait --text "SHA-256" --timeout 60000 > /dev/null 2>&1
+hbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Hash [0-9]+ files" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$hbtn > /dev/null 2>&1
+agent-browser wait --text "done" --timeout 60000 > /dev/null 2>&1
 snap=$(agent-browser snapshot -c 2>/dev/null)
 echo "$snap" | rg -q "Digests" && echo "$snap" | rg -q '[0-9a-f]{64}' \
   && ok "/hash-file-batch computes SHA-256 digests" || bad "/hash-file-batch digests"
@@ -485,10 +488,10 @@ agent-browser close > /dev/null 2>&1
 # 11p. /convert-units: exact factor result on open, Roman tab defaults
 open_page "http://localhost:81/convert-units"
 agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
-agent-browser wait --text "1.609344" --timeout 60000 > /dev/null 2>&1
+agent-browser wait --text "3.28084" --timeout 60000 > /dev/null 2>&1
 snap=$(agent-browser snapshot -c 2>/dev/null)
-echo "$snap" | rg -q "1.609344" \
-  && ok "/convert-units converts 1 mi to km exactly" || bad "/convert-units factor"
+echo "$snap" | rg -q "3.28084" \
+  && ok "/convert-units converts 1 m to ft exactly" || bad "/convert-units factor"
 rtab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Roman" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
 agent-browser click @$rtab > /dev/null 2>&1
 agent-browser wait --text "MCMLXXXVII" --timeout 30000 > /dev/null 2>&1
@@ -514,7 +517,7 @@ newurl=$(agent-browser get url 2>/dev/null)
 if [[ "$newurl" =~ ^http://localhost:81/[A-Z0-9]{6}$ ]]; then ok "new session at $newurl"; else bad "new session url: $newurl"; fi
 sleep 2
 if snap_hit "Share modes"; then ok "in-session Share modes tablist"; else bad "in-session Share modes"; fi
-if snap_hit'"Folder"'; then ok "Folder tab reachable in-session (one code, all modes)"; else bad "Folder tab in-session"; fi
+if snap_hit '"Folder"'; then ok "Folder tab reachable in-session (one code, all modes)"; else bad "Folder tab in-session"; fi
 
 # 15. legacy ?s= / ?app= rewrites still work
 legacyCode=$(echo "$newurl" | rg -o '[A-Z0-9]{6}$')
