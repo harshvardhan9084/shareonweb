@@ -203,3 +203,28 @@ check against a dead server is not a defect.
   a fresh fine-grained PAT (repo `harshvardhan9084/shareonweb`, Contents:
   Read & write) and rewrite that file.
 - Push after every meaningful milestone — always, unprompted.
+
+## 8. Landing page reverted to the simple version (owner directive, 2026-11-23)
+
+Owner verdict on the long-form homepage: "revert the landing page to that
+earlier version which was simple — the last time I asked you merge the
+sharing tools." Scope kept surgical; nothing else touched.
+
+- `src/components/platform/discover-view.tsx` restored verbatim from
+  5776931 (the sharing-tools merge / rebrand commit): simple hero ("Every
+  tool you need…" + "No accounts, no ads, nothing uploaded."), the big
+  session-code example with its one-line explanation, problem → "Three
+  steps, every tool" → directory → "Privacy is a feature, not a settings
+  page" → FAQ. The long "How this place works" HOME_ARTICLE narrative, the
+  ethic strip and the "Two kinds of tools, one rule" block are gone.
+- `src/components/platform/footer.tsx` restored to its short two-sentence
+  privacy copy (the long version shipped only in the reverted passes).
+- Kept, deliberately: `src/app/page.tsx` metadata (OG/Twitter/WebSite
+  JSON-LD) — invisible SEO plumbing the owner explicitly demanded earlier;
+  per-tool long articles (owner asked for long reading there; this directive
+  named only the landing page); app-icon additions.
+- QA: `scripts/final-qa.sh` home-HTML assertions rewritten for the simple
+  page (hero privacy line, code explanation, problem/process/trust sections,
+  FAQPage JSON-LD). Full suite green after revert.
+- Added `FILE_STRUCTURE.md` at the owner's request: gitingest-style map of
+  every meaningful file with a one-line description.

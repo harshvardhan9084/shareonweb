@@ -199,18 +199,19 @@ g=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:81/garbage123")
 if [ "$g" = "404" ]; then ok "/garbage123 404"; else bad "404: $g"; fi
 
 echo "== SEO + ethic checks (server HTML) =="
-# 17. home: ethic stated, families explained, FAQPage JSON-LD present
+# 17. home: the SIMPLE landing page (reverted per owner) — hero privacy line,
+#     code explanation, problem/process/trust sections, FAQPage JSON-LD present
 h=$(curl -s http://localhost:81/)
-echo "$h" | rg -q "Nothing you do here ever lands on our servers" \
-  && ok "home states the ethic up front" || bad "home ethic line"
-echo "$h" | rg -q "Two kinds of tools, one rule" \
-  && ok "hero explains Instant vs Live" || bad "hero families"
-echo "$h" | rg -q "How this place works" \
-  && ok "homepage narrative section present (ethic as story)" || bad "narrative section"
-echo "$h" | rg -q "What actually happens when you zip a file here" \
-  && ok "narrative explains instant mechanics" || bad "narrative instant mechanics"
-echo "$h" | rg -q "What actually happens in a live session" \
-  && ok "narrative explains live mechanics" || bad "narrative live mechanics"
+echo "$h" | rg -q "No accounts, no ads, nothing uploaded" \
+  && ok "home hero states the no-upload ethic" || bad "home ethic line"
+echo "$h" | rg -q "Every session opens with a code like this" \
+  && ok "hero explains the session code" || bad "hero code explanation"
+echo "$h" | rg -q "The usual ways are heavier than the task" \
+  && ok "problem section present" || bad "problem section"
+echo "$h" | rg -q "Three steps, every tool" \
+  && ok "process section present" || bad "process section"
+echo "$h" | rg -q "Privacy is a feature, not a settings page" \
+  && ok "trust section present" || bad "trust section"
 echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home FAQPage JSON-LD"
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
