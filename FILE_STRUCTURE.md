@@ -47,7 +47,9 @@ The only backend besides the Next.js API routes: an independent Bun process.
 
 | File | Contents |
 | --- | --- |
-| `mini-services/relay-service/index.ts` | The real-time relay: plain `node:http` + socket.io server (port 3003). Devices join rooms by 6-character code; it forwards events between all devices in a room, keeps per-room state so late joiners get history, relays WebRTC signaling, and exposes an internal `POST /close/:code` guarded by `x-relay-key`. |
+| `mini-services/relay-service/index.ts` | The real-time relay: plain `node:http` + socket.io server (port 3003). Devices join rooms by 6-character code; it forwards events between all devices in a room, keeps per-room state so late joiners get history, relays WebRTC signaling, exposes an internal `POST /close/:code` guarded by `x-relay-key`, and writes every registry/room mutation through the durable store below. |
+| `mini-services/relay-service/store.ts` | Durable persistence for the relay: pluggable backends chosen from env — Upstash Redis REST (works on hosts without a persistent disk, e.g. Render free tier), an atomic JSON snapshot file (`RELAY_DATA_DIR`) for persistent disks, or memory (default). Session registry + closed markers + room content (texts, chat, strokes, polls, note, app events, completed files ≤ 8 MB) survive restarts for the 24 h session lifetime. |
+| `mini-services/relay-service/README.md` | Relay ops guide: rooms vs sessions (what `/healthz` counts), how persistence works, Render deployment recipes (Upstash free tier / paid disk), env-var table, capacity limits. |
 | `mini-services/relay-service/package.json` | Dependency + dev script of the relay (separate from the app). |
 | `mini-services/relay-service/bun.lock` | Lockfile for the relay's dependencies. |
 

@@ -14,6 +14,12 @@
  */
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Server, type Socket } from "socket.io";
+import {
+  buildRoomSnapshot,
+  createStoreBackend,
+  hydrateRoom,
+  type SnapshotRoomInput,
+} from "./store";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -172,6 +178,55 @@ const socketRooms = new Map<string, string>(); // socket.id -> room code
 const sessions = new Map<string, SessionMeta>(); // session registry (see /api/session)
 
 // ---------------------------------------------------------------------------
+// Durable persistence (see ./store.ts)
+//
+// The registry is written through on create/close/rename; room content is
+// snapshotted on a short debounce after every content mutation. Backends:
+//   redis  — Upstash REST (survives restarts on hosts WITHOUT a persistent
+//            disk, e.g. Render free tier)
+//   disk   — RELAY_DATA_DIR snapshot file (persistent disks / volumes)
+//   memory — default, no env configured (previous behavior)
+// ---------------------------------------------------------------------------
+const store = createStoreBackend();
+const dirtyRooms = new Set<string>();
+const PERSIST_FLUSH_MS = positiveInt(process.env.RELAY_PERSIST_INTERVAL_MS, 4000);
+
+function positiveInt(raw: string | undefined, fallback: number): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
+
+function touchRoom(code: string): void {
+  dirtyRooms.add(code);
+}
+
+function roomTtlSec(code: string): number {
+  const meta = sessions.get(code);
+  if (meta) {
+    return Math.max(60, Math.ceil((new Date(meta.expiresAt).getTime() - Date.now()) / 1000) + 60);
+  }
+  return SESSION_TTL_MS / 1000;
+}
+
+async function flushDirtyRooms(): Promise<void> {
+  if (dirtyRooms.size === 0) return;
+  const codes = Array.from(dirtyRooms);
+  dirtyRooms.clear();
+  for (const code of codes) {
+    const room = rooms.get(code);
+    if (!room) continue;
+    try {
+      // The cast drops live-only fields (participants, receive counters) that
+      // intentionally never enter a snapshot.
+      await store.putRoom(buildRoomSnapshot(room as unknown as SnapshotRoomInput), roomTtlSec(code));
+    } catch (err) {
+      console.error(`[relay-service] failed to persist room ${code}:`, err);
+      dirtyRooms.add(code); // retried on the next flush tick
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 function nowIso(): string {
@@ -266,7 +321,13 @@ async function handleControlRequest(req: IncomingMessage, res: ServerResponse): 
 
   // -- liveness -------------------------------------------------------------
   if (method === "GET" && (url === "/healthz" || url === "/health")) {
-    sendJson(res, 200, { ok: true, uptime: process.uptime(), rooms: rooms.size, sessions: sessions.size });
+    sendJson(res, 200, {
+      ok: true,
+      uptime: process.uptime(),
+      rooms: rooms.size,
+      sessions: sessions.size,
+      store: store.kind,
+    });
     return true;
   }
 
@@ -300,6 +361,11 @@ async function handleControlRequest(req: IncomingMessage, res: ServerResponse): 
       closed: false,
     };
     sessions.set(meta.code, meta);
+    try {
+      await store.putSession(meta); // durable before the code is handed out
+    } catch (err) {
+      console.error(`[relay-service] failed to persist session ${meta.code}:`, err);
+    }
     console.log(`[relay-service] session ${meta.code} registered (appId=${meta.appId})`);
     sendJson(res, 201, sessionResponse(meta));
     return true;
@@ -355,6 +421,9 @@ async function handleControlRequest(req: IncomingMessage, res: ServerResponse): 
         return true;
       }
       meta.title = body.title.trim().slice(0, TITLE_MAX) || null;
+      store.putSession(meta).catch((err) =>
+        console.error(`[relay-service] failed to persist rename for ${code}:`, err),
+      );
       sendJson(res, 200, sessionResponse(meta));
       return true;
     }
@@ -362,7 +431,7 @@ async function handleControlRequest(req: IncomingMessage, res: ServerResponse): 
 
   // -- close ------------------------------------------------------------------
   if (method === "POST" && /^\/close\/[^/]+$/.test(url)) {
-    handleCloseRequest(req, res);
+    await handleCloseRequest(req, res);
     return true;
   }
 
@@ -507,9 +576,10 @@ const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
 /**
  * POST /close/:code with header `x-relay-key`.
  * Broadcasts `room:closed`, disconnects the room's sockets, deletes room
- * state and permanently marks the code as closed (registry row too).
+ * state and permanently marks the code as closed (registry row too, in
+ * memory and in the durable store).
  */
-function handleCloseRequest(req: IncomingMessage, res: ServerResponse): void {
+async function handleCloseRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = (req.url || "/").split("?")[0];
   const match = /^\/close\/([^/]+)$/.exec(url);
   if (!match) {
@@ -547,11 +617,28 @@ function handleCloseRequest(req: IncomingMessage, res: ServerResponse): void {
       if (roomCode === code) socketRooms.delete(sid);
     }
     rooms.delete(code);
+    dirtyRooms.delete(code);
     // Give the room:closed emit a moment to flush before kicking the sockets —
     // disconnecting synchronously races the async transport write.
     setTimeout(() => io.in(code).disconnectSockets(true), 150);
   }
   closedCodes.add(code);
+
+  // Durable close: the registry row flips to closed=true and a closed marker
+  // keeps socket joins refusing this code until the original expiry. The
+  // room snapshot is dropped — its content is gone for good.
+  try {
+    if (meta) {
+      await store.putSession(meta);
+      await store.putClosed({ code, until: meta.expiresAt });
+    } else {
+      await store.putClosed({ code, until: new Date(Date.now() + SESSION_TTL_MS).toISOString() });
+    }
+    await store.forgetRoom(code);
+  } catch (err) {
+    console.error(`[relay-service] failed to persist close for ${code}:`, err);
+  }
+
   console.log(`[relay-service] room ${code} closed via /close endpoint`);
   return sendJson(res, 200, { ok: true });
 }
@@ -692,6 +779,7 @@ io.on("connection", (socket) => {
       ctx.room.texts.splice(0, ctx.room.texts.length - MAX_TEXTS);
     }
     io.to(ctx.code).emit("text:new", item); // ALL sockets, including sender
+    touchRoom(ctx.code);
     ack({ ok: true, item });
   });
 
@@ -700,6 +788,7 @@ io.on("connection", (socket) => {
     if (!ctx) return ack({ ok: false, error: "Not in a room" });
     ctx.room.texts = [];
     io.to(ctx.code).emit("text:cleared", {}); // ALL sockets, including sender
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -795,6 +884,7 @@ io.on("connection", (socket) => {
     if (!file) return ack({ ok: false, error: "Unknown file" });
     file.complete = true;
     socket.to(ctx.code).emit("file:complete", { fileId }); // EXCEPT sender
+    touchRoom(ctx.code); // completed files (within the size cap) now persist
     ack({ ok: true });
   });
 
@@ -806,6 +896,7 @@ io.on("connection", (socket) => {
       return ack({ ok: false, error: "Unknown file" });
     }
     io.to(ctx.code).emit("file:removed", { fileId }); // ALL sockets, including sender
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -847,6 +938,7 @@ io.on("connection", (socket) => {
     }
 
     socket.to(ctx.code).emit("draw:segment", payload); // EXCEPT sender, same payload
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -860,6 +952,7 @@ io.on("connection", (socket) => {
       ctx.room.strokes.splice(idx, 1);
       removed = true;
       socket.to(ctx.code).emit("draw:undo", { strokeId }); // EXCEPT sender
+      touchRoom(ctx.code);
     }
     ack({ ok: true, removed });
   });
@@ -869,6 +962,7 @@ io.on("connection", (socket) => {
     if (!ctx) return ack({ ok: false, error: "Not in a room" });
     ctx.room.strokes = [];
     socket.to(ctx.code).emit("draw:cleared", {}); // EXCEPT sender
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -895,6 +989,7 @@ io.on("connection", (socket) => {
       ctx.room.chat.splice(0, ctx.room.chat.length - MAX_CHAT);
     }
     io.to(ctx.code).emit("chat:new", msg); // ALL sockets, including sender
+    touchRoom(ctx.code);
     ack({ ok: true, item: msg });
   });
 
@@ -931,6 +1026,7 @@ io.on("connection", (socket) => {
     ctx.room.polls.set(poll.id, poll);
 
     io.to(ctx.code).emit("poll:update", { poll: sanitizedPoll(poll) }); // ALL, incl. sender
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -956,6 +1052,7 @@ io.on("connection", (socket) => {
     }
 
     io.to(ctx.code).emit("poll:update", { poll: sanitizedPoll(poll) }); // ALL, incl. sender
+    touchRoom(ctx.code);
     ack({ ok: true });
   });
 
@@ -990,6 +1087,7 @@ io.on("connection", (socket) => {
     ctx.room.doc = doc;
 
     io.to(ctx.code).emit("doc:changed", { doc: { ...doc } }); // ALL, incl. sender (rev confirm)
+    touchRoom(ctx.code);
     ack({ ok: true, doc: { ...doc } });
   });
 
@@ -1057,6 +1155,7 @@ io.on("connection", (socket) => {
         ctx.room.appEvents.splice(0, ctx.room.appEvents.length - MAX_APP_EVENTS);
       }
       io.to(ctx.code).emit("app:event", envelope); // ALL sockets, incl. sender
+      touchRoom(ctx.code);
     } else {
       const to = typeof payload?.to === "string" ? payload.to : "";
       if (to) {
@@ -1086,25 +1185,81 @@ const sweepTimer = setInterval(() => {
   for (const [code, room] of rooms) {
     if (room.participants.size === 0 && room.emptySince !== null && now - room.emptySince > EMPTY_ROOM_TTL_MS) {
       rooms.delete(code);
+      dirtyRooms.delete(code);
+      store.forgetRoom(code).catch((err) =>
+        console.error(`[relay-service] failed to forget room ${code}:`, err),
+      );
       console.log(`[relay-service] swept empty room ${code}`);
     }
   }
-  // Registry rows live 24h max — drop expired ones.
+  // Registry rows live 24h max — drop expired ones (memory + store).
   for (const [code, meta] of sessions) {
     if (new Date(meta.expiresAt).getTime() < now) {
       sessions.delete(code);
       closedCodes.delete(code);
+      dirtyRooms.delete(code);
+      store.forgetSession(code).catch((err) =>
+        console.error(`[relay-service] failed to forget session ${code}:`, err),
+      );
     }
   }
 }, SWEEP_INTERVAL_MS);
 (sweepTimer as unknown as { unref?: () => void }).unref?.();
 
 // ---------------------------------------------------------------------------
+// Persistence flush loop + boot restore + graceful shutdown
+// ---------------------------------------------------------------------------
+const flushTimer = setInterval(() => void flushDirtyRooms(), PERSIST_FLUSH_MS);
+(flushTimer as unknown as { unref?: () => void }).unref?.();
+
+(async () => {
+  try {
+    const state = await store.load();
+    for (const row of state.sessions) {
+      if (!sessions.has(row.code)) sessions.set(row.code, row);
+    }
+    for (const row of state.closed) closedCodes.add(row.code);
+    for (const snap of state.rooms) {
+      if (!rooms.has(snap.code)) {
+        // Participants are connections, not data — a restored room starts
+        // empty (emptySince set) and devices simply rejoin by code.
+        rooms.set(snap.code, hydrateRoom(snap) as unknown as Room);
+      }
+    }
+    if (state.sessions.length > 0 || state.rooms.length > 0 || state.closed.length > 0) {
+      console.log(
+        `[relay-service] restored from ${store.kind}: ${state.sessions.length} sessions, ` +
+          `${state.rooms.length} rooms, ${state.closed.length} closed codes`,
+      );
+    }
+  } catch (err) {
+    console.error("[relay-service] failed to restore persisted state:", err);
+  }
+})();
+
+let shuttingDown = false;
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[relay-service] ${signal} received — flushing durable state before exit`);
+  try {
+    await flushDirtyRooms();
+    await store.flush?.();
+  } catch (err) {
+    console.error("[relay-service] shutdown flush failed:", err);
+  }
+  process.exit(0);
+}
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 httpServer.listen(PORT, () => {
   console.log(
-    `[relay-service] listening on http://0.0.0.0:${PORT} (socket.io path "${SOCKET_IO_PATH}", control API: /healthz, /api/session, /close/:code)`,
+    `[relay-service] listening on http://0.0.0.0:${PORT} (socket.io path "${SOCKET_IO_PATH}", ` +
+      `control API: /healthz, /api/session, /close/:code, persistence: ${store.kind})`,
   );
 });
 

@@ -290,3 +290,53 @@ from the owner-supplied PAT earlier in this session (not re-asked).
 Remaining checklist: Batch 4 (file tools deep + privacy), Batch 5 (dev &
 generators), Batch 6 polish (relay-side session GC on wake, PWA offline
 shells, /video-trim if the owner accepts the 25 MB lazy core).
+
+## 10. Relay persistence — sessions survive restarts for 24 h (this run)
+
+Owner report from their Render deployment: `/healthz` showed
+`{"ok":true,"uptime":1332,"rooms":1,"sessions":2}` and both numbers kept
+resetting, making every existing session unconnectable. Root cause: the
+relay held its session registry AND all room content (texts, chat, file
+buffers, strokes, notes, polls) only in RAM — every restart (deploy, crash,
+Render free tier's 15-minute idle spin-down) wiped both maps, so codes 404'd
+and clients reconnected forever. This is also the true fix for the
+">15 min reconnect" failure mode on hosted deployments: it was never a
+reconnect bug, it was state loss when the process restarted.
+
+What shipped (48/48 checks pass in an end-to-end harness):
+
+1. **`mini-services/relay-service/store.ts`** — durable persistence with
+   three backends chosen from env, in priority order:
+   - `redis` — Upstash Redis REST API via plain fetch (no client dep).
+     Works on hosts WITHOUT a persistent disk, i.e. Render **free tier**:
+     env `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`. Keys carry
+     real TTLs (session expiry + buffer); boot reads use SMEMBERS indexes +
+     pipeline GETs.
+   - `disk` — one JSON snapshot (`RELAY_DATA_DIR/relay-state.json`) written
+     atomically (tmp + rename), debounced; use on Render paid disks /
+     Railway / Fly volumes / any VPS.
+   - `memory` — default, previous behavior, zero config.
+2. **Relay integration** (`index.ts`): registry rows are written through on
+   create (durable BEFORE the code is handed out), rename and close (closed
+   codes stay closed across restarts); every content mutation marks the room
+   dirty and a 4 s flush loop snapshots rooms; sweep and close also delete
+   from the store; boot restores sessions/closed-codes/rooms (participants
+   intentionally excluded — they are connections, restored rooms start
+   empty and devices rejoin); SIGTERM/SIGINT flush before exit;
+   `/healthz` now also reports `store`.
+3. **Honest content policy**: completed files ≤ 8 MB persist with chunks
+   (`RELAY_PERSIST_FILE_MAX`), oversized room snapshots shed files → app
+   events → strokes so texts/chat/note/polls always survive; nothing
+   outlives its session's 24 h expiry in any backend; in-flight transfers
+   and WebRTC media remain live-only by design.
+4. **Verification** (temp harness, run once, deleted before commit): disk
+   backend — SIGTERM flush → restart → code resolvable, closed code stays
+   closed, text/chat/note/poll/stroke/app-event/file+content restored.
+   Redis backend via a mock Upstash REST server — SIGKILL (no graceful
+   shutdown) with only the 4 s interval flush → restart → identical full
+   restore. `bun run lint` clean; full QA suite 89/89 via :81; boot relay
+   hot-reloaded and reports `store":"memory"` with no env (sandbox default).
+5. **`mini-services/relay-service/README.md`** — ops guide answering the
+   owner's question directly: rooms vs sessions (registry vs live rooms),
+   why the numbers reset, and the two Render recipes (Upstash free /
+   persistent disk) with the full env-var table.
