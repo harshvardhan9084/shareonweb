@@ -841,4 +841,280 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ---------------------------------------------------------------- archive
+  archive: {
+    lede: [
+      'Archive Explorer opens the TAR family of archives: plain .tar, gzipped .tar.gz and .tgz, and lone .gz files. It lists every entry with its size, type and timestamp, then lets you take a single file or a whole selection, rebuilt into a ZIP with folder structure intact. The same page builds new .tar.gz archives from loose files or a whole folder, and gzips or decompresses one file at a time.',
+      'There is no tar library behind it. The reader and writer are hand-written ustar implementations running in this tab, and gzip is the browser\u2019s own native compression engine. Nothing is uploaded at any point \u2014 the page has no upload code at all, so the archive never leaves your device, something you can verify in the network tab, which will show nothing but the page itself.',
+    ],
+    sections: [
+      {
+        heading: 'How TAR really works',
+        paragraphs: [
+          'TAR is a format from tape-drive days, and it shows. The archive is a plain sequence of 512-byte blocks: one header block describing the next entry, then that entry\u2019s contents padded up to the next 512-byte boundary, then the next header, and finally two all-zero blocks to mark the end. There is no central directory to index the whole thing \u2014 a reader simply walks the chain from the start, which is exactly what this tool does.',
+          'Each header carries fixed-width fields: the name in 100 bytes, the size and modification time as octal numbers, a type flag for file, folder or link, and a checksum of the header itself, which this tool verifies before trusting anything and reports with a byte offset when it fails. Long paths get two escape hatches: the ustar prefix field adds 155 bytes of path ahead of the name, and GNU tar\u2019s long-name entries or PAX extended headers can override the path entirely. All three are handled here, with PAX kept to its minimal path override.',
+        ],
+      },
+      {
+        heading: 'When it beats the desktop tools',
+        paragraphs: [
+          'Desktop archivers work, but they assume software is installed and you are on your own machine. This page fits the in-between moments.',
+        ],
+        list: [
+          'Inspect a .tar.gz a colleague sent, on a machine where nothing is installed',
+          'Pull two files out of a huge archive instead of unpacking the whole thing',
+          'Hand over a folder as .tar.gz when the recipient expects one, straight from the browser',
+          'Quickly gzip or uncompress a single file, with no terminal and no install',
+        ],
+      },
+      {
+        heading: 'What happens to your files',
+        paragraphs: [
+          'The archive is read into this tab, parsed there, and any output \u2014 a ZIP of your selection, a built .tar.gz, a decompressed file \u2014 is assembled in memory and handed to you as a download. No request ever carries your data; there is no endpoint on this page to send it to, which is a stronger guarantee than any privacy policy can offer.',
+          'Close the tab and the memory is released. Nothing was stored anywhere else, so there is nothing to delete, retain or leak later.',
+        ],
+      },
+      {
+        heading: 'The honest limits',
+        paragraphs: [
+          'Symlinks and hardlinks are listed with their targets but never extracted or followed, and they are skipped when a ZIP is rebuilt \u2014 an archive cannot use them to place files outside the tree you chose. PAX support is the minimal path override, not the whole standard. Extraction is capped at 1 GB uncompressed: the work runs in this tab\u2019s memory, and the cap keeps the page honest on small devices; archives beyond that need a desktop tool, and the page says so plainly.',
+          'ZIP files, for the record, belong to the Zip tool \u2014 this page is the TAR family. If you arrive with a .zip, the Zip tool two doors down handles packing and unpacking it.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- file-tools
+  'file-tools': {
+    lede: [
+      'File Workshop bundles the five file jobs a browser page can actually do without a server: split a file into parts, rejoin the parts, rename a batch, swap extensions and group duplicates. Everything reads from disk with the File API, works inside this tab and comes back as downloads \u2014 the page has no upload code at all, so your files never leave the device, something the network tab will happily confirm.',
+      'The split/merge pair is the serious one. Splitting cuts the file as Blob slices (the bytes are not even loaded a second time), records the original name, size and SHA-256 in a .manifest.json, and names the parts name.part001, part002 and so on. Merging takes those parts in any pick order, sorts them by their numbers, and \u2014 when the manifest is present \u2014 refuses to guess: it checks the total size and re-hashes the restored file before the download starts.',
+    ],
+    sections: [
+      {
+        heading: 'How split and merge prove themselves',
+        paragraphs: [
+          'The manifest is plain JSON carrying the original name, byte size, SHA-256, the part count and the exact size of every part. The hash comes from WebCrypto for files that fit in memory, and from a compact streaming implementation for the ones that do not \u2014 the same FIPS 180-4 algorithm either way, verified to agree byte for byte. At merge time the tool adds up the parts\u2019 sizes and streams the restored bytes through SHA-256 again. A green banner means the restored file is identical to the original; a red one means a part is corrupt, truncated or out of order, and nothing downloads automatically until you say so.',
+          'Without a manifest the merge still works: part numbers are read from the file names, so part003 lands after part002 wherever you picked them, and gaps in the sequence are called out loudly. The result downloads with an honest banner saying integrity could not be verified \u2014 the page never pretends a check happened that did not.',
+        ],
+      },
+      {
+        heading: 'Renaming and extensions: previews, not surprises',
+        paragraphs: [
+          'Bulk rename builds each new name from find/replace, prefix, suffix, numbering and case, applied to the base name with the extension kept as-is, and shows the old \u2192 new table live before anything happens. Files are numbered in name order, and any two files that would land on the same name are flagged in rose \u2014 a folder cannot hold two identical names, and neither can the ZIP of your results.',
+          'The Extension tab is the narrow version: set, replace or append one extension for every picked file, lower or upper case. Both modes end the same honest way \u2014 a browser cannot modify files on disk in place, so applying means downloading renamed copies while the originals stay untouched.',
+        ],
+      },
+      {
+        heading: 'Finding duplicates without a server',
+        paragraphs: [
+          'Duplicate hunting is staged so it stays fast: files are grouped by exact size first (different sizes can never be identical), same-size groups get a fingerprint hashed from the first and last 64 KB, and only surviving candidates get a full SHA-256 \u2014 capped at 256 MB per file. Anything bigger is judged on the fingerprint alone and labelled \u201clikely duplicate \u2014 partial hash\u201d. Each group suggests a keeper, the oldest copy by modification time, and pre-marks the rest so the review starts from a sensible place.',
+          'The honest limit: a browser page cannot delete files on disk. The keeper list (.txt) is the hand-off \u2014 it lists every group with the keeper, the copies and which ones you marked, so the manual cleanup is a checklist instead of an investigation.',
+        ],
+      },
+      {
+        heading: 'What happens to your files',
+        paragraphs: [
+          'Files are read locally, hashed sequentially so the tab stays responsive, and written back as downloads. Nothing is stored, queued or transmitted; close the tab and every buffer is gone. There is no account to delete, because there was never an account.',
+          'The caps are stated rather than discovered: single-file operations refuse anything over 2 GB, parts cap at 500, and the duplicate finder\u2019s full-hash stage stops at 256 MB per file \u2014 all spelled out in the page instead of failing mysteriously.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- encrypt
+  encrypt: {
+    lede: [
+      'Encrypt turns a password into real protection: drop a file and it comes back as a .enc container, or type text and it comes back as an encrypted Base64 block you can paste anywhere. Underneath is AES-256-GCM, the authenticated cipher browsers use for TLS, with the key stretched from your password by PBKDF2-SHA256 at 310,000 iterations. The same page decrypts, and a wrong password refuses to produce anything rather than decrypting to garbage.',
+      'Everything happens in this tab. The key is derived in the browser\u2019s crypto engine and marked non-extractable, so it cannot be pulled out of it; the plaintext never leaves the device, because the page has no upload code at all. There is no account, no server copy and no recovery: lose the password and the data stays encrypted, exactly as promised.',
+    ],
+    sections: [
+      {
+        heading: 'How the encryption actually works',
+        paragraphs: [
+          'A password is a terrible key \u2014 people choose memorable ones, and memorable means guessable. So the password is never used directly. PBKDF2-SHA256 runs it through 310,000 hashing rounds together with a random 16-byte salt, which makes each guess cost real computation and means the same password produces a different key for every operation. The result is a 256-bit AES key the engine never exposes.',
+          'The data is then sealed with AES-GCM and a fresh random 12-byte IV, the mode\u2019s one hard requirement per message. GCM is an authenticated mode: alongside the ciphertext it produces a tag that only the correct key verifies. That is what \u201Cauthenticated\u201D buys you \u2014 a flipped bit, a truncated file or a wrong password does not decrypt to plausible garbage; it refuses outright with \u201CWrong password, or the file is damaged.\u201D',
+        ],
+      },
+      {
+        heading: 'The container, byte by byte',
+        paragraphs: [
+          'Every operation writes the same layout: the five magic bytes \u201CKENC1\u201D, a one-byte version, the 16-byte salt, the 12-byte IV, then the ciphertext \u2014 the table is printed on the page, and a .enc file and the Base64 text container differ only in transport. Reading the header back is how the page decrypts: salt and IV come first, the key is re-derived from your password, the ciphertext is verified and opened.',
+          'The honest compatibility note: this is Kontivo\u2019s own container, not an OpenSSL or GPG format. The primitives are the standard ones, and the spec is short enough to implement from the page, but a .enc file opens with a KENC1 reader \u2014 this page, today \u2014 and nothing else by default.',
+        ],
+      },
+      {
+        heading: 'When this is the right tool',
+        paragraphs: [
+          'It fits the moments where installing anything is heavier than the job itself.',
+        ],
+        list: [
+          'Seal a document before emailing it, so the attachment is inert without the password',
+          'Put a secret into a chat as a Base64 block that means nothing until decrypted',
+          'Protect a file on a borrowed or locked-down machine where you cannot install software',
+          'Hand someone a .enc file plus the password over a second channel, and nothing else reveals the contents',
+        ],
+      },
+      {
+        heading: 'What happens to your data, and the honest limits',
+        paragraphs: [
+          'The key derivation, the encryption and the decryption all run in this tab\u2019s engine; no request carries the password, the key or a single byte of your data, which the network tab will confirm. Close the tab and the key, the plaintext and the memory are gone \u2014 there is nothing stored anywhere else to breach or retain.',
+          'The limits are stated, not hidden. Files are held whole in this tab\u2019s memory, so anything over 256 MB is refused up front \u2014 those jobs belong to a desktop tool such as age or GPG, which also serve command-line workflows and cross-tool formats better. There is no password recovery, by design. And the strength meter cannot save a leaked password: if the phrase is reused anywhere else, assume it is already known and pick another.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- meta-scrub
+  'meta-scrub': {
+    lede: [
+      'Metadata Cleaner opens a photo and shows you what it quietly carries: the camera that took it, the software that touched it, when it was taken, and \u2014 on many phones \u2014 the exact GPS coordinates of where. The viewer is a hand-written EXIF and PNG-chunk reader, not a library wrap: JPEG segment markers are walked one by one, the TIFF directories inside the EXIF block are decoded tag by tag, and PNG chunks are listed with their checksums verified. Then one press strips all of it.',
+      'The scrub is byte surgery, not a re-encode. A JPEG is rebuilt from its structural segments alone \u2014 quantization tables, frame, Huffman tables, scan data, end marker \u2014 so the pixels come out byte-identical to the original; nothing is decompressed, nothing is recompressed. A PNG is rebuilt from its critical chunks with checksums recomputed. The cleaned file is then re-parsed in memory as proof: the page shows the record count it finds afterwards, instead of promising the metadata is gone.',
+    ],
+    sections: [
+      {
+        heading: 'What EXIF actually leaks',
+        paragraphs: [
+          'EXIF is a small database taped onto the front of a JPEG, and phone cameras fill it generously. The Make, Model, body serial number and lens serial number identify the device \u2014 sometimes down to the individual unit. DateTimeOriginal records the moment of capture to the second. And the GPS IFD, when the camera had a fix, stores latitude and longitude as three rational numbers each \u2014 which this page converts to decimal degrees with the hemisphere spelled out, so you can see exactly how locating that caf\u00e9 photo is.',
+          'Beyond the headline fields there is a longer tail: Software (which editor or uploader touched the file last), UserComment and ImageDescription (free text some cameras fill), thumbnails that can outlive an edit, and XMP blocks from Adobe tools. The table on the page decodes every tag it can name and reports the ones it cannot, so the verdict card \u2014 \u201CFound: 63 metadata records, including GPS location\u201D \u2014 counts real entries, not vibes.',
+        ],
+      },
+      {
+        heading: 'How the lossless strip works',
+        paragraphs: [
+          'A JPEG file is a chain of segments: a start marker, optional metadata segments, then the coding tables, the frame header, the entropy-coded scan and an end marker. The strip walks that chain and copies only the segments a decoder actually needs, skipping every APPn (EXIF, ICC, XMP, Photoshop), every COM comment, and multi-picture extensions. The scan data is never touched, so what comes out renders identically to what went in \u2014 there is no quality slider because no pixel is re-computed.',
+          'PNG takes the other path: its format is a sequence of typed chunks, and only four are critical (IHDR, PLTE, IDAT, IEND). The rebuild copies those, recomputes each checksum, and drops everything ancillary \u2014 text chunks, the eXIf block, timestamps, color profiles. When a JPEG\u2019s structure is too unusual to walk safely, the page falls back to a canvas re-encode at quality 0.92 and labels that honestly: pixels touched, metadata gone.',
+        ],
+      },
+      {
+        heading: 'What happens to your photos',
+        paragraphs: [
+          'The photo is read into this tab, parsed there, rebuilt there, and handed back as a download named after the original plus \u201c-clean\u201d. There is no upload code on this page at all, so the bytes never leave the device \u2014 the strongest privacy statement a tool can make is that it has nowhere to send them.',
+          'The proof pass is part of that honesty: after scrubbing, the cleaned bytes are re-parsed with the same reader, and the verdict card shows what it finds \u2014 normally zero records, no GPS. If it ever found something, the page would say so rather than claim a clean bill.',
+        ],
+      },
+      {
+        heading: 'The honest limits',
+        paragraphs: [
+          'Formats are detected by magic bytes, and only JPEG and PNG are supported: HEIC/HEIF \u2014 the iPhone default \u2014 cannot be parsed here, and the page says so plainly instead of pretending. Files cap at 100 MB because the scrub holds the photo in memory more than once. Removing the ICC color profile alongside the metadata shifts nothing on ordinary sRGB photos, but wide-gamut photos can render slightly differently without it.',
+          'And one thing no local tool can change: platforms usually strip metadata on upload \u2014 but email, chat attachments and direct file shares do not. If you post a photo somewhere, check what arrives, not just what you sent.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- jwt
+  jwt: {
+    lede: [
+      'A JWT looks like an encrypted blob, and that first impression causes most of the trouble around it. It is not encryption at all: a compact token is three base64url segments joined by dots, and anyone holding one can read every claim by decoding the first two. JWT Inspector does exactly that \u2014 paste a token and the header and payload appear as readable JSON, each standard claim explained in plain language, every epoch second turned into a real date in your local time.',
+      'Everything happens in this tab. The decoder is hand-written base64url with strict UTF-8 checking, the signature checks run in the browser\u2019s own WebCrypto engine, and there is no upload code on the page: the token and any key you paste never leave the device. Verification answers one narrow question \u2014 were these exact bytes signed by this key \u2014 and the page is equally clear about what it does not answer.',
+    ],
+    sections: [
+      {
+        heading: 'Three segments, not encryption',
+        paragraphs: [
+          'The header names the scheme: alg, sometimes typ, often a kid saying which key signed this. The payload carries the claims \u2014 iss for who issued the token, sub for who it is about, aud for who may accept it, exp and nbf for its lifetime, iat for when it was minted, jti as a unique id, scope for embedded permissions. The signature is the third segment: proof, produced with the issuer\u2019s key, that neither of the first two has changed since signing. Base64url is a transport encoding, not a cipher \u2014 decoding a JWT is reading it, and every party between you and the issuer can read it too. Confidentiality needs JWE or another layer; a JWT offers integrity and identity, not secrecy.',
+          'Because the encoding is so regular, honest decoding lives at the edges: missing padding, URL-safe characters, segments whose bytes are not valid UTF-8. This page reports exactly what failed \u2014 which part, at which byte \u2014 instead of a bare \u201Cinvalid\u201D with nothing behind it.',
+        ],
+      },
+      {
+        heading: 'Claims and clocks',
+        paragraphs: [
+          'exp, nbf and iat are NumericDates: seconds since 1970, deliberately timezone-free. The page renders them as local dates and as distances \u2014 \u201Cexpires in 3 h 12 m\u201D, \u201Cissued 2 h ago\u201D \u2014 and computes VALID, EXPIRED and NOT YET VALID against one clock only: your device\u2019s. That clock ticks next to the verdict with an honest note: if the device clock is wrong, the badges are wrong too. Real servers tolerate a small skew, a minute or two either side, for exactly this reason.',
+          'A token without exp never expires on its own \u2014 the badge says so plainly instead of inventing an expiry. aud can be a string or an array; both are shown, and either way the decision \u201Cam I the audience?\u201D belongs to the app that accepts the token, not to this page.',
+        ],
+      },
+      {
+        heading: 'Verifying a signature locally',
+        paragraphs: [
+          'HS* tokens are symmetric: the same secret signs and verifies, so pasting the issuer\u2019s shared secret lets WebCrypto recompute the HMAC over header.payload and compare it. RS*, PS* and ES* tokens are asymmetric: a private key signs, and the public key \u2014 pasted here as a JWK, or as a whole JWKS document from which the key matching the header\u2019s kid is picked \u2014 is enough to check it. RSA-PSS uses the digest-sized salt the JWS standard mandates, and ES* signatures arrive as raw r\u2016s bytes that are length-checked before the curve ever sees them.',
+          'alg \u201Cnone\u201D gets the loudest treatment on the page: an unsigned token is just JSON wearing a token costume, and this tool never calls it verified. What a verified result proves is stated just as plainly \u2014 the signature matches the key you provided. Not that the key belongs to a legitimate issuer, and not that the claims are safe to accept.',
+        ],
+      },
+      {
+        heading: 'What happens to your tokens, and the honest limits',
+        paragraphs: [
+          'There is no upload code, no fetch and no storage: the token, the secret and the key exist only in this tab\u2019s component state, and the Clear button wipes them in one press. Even so, treat every pasted secret like a password \u2014 test tokens are what this page is for.',
+          'The limits are stated, not hidden: EdDSA (Ed25519) is not verified here because browser WebCrypto support is still uneven, the jwks_uri is never fetched \u2014 you paste the key yourself \u2014 and the timing of the signature comparison is the engine\u2019s, not this page\u2019s.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------- hash-file-batch
+  'hash-file-batch': {
+    lede: [
+      'A checksum answers one question about one file: are these bytes still exactly what they were? A checksum list asks it about a whole folder at once \u2014 one line per file, a manifest you can re-check tomorrow, on another machine, or after a backup restore. Batch Checksums builds that manifest: drop a pile of files or pick a folder, and every file is hashed with MD5, SHA-1 or SHA-256 in a sequential queue that shows live progress, per-file status and elapsed time.',
+      'The output speaks the format the command line already uses. The .sha256, .sha1 and .md5 exports follow the GNU two-space convention, so a list saved here verifies on any Linux machine with sha256sum -c \u2014 or verifies right here, by pasting any checksum list into the page and reading a color-coded verdict for every entry. Nothing is uploaded at any point: the page has no upload code at all.',
+    ],
+    sections: [
+      {
+        heading: 'Why checksum lists exist',
+        paragraphs: [
+          'Downloads publish them so you can prove a file arrived intact; backup scripts write them so a restore can be audited; archivists keep them as the receipt for what a collection contained on a given day. The list is more useful than the hash alone because it binds the hashes to names and sizes in one place \u2014 a single file hash tells you nothing once you forget which file it belonged to.',
+          'This tool covers both sides of that exchange. Produce: hash a folder and export the manifest in a format native tools read. Check: paste any list \u2014 from a download page, a previous run of this tool, or a Linux machine \u2014 and every entry is matched against your files by relative path or filename, then marked OK, MISMATCH or NOT FOUND with the counts on top.',
+        ],
+      },
+      {
+        heading: 'Hashing a queue without freezing the page',
+        paragraphs: [
+          'WebCrypto hashes a whole file in one call, which is perfect until the file is bigger than the tab wants to hold in memory. Files up to 64 MB go that route. Anything larger is streamed through incremental implementations of the same algorithms: the file is read 8 MB at a time, each slice feeds MD5, SHA-1 and SHA-256 state machines that carry partial 64-byte blocks across chunk boundaries, and the page yields to the browser between slices so scrolling and clicking stay alive. The result is byte-identical to a one-shot hash \u2014 a self-test button proves it against the published \u201Cabc\u201D vectors, against WebCrypto itself, and against one-shot versus sliced input.',
+          'The queue runs sequentially by design: one file at a time keeps disk reads and CPU from fighting each other, the progress bar counts files and bytes honestly, and the cancel button stops cleanly between chunks \u2014 finished results are kept and the interrupted row stays pending for a resume.',
+        ],
+      },
+      {
+        heading: 'The verify pass: sha256sum -c, made visual',
+        paragraphs: [
+          'The command-line verify prints one terse line per file. This page does the same match \u2014 entries are parsed from the three common line forms, compared digest by digest \u2014 but renders the outcome as a table: emerald OK, rose MISMATCH with the computed value shown beside it, amber NOT FOUND for names with no matching file. The page also reports the reverse direction the command line ignores: hashed files the pasted list never mentions.',
+          'Honest edges are handled rather than hidden: unparseable lines are counted, SHA-512-length hashes are skipped with a note because the tool does not compute SHA-512, and a file that was found but never hashed for that algorithm says so plainly instead of pretending to verify.',
+        ],
+      },
+      {
+        heading: 'What happens to your files, and the honest limits',
+        paragraphs: [
+          'Every checksum is computed in this tab. Files are read with the browser File API, hashed in memory, and never sent anywhere \u2014 the page contains no upload code to audit, and the browser\u2019s network tab will show nothing but the page itself. Pasted checksum lists are matched in memory the same way, and the self-test runs on the same device.',
+          'The limits are stated, not discovered: files over 2 GB are refused up front (browser file handling gets unreliable past that size \u2014 sha256sum or certutil handle those better), the whole queue carries a soft cap of 8 GB that warns rather than blocks, and the exports write filenames as-is: names with plain spaces parse correctly in the two-space format, but GNU tools backslash-escape names containing backslashes or newlines and this page does not. And MD5 remains fine for integrity but broken for secrecy \u2014 treat an MD5 match as proof the file is whole, never as proof it is authentic.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- cron
+  cron: {
+    lede: [
+      'A cron expression is five (or six) small fields that decide when a job runs, and it is read wrong constantly. Cron Studio parses the expression into its exact set of values, writes the schedule out as a plain English sentence, and then shows the part that actually matters: the next fire times, computed against your device clock. Standard 5-field crontab syntax and 6-field seconds-first (the Quartz and lockfile convention) are both read, and the field count is detected for you \u2014 with a toggle to force either reading.',
+      'The parser is hand-written for this page; there is no cron library. Names, ranges, steps and lists expand into the exact values they mean, and when something cannot be parsed the error names the field and the exact offending value. Nothing is sent anywhere: the expression, the parse and the schedule math all happen in this tab.',
+    ],
+    sections: [
+      {
+        heading: 'What the fields mean',
+        paragraphs: [
+          'Five fields, left to right: minute (0-59), hour (0-23), day-of-month (1-31), month (1-12, or JAN-DEC) and day-of-week (0-7, where 0 and 7 are both Sunday, or SUN-SAT). A sixth field in front means seconds, and each field accepts a single value, a range like 9-17, a step like */5 or 9-17/2, a list like 0,15,30, and any combination of those. The field chips under the input show what every field expanded to, value by value \u2014 */5 in the minute field becomes 0, 5, 10, \u2026 55, and nothing is left to guess about what the asterisk covered.',
+          'The plain-English sentence is the tool\u2019s reading, not a guarantee \u2014 the next-runs grid below it is the ground truth. That order matters: a description can be fluent and still subtly wrong, but a grid of computed fire times cannot.',
+        ],
+      },
+      {
+        heading: 'The day-of-month OR day-of-week subtlety',
+        paragraphs: [
+          'The most misread rule in cron: when day-of-month and day-of-week are BOTH restricted, a day fires when EITHER matches \u2014 not both. 0 0 13 * FRI fires on the 13th of every month and on every Friday, while the person writing it usually meant \u201Cthe 13th, but only if it lands on a Friday\u201D \u2014 which cron cannot express in one line. Whenever the parser sees both day fields restricted, the page says so in plain words beside the schedule, so the reading is never silent.',
+          'If one of the two day fields is a plain *, the intuitive rule applies and both conditions must hold. The parser treats a bare ? in a day field the same way \u2014 it is Quartz syntax that reads exactly like * \u2014 and flags it, while L, W, # and year fields are refused with an error naming the field and the character, because guessing them would risk a silently wrong schedule.',
+        ],
+      },
+      {
+        heading: 'Why the next-run preview catches bugs',
+        paragraphs: [
+          'Descriptions lie by omission; a grid of upcoming fire times cannot. Schedule 0 0 31 * * and the preview shows the honest gap: seven months of the year have no 31st, so the job goes quiet for weeks at a stretch. A step in the wrong field, a weekday off by one, a monthly job that lands on the 1st \u2014 all of it becomes visible in the first rows, each carrying the full local date and its distance from now.',
+          'The per day, week and month load figures are labeled as a simulation: they are counted by walking one representative window on this device, and other months differ when weekdays shift or months run short. The search for fire times caps at 366 days ahead and says so plainly when nothing matches \u2014 day-of-month 31 in a 30-day month never fires, and no description would have warned you.',
+        ],
+      },
+      {
+        heading: 'What happens to your data, and the honest limits',
+        paragraphs: [
+          'There is no upload code on this page. The expression is parsed in this tab, the fire times are computed in your local timezone against your device clock \u2014 the only clock that matters here, so a wrong device clock shifts every computed run with it. Nothing is stored; close the tab and it is gone.',
+          'Timezones are the honest limit worth repeating: your crontab fires in the timezone of the machine it runs on, which may not be the one in your pocket. And @reboot cannot be previewed at all, since firing at boot has no wall-clock time behind it \u2014 the other @-shortcuts expand to their expressions automatically.',
+        ],
+      },
+    ],
+  },
 }

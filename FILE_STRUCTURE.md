@@ -4,7 +4,7 @@ A map of every useful file in this repository — what each one contains and why
 in the spirit of gitingest: read top to bottom and you understand the whole app without
 opening a single file.
 
-Toolhive is a platform of small web tools. Two families: **Instant** tools run entirely in
+Kontivo is a platform of small web tools. Two families: **Instant** tools run entirely in
 your browser (files never leave the device), **Live** tools connect two or more devices
 through a 6-character session code. One dynamic route serves every tool page and every
 session path; a small socket.io relay forwards events between the devices in a session.

@@ -3,7 +3,7 @@
 // Discover — the index. Do-it-first: the working controls (start a session,
 // search the catalog, join with a code) sit in the first viewport. Below the
 // action, the page follows the classic flow — problem, value, how it works,
-// the catalog, trust, answers, one last call — adapted to Toolhive rather
+// the catalog, trust, answers, one last call — adapted to Kontivo rather
 // than copied from a template. The tool directory renders as individual cards
 // on small screens (a dense paragraph of links is unreadable) and as hairline
 // rows on large ones. Doctrine: DESIGN.md at the repo root.
@@ -327,7 +327,7 @@ export function DiscoverView() {
           </h2>
           <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-muted-foreground">
             Moving one photo, sharing one link, meeting for five minutes: each usually drags a
-            cable, an upload or a sign-up behind it. Toolhive strips that back to a single
+            cable, an upload or a sign-up behind it. Kontivo strips that back to a single
             idea: open a session, hand over a code, and the work happens live between the
             browsers in the room.
           </p>

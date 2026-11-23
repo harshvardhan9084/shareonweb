@@ -4,6 +4,7 @@
 
 import { cn } from '@/lib/utils'
 import {
+  Archive,
   ArrowRightLeft,
   AudioLines,
   Baby,
@@ -14,8 +15,12 @@ import {
   Camera,
   Captions,
   CircleDot,
+  Clock,
   Code,
   Expand,
+  Eraser,
+  FileCog,
+  FileKey,
   FileSearch,
   FileStack,
   FileText,
@@ -29,6 +34,8 @@ import {
   Images,
   KeyRound,
   LifeBuoy,
+  ListChecks,
+  Lock,
   MapPin,
   MessagesSquare,
   Mic,
@@ -102,6 +109,13 @@ const ICON_MAP: Record<string, LucideIcon> = {
   frame: Frame,
   'circle-dot': CircleDot,
   expand: Expand,
+  archive: Archive,
+  'file-tools': FileCog,
+  encrypt: Lock,
+  'meta-scrub': Eraser,
+  jwt: FileKey,
+  'hash-file-batch': ListChecks,
+  cron: Clock,
   // category + brand icons
   way: Waypoints,
   screencast: Monitor,
@@ -112,8 +126,8 @@ export function AppIcon({ name, className }: { name: string; className?: string 
   return <Icon className={className} aria-hidden="true" />
 }
 
-// The Toolhive "hive" mark (v4): three honeycomb cells — a filled cyan cell
-// on top, two green cells beneath. Drawn inline (not an <img>) so the
+// The Kontivo "focus frame" mark (v5): four context brackets around a filled
+// node. Drawn inline (not an <img>) so the
 // favicon, the PWA icons and the in-app marks are the same drawing. Source
 // of truth: brand/*.svg (see brand/README.md); geometry mirrored there —
 // keep both in sync.
@@ -128,13 +142,19 @@ export function BrandMark({
 }) {
   const node = variant === 'mono' ? 'currentColor' : 'var(--brand-node)'
   const edge = variant === 'mono' ? 'currentColor' : 'var(--brand-edge)'
+  // Kontivo mark (v5): a focus frame — four context brackets around a filled
+  // node. The visual grammar of "context aware": attention drawn to the thing
+  // in the middle, framed by what surrounds it. Keep in sync with
+  // brand/brandmark.svg and brand/brandmark-mono.svg.
   return (
     <svg viewBox="0 0 512 512" className={className} aria-hidden="true" focusable="false">
-      <path d="M170 178 L213 103 L299 103 L342 178 L299 252 L213 252 Z" fill={node} />
-      <g fill="none" stroke={edge} strokeWidth="16" strokeLinejoin="round">
-        <path d="M80 336 L123 261 L209 261 L252 336 L209 411 L123 411 Z" />
-        <path d="M260 336 L303 261 L389 261 L432 336 L389 411 L303 411 Z" />
+      <g fill="none" stroke={edge} strokeWidth="40" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M96 208 L96 96 L208 96" />
+        <path d="M304 96 L416 96 L416 208" />
+        <path d="M416 304 L416 416 L304 416" />
+        <path d="M208 416 L96 416 L96 304" />
       </g>
+      <circle cx="256" cy="256" r="64" fill={node} />
     </svg>
   )
 }
@@ -154,7 +174,7 @@ export function BrandLockup({
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <BrandMark className={markClassName} />
-      <span className={cn(wordClassName, 'text-[var(--brand-wordmark)]')}>Toolhive</span>
+      <span className={cn(wordClassName, 'text-[var(--brand-wordmark)]')}>Kontivo</span>
     </span>
   )
 }

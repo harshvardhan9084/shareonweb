@@ -1,6 +1,6 @@
 # relay-service
 
-Signaling + room-state relay for Toolhive's live session tools. Plain
+Signaling + room-state relay for Kontivo's live session tools. Plain
 node:http server + socket.io (Bun runtime), one port.
 
 - **socket.io path `/`** — all device traffic: join, texts, chat, file

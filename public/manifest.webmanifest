@@ -1,6 +1,6 @@
 {
-  "name": "Toolhive — practical tools across your devices",
-  "short_name": "Toolhive",
+  "name": "Kontivo — practical tools across your devices",
+  "short_name": "Kontivo",
   "description": "Send files between your phone and your computer, share text instantly, draw together, run instant polls. No accounts. Sessions expire on their own.",
   "id": "/",
   "start_url": "/?source=pwa",

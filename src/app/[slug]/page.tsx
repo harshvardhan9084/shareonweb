@@ -40,7 +40,7 @@ function toolJsonLd(appId: string): string {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Toolhive', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 1, name: 'Kontivo', item: `${SITE_URL}/` },
         {
           '@type': 'ListItem',
           position: 2,
@@ -144,7 +144,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   // Session deep links are private and ephemeral — never indexed.
   if (CODE_PATH_RE.test(slug.toUpperCase())) {
     return {
-      title: 'Join a Toolhive session',
+      title: 'Join a Kontivo session',
       robots: { index: false, follow: false },
     }
   }

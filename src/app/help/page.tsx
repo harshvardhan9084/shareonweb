@@ -7,7 +7,7 @@ import { SITE_URL, SITE_NAME } from '@/lib/site'
 export const metadata: Metadata = {
   title: `Help Center · ${SITE_NAME}`,
   description:
-    'How joining works, how sessions expire, and answers to common questions about every Toolhive tool.',
+    'How joining works, how sessions expire, and answers to common questions about every Kontivo tool.',
   alternates: { canonical: `${SITE_URL}/help` },
 }
 

@@ -47,6 +47,13 @@ const SEO_TITLES: Record<string, string> = {
   'frame-grab': 'Frame Grabber — pull still PNG frames from any video, one shot or the whole clip',
   recorder: 'Screen & Mic Recorder — capture your screen or voice to a file, never uploaded',
   upscaler: 'Image Upscaler — enlarge photos 2–4× with stepped resampling and sharpening, locally',
+  archive: 'Archive Explorer — open TAR and tar.gz archives, list and extract entries, locally',
+  'file-tools': 'File Workshop — split, merge, rename and de-duplicate files in your browser',
+  encrypt: 'Encrypt — password-encrypt files and text with AES-256-GCM, never uploaded',
+  'meta-scrub': 'Metadata Cleaner — view and strip EXIF & GPS from photos, losslessly, in your browser',
+  jwt: 'JWT Inspector — decode JSON Web Tokens and verify signatures locally',
+  'hash-file-batch': 'Batch Checksums — MD5 & SHA-256 for many files, with sha256sum-compatible lists',
+  cron: 'Cron Studio — parse, explain and preview cron expressions in your browser',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -113,6 +120,20 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Record the screen, a window or a tab — with mic narration mixed in — or capture voice alone. Pause, resume, stop and download the WebM. Nothing leaves your device.',
   upscaler:
     'Enlarge images 2×, 3× or 4× with stepped high-quality resampling plus unsharp sharpening. Before/after sizes shown side by side. Runs in your browser.',
+  archive:
+    'Open .tar and .tar.gz archives, list every entry, extract a selection to a ZIP, build tar.gz from a folder or gzip one file. In your browser, nothing uploaded.',
+  'file-tools':
+    'Split files into verified parts and rejoin them, bulk-rename a batch with live preview, swap extensions and find duplicates. Runs in your browser — nothing uploaded.',
+  encrypt:
+    'Encrypt files or text with a password: AES-256-GCM plus PBKDF2 key stretching at 310,000 iterations, all inside your browser tab. No upload, no account, no recovery.',
+  'meta-scrub':
+    'See every EXIF record a photo carries — camera, GPS coordinates, timestamps — then strip them losslessly: JPEG segment surgery, PNG critical-chunk rebuild. Runs in your browser, nothing uploaded.',
+  jwt:
+    'Decode a JWT’s header and payload with exact error positions, read every claim as a local date with expiry distances, and verify HS*, RS*, PS* or ES* signatures with WebCrypto — all in your browser, nothing uploaded.',
+  'hash-file-batch':
+    'Checksum many files or a whole folder with MD5, SHA-1 and SHA-256, export sha256sum-compatible lists and verify pasted checksums visually. Nothing uploads.',
+  cron:
+    'Read a cron expression in plain English, preview its next fire times from your device clock and simulate its per day/week/month load. Hand-written parser, real Vixie rules, nothing uploaded.',
 }
 
 /**
@@ -129,7 +150,7 @@ export const APP_FAQS: Record<string, Faq[]> = {
     },
     {
       q: 'What happens if the connection drops mid-transfer?',
-      a: 'Toolhive reconnects on its own, and failed files stay queued on your side so you can resend them with one tap once the link is back.',
+      a: 'Kontivo reconnects on its own, and failed files stay queued on your side so you can resend them with one tap once the link is back.',
     },
     {
       q: 'Do text, files and folders need separate codes?',
@@ -538,12 +559,158 @@ export const APP_FAQS: Record<string, Faq[]> = {
       a: 'An unsharp-mask pass: it exaggerates local contrast along edges. Small amounts crisp up enlargement; heavy amounts start to halo — the preview shows it honestly.',
     },
   ],
+  archive: [
+    {
+      q: 'Should I use this or the Zip tool?',
+      a: 'ZIP files belong to the Zip tool — packing, unpacking and batch downloads all live there. Archive Explorer is for the TAR family: .tar, .tar.gz, .tgz and lone .gz files. Both run entirely on your device, so choosing wrong costs nothing but one tab.',
+    },
+    {
+      q: 'What happens to symlinks inside a TAR?',
+      a: 'They are listed with the path they point to, but never extracted or followed. Links are skipped when the ZIP of your selection is rebuilt, so an archive cannot place files outside the tree you chose.',
+    },
+    {
+      q: 'Is there a size limit?',
+      a: 'Extraction is capped at 1 GB uncompressed. The work runs in this tab’s memory on purpose, and the cap keeps that honest on small devices — the page shows the archive’s uncompressed total before you extract anything.',
+    },
+    {
+      q: 'Are my archives uploaded anywhere?',
+      a: 'No. There is no upload code on this page at all: the archive is parsed and rebuilt in this tab, and the only network traffic is the page itself. The browser’s network tab will confirm it.',
+    },
+  ],
+  'file-tools': [
+    {
+      q: 'Can it delete the duplicate files from my disk?',
+      a: 'No — and no browser page can. The sandbox only lets a page hand you downloads, never modify files on disk. File Workshop marks a suggested keeper per group (the oldest copy) and gives you a keeper list (.txt), but removing the duplicates stays a manual step on your side.',
+    },
+    {
+      q: 'Is merging split parts safe?',
+      a: 'When the manifest is picked, every claim is checked: the total size must match the recorded original, and the rejoined bytes are streamed through SHA-256 again and compared with the hash taken at split time. A green banner means the restore is byte-identical; a mismatch stops the automatic download and tells you which verdict failed instead of handing you a broken file.',
+    },
+    {
+      q: 'How big can the files be?',
+      a: 'Single-file operations — split and merge — are capped at 2 GB, because the work runs in this tab and the cap keeps it honest on ordinary devices. Duplicate detection full-hashes files up to 256 MB each; bigger files are judged on their first and last 64 KB and labelled “likely duplicate — partial hash”.',
+    },
+    {
+      q: 'Does renaming change my original files?',
+      a: 'No. A browser cannot rename files on disk. Applying downloads copies with the new names — individually or as one ZIP — and the originals stay exactly where and as they were.',
+    },
+    {
+      q: 'Are my files uploaded anywhere?',
+      a: 'No. There is no upload code on this page: splitting, hashing, renaming and duplicate detection all read your files locally in this tab, and the only network traffic is the page itself.',
+    },
+  ],
+  encrypt: [
+    {
+      q: 'Is this compatible with OpenSSL, GPG or age?',
+      a: 'No, and it does not pretend to be. The primitives are the standard ones — AES-256-GCM and PBKDF2-SHA256 — but the wiring is Kontivo\u2019s own KENC1 container format, so a .enc file made here opens with this page, not with those tools. The full byte layout is printed on the page, so another developer could implement a reader from the spec.',
+    },
+    {
+      q: 'What happens if I lose the password?',
+      a: 'The data is unrecoverable. There is no recovery, no reset and no backdoor — that is what working encryption means. Keep the password in a password manager, and encrypt again before deleting anything you still care about.',
+    },
+    {
+      q: 'How strong is the encryption?',
+      a: 'The cipher is AES-256-GCM, the authenticated mode browsers use for TLS, and the key is stretched from your password with PBKDF2-SHA256 at 310,000 iterations plus a fresh random salt and IV per operation. That makes brute force expensive — but the weakest link stays the password itself, which is why the page shows an entropy estimate and checks it against the most common passwords.',
+    },
+    {
+      q: 'What if I type the wrong password when decrypting?',
+      a: 'GCM authentication fails and the page reports honestly: \u201CWrong password, or the file is damaged.\u201D It never decrypts to garbage, because an authenticated cipher refuses to produce output when the tag does not check out.',
+    },
+    {
+      q: 'Does anything get uploaded?',
+      a: 'No. There is no upload code on the page at all: the key is derived in this tab, the file is encrypted or decrypted in this tab\u2019s memory, and the only network traffic is the page itself. The browser\u2019s network tab will confirm it.',
+    },
+  ],
+  'meta-scrub': [
+    {
+      q: 'What exactly survives the scrub?',
+      a: 'The pixels, exactly. For a JPEG, the scrub copies the structural segments (quantization tables, frame, Huffman tables, scan data, EOI) byte for byte, so the image data is untouched — only APPn/EXIF/ICC/COM segments are cut. For a PNG, the file is rebuilt from its critical chunks (IHDR, PLTE, IDATs, IEND), so the pixel data is identical and every ancillary chunk — text, EXIF, timestamps, color profile — is gone.',
+    },
+    {
+      q: 'Will it break my photo?',
+      a: 'No, when the lossless path runs — and it is the only path for PNG. The JPEG strip never re-encodes anything, so there is no quality loss at all; if a JPEG has an unusual structure the page cannot walk, it falls back to a canvas re-encode at quality 0.92 and labels that honestly (pixels touched, metadata gone). One honest side effect: the ICC color profile rides in an APPn segment and goes with the scrub — sRGB photos shift nothing, wide-gamut photos can shift colors slightly.',
+    },
+    {
+      q: 'Which formats does it work with?',
+      a: 'JPEG and PNG, detected by magic bytes rather than file names. HEIC/HEIF — the iPhone default — and WebP are not parsed here, and the page says so instead of guessing: export or share those photos as JPEG first, then bring them back.',
+    },
+    {
+      q: 'Do social networks strip metadata anyway?',
+      a: 'Usually yes — major platforms re-encode uploads and drop most EXIF in the process. But that only covers what you upload to them. Send the file directly by email, chat attachment, AirDrop or a link, and the metadata travels with it — GPS coordinates and all. That is the case this tool closes.',
+    },
+    {
+      q: 'Does anything get uploaded?',
+      a: 'No. There is no upload code on this page at all: the photo is parsed and rebuilt in this tab\u2019s memory, and the only network traffic is the page itself. Even the verification pass that re-checks the cleaned file runs locally. The browser\u2019s network tab will confirm it.',
+    },
+  ],
+  jwt: [
+    {
+      q: 'Is it safe to paste a token here?',
+      a: 'Mechanically, yes: decoding and verification run entirely in this browser tab, there is no upload code on the page, and nothing is stored — the paste lives only in component state and disappears when you press Clear or close the tab. But a token is still a credential: prefer test tokens, and press Clear when you are done.',
+    },
+    {
+      q: 'Can it verify RS256 signatures?',
+      a: 'Yes — paste the issuer\u2019s public key as a JWK, or a whole JWKS document; if the token header carries a kid, the matching key is picked automatically. RS256/384/512, PS256/384/512 and ES256/384/512 all verify locally with the browser\u2019s crypto engine. HS* tokens verify against the shared secret instead.',
+    },
+    {
+      q: 'Does it fetch the jwks_uri to get the key?',
+      a: 'No — this tool is offline by design and has no fetch code at all. Copy the JWK from your identity provider\u2019s JWKS endpoint yourself and paste it; it stays in the tab and never travels anywhere.',
+    },
+    {
+      q: 'What about alg "none"?',
+      a: 'It is flagged loudly: a token with alg "none" is unsigned, meaning nothing binds its contents to any key and anyone can forge one. The page never reports such a token as verified — it says plainly that there is nothing to verify.',
+    },
+    {
+      q: 'Does it accept expired tokens?',
+      a: 'Yes — inspection and validity are separate. An expired token still decodes fully so you can read its claims and see exactly when it stopped being valid; the badge simply says EXPIRED. Every status is computed against your device clock, which the page shows next to the verdict, wrong clock and all.',
+    },
+  ],
+  'hash-file-batch': [
+    {
+      q: 'Is the export compatible with Linux sha256sum -c?',
+      a: 'Yes. The .sha256, .sha1 and .md5 exports use the GNU two-space format — “HASH  filename” — which sha256sum -c, sha1sum -c and md5sum -c read directly. Filenames are written as-is, never quoted: names containing plain spaces parse correctly, but GNU tools backslash-escape names containing backslashes or newlines and this export does not, so that is the one known gap. The optional ./ prefix matches what GNU tools print for explicit paths.',
+    },
+    {
+      q: 'How big can the files be?',
+      a: 'Each file can be up to 2 GB — anything larger is refused honestly before hashing starts, because browser file handling gets unreliable past that size and a native tool such as sha256sum or certutil does it better. The whole queue carries a soft cap of 8 GB: past it the page warns you but still runs, at the cost of possible slowdowns or memory pressure on smaller devices.',
+    },
+    {
+      q: 'Is MD5 still safe to use?',
+      a: 'For integrity, yes: MD5 reliably detects a corrupted, truncated or re-downloaded file. For security it is broken — collisions can be crafted on purpose, so an MD5 match is never proof a file is authentic. That is why SHA-256 is ticked by default; keep MD5 for comparing against older lists that only publish it.',
+    },
+    {
+      q: 'Do my files get uploaded?',
+      a: 'No. There is no upload code on this page at all: files are read with the browser File API and hashed in this tab, and the only network traffic is the page itself — the browser’s network tab will confirm it. Pasted checksum lists are parsed and matched in memory the same way, and the self-test runs on-device too.',
+    },
+  ],
+  cron: [
+    {
+      q: 'Why does 0 0 13 * FRI fire on every Friday, not only Friday the 13th?',
+      a: 'That is the classic Vixie cron rule: when day-of-month and day-of-week are both restricted, a day fires when EITHER matches — not both. The expression above fires on the 13th of every month and on every Friday. Cron cannot say “both at once” in a single line, so the page warns whenever both day fields are restricted, and the next-runs grid shows the combined schedule so you can see the real behavior before it surprises you.',
+    },
+    {
+      q: 'Does it support L, W and # like Quartz?',
+      a: 'No, and that is deliberate: L (last day), W (nearest weekday) and # (nth weekday) are Quartz extensions, not part of standard crontab syntax. Guessing what a Quartz expression means risks a silently wrong schedule, so the parser refuses them with an error that names the field and the exact character. The one exception is ? in the two day fields: it reads exactly like *, is accepted, and is flagged as Quartz-only syntax that Vixie cron would reject.',
+    },
+    {
+      q: 'What timezone are the next runs computed in?',
+      a: 'Your device’s local timezone, shown next to the grid. Cron daemons fire in the timezone of the machine they run on — usually the server’s, which may differ from yours. The schedule is in local wall-clock time, so on daylight-saving nights real-world intervals shift with the clock: an hour that does not exist resolves to the next real instant, and a repeated hour shows its first occurrence.',
+    },
+    {
+      q: 'Can I preview @reboot?',
+      a: 'No — honestly. @reboot means “fire when the machine boots”, which has no wall-clock time to compute, so there is nothing to preview on a device that is always on. The other shortcuts expand automatically: @hourly is 0 * * * *, @daily is 0 0 * * *, @weekly is 0 0 * * 0, @monthly is 0 0 1 * * and @yearly is 0 0 1 1 *.',
+    },
+    {
+      q: 'Does this tool run my job when the time comes?',
+      a: 'No. It only computes when a schedule would fire — nothing executes here, no process starts and no notification is scheduled. It is a reading lamp for crontab lines: paste an expression from your server, check the next runs against your calendar, then fix or keep it. The per day/week/month load numbers are simulations over one representative window, and nothing is uploaded while you do any of it.',
+    },
+  ],
 
   // ------------------------------------------------------------ mode-level
   drop: [
     {
       q: 'What happens if a file fails halfway?',
-      a: 'Toolhive reconnects on its own, and the failed file stays queued on your side so you can resend it with one tap once the link is back.',
+      a: 'Kontivo reconnects on its own, and the failed file stays queued on your side so you can resend it with one tap once the link is back.',
     },
     {
       q: 'Why is there a 50 MB per-file limit?',
@@ -567,7 +734,7 @@ export const APP_FAQS: Record<string, Faq[]> = {
     },
     {
       q: 'Does it use Bluetooth?',
-      a: 'No. Pairing runs over the web like everything else on Toolhive: the second device joins through a link or QR, so it works across networks, not just in the same room.',
+      a: 'No. Pairing runs over the web like everything else on Kontivo: the second device joins through a link or QR, so it works across networks, not just in the same room.',
     },
   ],
   'video-call': [
@@ -697,7 +864,7 @@ export const HOME_FAQS: Faq[] = [
     a: 'Instant tools (ZIP, PDF, images, JSON, passwords…) are one-device utilities: open the page and the work happens on your device in seconds — no session, no code, no upload. Live tools (Share, Call, Screen, Notepad…) connect two or more devices in real time through a six-character code.',
   },
   {
-    q: 'Is Toolhive really free?',
+    q: 'Is Kontivo really free?',
     a: 'Yes. There are no accounts, no plans and no paywalls: instant tools open ready to use, and a live session starts with one click.',
   },
   {
@@ -752,7 +919,7 @@ export function appMeta(app: AppDef): {
   keywords: string[]
 } {
   return {
-    title: `${SEO_TITLES[app.id] ?? app.name} · Toolhive`,
+    title: `${SEO_TITLES[app.id] ?? app.name} · Kontivo`,
     description:
       SEO_DESCRIPTIONS[app.id] ?? `${app.tagline} ${app.description}`.slice(0, 158),
     keywords: [

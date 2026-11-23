@@ -1,4 +1,4 @@
-# Production image for the Toolhive relay service.
+# Production image for the Kontivo relay service.
 #
 # Render setup: Runtime "Docker", Root Directory "mini-services/relay-service"
 # — Render finds this Dockerfile automatically. All configuration is via

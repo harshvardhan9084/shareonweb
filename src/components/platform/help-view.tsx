@@ -65,7 +65,7 @@ const TROUBLESHOOTING = [
     title: 'Live Captions does not hear me',
     steps: [
       'Automatic captions need Chrome, Edge or Safari; other browsers can still type caption lines manually.',
-      'Chrome restarts its listener every minute or so; Toolhive restarts it for you, just keep the tab in the foreground.',
+      'Chrome restarts its listener every minute or so; Kontivo restarts it for you, just keep the tab in the foreground.',
       'Translation runs per viewer. Turn on “Also translate for me” and pick your language; the original stays on the feed.',
     ],
   },
@@ -99,11 +99,11 @@ const FAQ = [
   },
   {
     q: 'Is it encrypted?',
-    a: 'Traffic runs over HTTPS/WSS, so it is encrypted in transit. Toolhive never stores your content after a session ends. Full end-to-end encrypted peer-to-peer (for video and large files) is on the roadmap.',
+    a: 'Traffic runs over HTTPS/WSS, so it is encrypted in transit. Kontivo never stores your content after a session ends. Full end-to-end encrypted peer-to-peer (for video and large files) is on the roadmap.',
   },
   {
     q: 'Why did the connection drop?',
-    a: 'Backgrounded tabs and network switches (like leaving Wi-Fi for mobile data) can interrupt the connection. Toolhive reconnects automatically and puts you back into the session with its full history.',
+    a: 'Backgrounded tabs and network switches (like leaving Wi-Fi for mobile data) can interrupt the connection. Kontivo reconnects automatically and puts you back into the session with its full history.',
   },
   {
     q: 'Does it work on mobile?',
@@ -115,14 +115,14 @@ const FAQ = [
   },
   {
     q: 'Is there a faster way to start things?',
-    a: 'Press ⌘K (or Ctrl+K) anywhere on Toolhive: the command palette can start any tool, join a session by code, or jump to any page without touching the mouse.',
+    a: 'Press ⌘K (or Ctrl+K) anywhere on Kontivo: the command palette can start any tool, join a session by code, or jump to any page without touching the mouse.',
   },
   {
-    q: 'Can I install Toolhive like an app?',
-    a: 'Yes. In Chrome or Edge, use the Install button in the suggestion card on Discover (or your browser menu → Install app). On iPhone or iPad, open Toolhive in Safari, tap Share, then “Add to Home Screen”.',
+    q: 'Can I install Kontivo like an app?',
+    a: 'Yes. In Chrome or Edge, use the Install button in the suggestion card on Discover (or your browser menu → Install app). On iPhone or iPad, open Kontivo in Safari, tap Share, then “Add to Home Screen”.',
   },
   {
-    q: 'Does Toolhive work offline?',
+    q: 'Does Kontivo work offline?',
     a: 'The app itself does: once you have visited, the landing pages open instantly and still open without a connection, so an installed app never shows a blank screen. Sessions do not — they run live between browsers, so joining and sharing need a network. If you open a session link while offline you get an honest offline page instead of a broken room.',
   },
   {

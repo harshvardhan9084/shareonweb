@@ -106,7 +106,7 @@ export function QrScanner({ onCode }: { onCode: (code: string) => void }) {
         return
       }
       // A QR code, but not one of ours — say so and keep scanning.
-      setNote('That QR code is not a Toolhive session code.')
+      setNote('That QR code is not a Kontivo session code.')
     }
 
     void start()

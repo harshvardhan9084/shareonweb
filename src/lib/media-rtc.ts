@@ -1,6 +1,6 @@
 'use client'
 
-// MediaRtc — peer-to-peer camera/microphone calls for Toolhive's media apps
+// MediaRtc — peer-to-peer camera/microphone calls for Kontivo's media apps
 // (Private Call, Group Meeting, Voice Call, Walkie-Talkie, Live Camera…).
 //
 // Signaling rides the existing session room (RoomClient -> relay-service

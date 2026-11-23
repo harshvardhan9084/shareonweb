@@ -1,10 +1,10 @@
-/* Hallmark · shape: app screen · theme: custom Toolhive v2 (tinted paper family, emerald signal) · genre: modern-minimal · surface: app shell · posture: committed · nav: top bar, wordmark and text links, one filled action · footer: mast with wordmark over links · hero: workbench, do-it-first console · redesign: structural de-slop pass per DESIGN.md */
+/* Hallmark · shape: app screen · theme: custom Kontivo v2 (tinted paper family, emerald signal) · genre: modern-minimal · surface: app shell · posture: committed · nav: top bar, wordmark and text links, one filled action · footer: mast with wordmark over links · hero: workbench, do-it-first console · redesign: structural de-slop pass per DESIGN.md */
 /* Hallmark · waive 29 · backdrop-blur glass kept on the sticky app header and video-stage chips · legibility over moving app content is chrome, not decoration */
 /* Hallmark · waive 28b · live screen and camera tiles carry no poster frame · a live stream has no still image; the app already fills empty tiles with skeleton and avatar states */
 /* Hallmark · answered F1 · apostrophes in UI copy use the typographic form · enforced across copy in this round's humanizer pass */
 
 /*
- * Toolhive design tokens — single source of truth for every colour and font.
+ * Kontivo design tokens — single source of truth for every colour and font.
  * Every component reads these through Tailwind theme utilities (bg-background,
  * text-muted-foreground, bg-stage, text-warning, ...). No literal colours in
  * component code; add a token here instead.

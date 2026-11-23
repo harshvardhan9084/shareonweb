@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Final QA pass: Toolhive brand, /share rename + unified session modes,
+# Final QA pass: Kontivo brand, /share rename + unified session modes,
 # instant tools (Batch 1 + Batch 2 file tools with REAL fixtures), legacy
 # redirects. Single invocation (sandbox kills ad-hoc processes between tool
 # calls). Run: bash scripts/final-qa.sh
@@ -42,7 +42,7 @@ sleep 3
 if agent-browser snapshot -c 2>/dev/null | rg -q "Every tool you need"; then ok "home hero is hub-accurate"; else bad "home hero"; fi
 if agent-browser snapshot -c 2>/dev/null | rg -q "Instant Tools"; then ok "Instant Tools section on home"; else bad "Instant Tools section"; fi
 if agent-browser snapshot -c 2>/dev/null | rg -q "PDF Toolkit"; then ok "home lists Batch 2 tools"; else bad "home Batch 2 listing"; fi
-if agent-browser snapshot -c 2>/dev/null | rg -q "Toolhive"; then ok "Toolhive brand visible"; else bad "Toolhive brand"; fi
+if agent-browser snapshot -c 2>/dev/null | rg -q "Kontivo"; then ok "Kontivo brand visible"; else bad "Kontivo brand"; fi
 if agent-browser get title 2>/dev/null | rg -qi "ShareOnWeb"; then bad "old brand in title"; else ok "no old brand in title"; fi
 
 # 2. /zip tool renders
@@ -144,7 +144,7 @@ sleep 2
 agent-browser upload "input[type=file]" "$FX/letter.docx" > /dev/null 2>&1
 sleep 4
 snap=$(agent-browser snapshot -c 2>/dev/null)
-echo "$snap" | rg -q "Word document" && echo "$snap" | rg -q "Toolhive QA Letter" \
+echo "$snap" | rg -q "Word document" && echo "$snap" | rg -q "Kontivo QA Letter" \
   && ok "/office-view DOCX renders (sandboxed)" || bad "/office-view DOCX"
 agent-browser close > /dev/null 2>&1
 
@@ -154,7 +154,7 @@ sleep 2
 agent-browser upload "input[type=file]" "$FX/sample.epub" > /dev/null 2>&1
 sleep 7
 snap=$(agent-browser snapshot -c 2>/dev/null)
-echo "$snap" | rg -q "Toolhive QA Book" && ok "/epub-view opens book with metadata" || bad "/epub-view open"
+echo "$snap" | rg -q "Kontivo QA Book" && ok "/epub-view opens book with metadata" || bad "/epub-view open"
 cbtn=$(echo "$snap" | rg -o 'button "Contents" \[.*ref=(e[0-9]+)\]' -r '$1')
 agent-browser click @$cbtn > /dev/null 2>&1
 sleep 1
@@ -323,7 +323,7 @@ for p in $ALL_LIVE; do
   echo "$h" | rg -q '"@type":"WebApplication"' || { bad "$p: WebApplication JSON-LD"; good=0; }
   echo "$h" | rg -q '"@type":"HowTo"' || { bad "$p: HowTo JSON-LD"; good=0; }
   echo "$h" | rg -q '"@type":"FAQPage"' || { bad "$p: FAQPage JSON-LD"; good=0; }
-  echo "$h" | rg -q '<title>[^<]*· Toolhive</title>' || { bad "$p: title not tool-branded"; good=0; }
+  echo "$h" | rg -q '<title>[^<]*· Kontivo</title>' || { bad "$p: title not tool-branded"; good=0; }
   # old BRAND leak (not the unchanged domain shareonweb.vercel.app, which is
   # legitimately present in canonical/JSON-LD URLs)
   echo "$h" | rg -q '<title>[^<]*(ShareOnWeb|SHAREONWEB)[^<]*</title>' && { bad "$p: old brand in title"; good=0; }

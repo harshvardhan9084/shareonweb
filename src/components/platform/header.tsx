@@ -49,7 +49,7 @@ export function Header() {
   const onHeaderInstall = async () => {
     const outcome = await promptInstall()
     if (outcome === 'accepted')
-      toast.success('Toolhive was installed. Find it on your home screen.')
+      toast.success('Kontivo was installed. Find it on your home screen.')
   }
 
   return (
@@ -58,10 +58,10 @@ export function Header() {
         <button
           onClick={goHome}
           className="flex items-center gap-2 rounded-md py-1 pr-2 focus-visible:outline-2 focus-visible:outline-ring"
-          aria-label="Toolhive home"
+          aria-label="Kontivo home"
         >
           <BrandMark className="size-7" />
-          <span className="font-display text-lg font-semibold tracking-[-0.01em]">Toolhive</span>
+          <span className="font-display text-lg font-semibold tracking-[-0.01em]">Kontivo</span>
         </button>
 
         <nav className="ml-3 hidden items-center gap-0.5 sm:flex" aria-label="Main navigation">

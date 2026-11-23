@@ -12,9 +12,14 @@ import { normalizeOriginOr } from '@/lib/normalize-url'
 const RAW_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || ''
 export const SITE_URL = normalizeOriginOr(RAW_SITE_URL, 'https://shareonweb.vercel.app')
 
-export const SITE_NAME = 'Toolhive'
+// Kontivo — an invented brand word (not a dictionary term, not an existing
+// product name). It evokes "context": every tool here opens aware of your
+// context — this device, this session, these files — and forgets it when
+// you leave. Third name in the project's history: ShareOnWeb → Kontivo →
+// Kontivo. The domain stays shareonweb.vercel.app.
+export const SITE_NAME = 'Kontivo'
 
-export const SITE_TITLE = 'Toolhive — instant web tools, live device-to-device sessions'
+export const SITE_TITLE = 'Kontivo — context-aware web tools: instant utilities, live device-to-device sessions'
 
 export const SITE_DESCRIPTION =
-  'A hive of everyday tools that just work: zip and unzip, compress and convert images, hash and verify files, format JSON, generate passwords and QR codes — all instantly, all on your device. Need two devices? Share files, text, screens and calls live over peer-to-peer sessions with a six-character code. No accounts, no uploads, no ads.'
+  'A context-aware hub of everyday tools that just work: zip and unzip, compress and convert images, hash and verify files, format JSON, generate passwords and QR codes — all instantly, all on your device. Need two devices? Share files, text, screens and calls live over peer-to-peer sessions with a six-character code. No accounts, no uploads, no ads — every tool opens on your context and forgets it when you leave.'

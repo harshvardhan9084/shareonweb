@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-const NETWORK_MSG = "Couldn't reach Toolhive. Check your connection and try again."
+const NETWORK_MSG = "Couldn't reach Kontivo. Check your connection and try again."
 
 /**
  * Human copy for failed calls — raw browser errors ("Failed to fetch",

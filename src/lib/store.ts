@@ -71,9 +71,9 @@ export function syncTitle(v: View) {
     const app = getApp(v.appId)
     if (app) title = appMeta(app).title
   } else if (v.name === 'session') {
-    title = 'Join a Toolhive session'
+    title = 'Join a Kontivo session'
   } else if (v.name === 'sessions') {
-    title = 'My Sessions · Toolhive'
+    title = 'My Sessions · Kontivo'
   } else if (v.name === 'help') {
     title = `Help Center · ${SITE_NAME}`
   }

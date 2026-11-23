@@ -28,7 +28,7 @@ async function makePdf(name, pages, label) {
     page.drawText(`${label} — page ${i} of ${pages}`, {
       x: 60, y: 760, size: 24, font, color: rgb(0.1, 0.25, 0.3),
     })
-    page.drawText(`Fixture generated for Toolhive browser QA.`, {
+    page.drawText(`Fixture generated for Kontivo browser QA.`, {
       x: 60, y: 720, size: 11, font, color: rgb(0.3, 0.3, 0.3),
     })
     page.drawRectangle({ x: 60, y: 500, width: 200, height: 120, color: rgb(0.9, 0.96, 0.98) })
@@ -39,7 +39,7 @@ async function makePdf(name, pages, label) {
   console.log(`wrote ${name} (${pages} pages, ${bytes.length} B)`)
 }
 
-await makePdf('test-3pages.pdf', 3, 'Toolhive fixture')
+await makePdf('test-3pages.pdf', 3, 'Kontivo fixture')
 await makePdf('test-2pages.pdf', 2, 'Second document')
 
 // ---------------------------------------------------------------- PNG
@@ -79,7 +79,7 @@ zip.file(
   `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
-    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Toolhive QA Letter</w:t></w:r></w:p>
+    <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Kontivo QA Letter</w:t></w:r></w:p>
     <w:p><w:r><w:t>This is the first paragraph of the fixture document. It should render as clean HTML in the sandboxed viewer.</w:t></w:r></w:p>
     <w:p><w:r><w:t>A second paragraph, so text extraction has more than one block to show.</w:t></w:r></w:p>
   </w:body>
@@ -104,8 +104,8 @@ epub.file(
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bookid">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="bookid">urn:uuid:toolhive-qa-0001</dc:identifier>
-    <dc:title>Toolhive QA Book</dc:title>
-    <dc:creator>Toolhive Fixtures</dc:creator>
+    <dc:title>Kontivo QA Book</dc:title>
+    <dc:creator>Kontivo Fixtures</dc:creator>
     <dc:language>en</dc:language>
     <meta property="dcterms:modified">2026-11-23T00:00:00Z</meta>
   </metadata>

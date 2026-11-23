@@ -78,7 +78,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Toolhive — instant tools on your device, live sessions between them",
+        alt: "Kontivo — instant tools on your device, live sessions between them",
       },
     ],
   },
@@ -136,7 +136,7 @@ function buildJsonLd(): string {
     {
       "@type": "ItemList",
       "@id": `${SITE_URL}/#tools`,
-      name: "Toolhive tools",
+      name: "Kontivo tools",
       itemListElement: APPS.map((a, i) => ({
         "@type": "ListItem",
         position: i + 1,

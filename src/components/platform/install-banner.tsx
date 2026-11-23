@@ -15,13 +15,13 @@ export function InstallBanner() {
 
   async function onInstall() {
     const outcome = await promptInstall()
-    if (outcome === 'accepted') toast.success('Toolhive was installed. Find it on your home screen.')
+    if (outcome === 'accepted') toast.success('Kontivo was installed. Find it on your home screen.')
     // 'dismissed' and 'unavailable' keep the banner; no nagging either way.
   }
 
   return (
     <section
-      aria-label="Install Toolhive"
+      aria-label="Install Kontivo"
       className="relative mx-auto mt-8 max-w-3xl animate-in fade-in duration-500"
     >
       <div className="flex items-center gap-3 rounded-lg border bg-card p-3.5 sm:gap-4 sm:p-4">
@@ -30,7 +30,7 @@ export function InstallBanner() {
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Install Toolhive</p>
+          <p className="text-sm font-semibold">Install Kontivo</p>
           {canInstall ? (
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
               Add it to your home screen. One tap to send files, share text and draw together.

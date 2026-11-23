@@ -1,12 +1,12 @@
-# Toolhive — Development Worklog
+# Kontivo — Development Worklog
 
-(Previously ShareOnWeb — rebranded 2026-11-23 per the owner's direction. The
-domain stays shareonweb.vercel.app; the product name, mark and copy are
-Toolhive.)
+(Previously ShareOnWeb, then Toolhive — rebranded again this run to
+**Kontivo**, an invented, non-existing brand word built around "context",
+per the owner's direction. The domain stays shareonweb.vercel.app.)
 
 ## 1. Project overview
 
-Toolhive is an account-free HUB of everyday web tools in two families:
+Kontivo is an account-free HUB of everyday web tools in two families:
 
 - **Live session tools** — two or more devices, real-time, peer-to-peer over
   WebRTC; a socket.io relay (`mini-services/relay-service/`, :3003) brokers
@@ -62,11 +62,14 @@ code covers all of them.* Implemented via family panels
 
 ### 2.3 Brand
 
-- Name: **Toolhive**. Mark (v4): three honeycomb cells — filled cyan cell on
-  top, two green cells beneath (`BrandMark` in app-icon.tsx, mirrored in
-  `brand/*.svg`). PWA icons, favicon, OG cards and per-tool OG images are
-  regenerated from those SVGs (`bun brand/build-icons.mjs`,
-  `bun brand/build-og.mjs` — 20 live tool cards).
+- Name: **Kontivo** — invented, non-existing word built around "context"
+  (owner directive: "change the app name something to 'context aware' and
+  non-existing"). The product story: every tool opens aware of your context
+  — this device, this session, these files — and forgets it when you leave.
+- Mark (v5): **focus frame** — four green context brackets around a filled
+  cyan node (`BrandMark` in app-icon.tsx, mirrored in `brand/*.svg`).
+  PWA icons, favicon and OG cards are regenerated from those SVGs
+  (`bun brand/build-icons.mjs`, `bun brand/build-og.mjs`).
 - `SITE_NAME`, `SITE_TITLE`, `SITE_DESCRIPTION` in `src/lib/site.ts`.
 - Domain unchanged: `https://shareonweb.vercel.app`.
 

@@ -31,6 +31,13 @@ import { GifTool } from '@/components/instant/gif-tool'
 import { FrameGrabTool } from '@/components/instant/frame-grab-tool'
 import { RecorderTool } from '@/components/instant/recorder-tool'
 import { UpscalerTool } from '@/components/instant/upscaler-tool'
+import { ArchiveTool } from '@/components/instant/archive-tool'
+import { FileToolsTool } from '@/components/instant/file-tools-tool'
+import { EncryptTool } from '@/components/instant/encrypt-tool'
+import { MetaScrubTool } from '@/components/instant/meta-scrub-tool'
+import { JwtTool } from '@/components/instant/jwt-tool'
+import { BatchHashTool } from '@/components/instant/hash-file-batch-tool'
+import { CronTool } from '@/components/instant/cron-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -53,6 +60,13 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'frame-grab': FrameGrabTool,
   recorder: RecorderTool,
   upscaler: UpscalerTool,
+  archive: ArchiveTool,
+  'file-tools': FileToolsTool,
+  encrypt: EncryptTool,
+  'meta-scrub': MetaScrubTool,
+  jwt: JwtTool,
+  'hash-file-batch': BatchHashTool,
+  cron: CronTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

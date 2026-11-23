@@ -1,10 +1,10 @@
-// Toolhive service worker — the offline shell.
+// Kontivo service worker — the offline shell.
 //
 // Caches the app shell (landing HTML, immutable build assets, brand icons) so
 // a repeat visit or installed PWA opens instantly on a weak network and the
 // shell still opens with no connection at all. Live traffic is never touched:
 // the relay socket (which rides this origin via the gateway query), session
-// join links and every API call pass straight through — Toolhive runs
+// join links and every API call pass straight through — Kontivo runs
 // between live browsers, and nothing here pretends otherwise.
 //
 // Bump VERSION whenever the precache list or a strategy changes; activation
@@ -121,7 +121,7 @@ self.addEventListener('fetch', (event) => {
         if (isSessionLink) {
           return (
             (await cachedHtml(cache, '/offline.html')) ||
-            new Response('You are offline. Toolhive sessions need a connection.', {
+            new Response('You are offline. Kontivo sessions need a connection.', {
               status: 503,
               headers: { 'Content-Type': 'text/plain; charset=utf-8' },
             })
