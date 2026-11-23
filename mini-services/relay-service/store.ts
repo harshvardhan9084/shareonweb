@@ -26,7 +26,7 @@
  *   - closed-code markers (so an ended session stays "closed" after restart)
  *   - room content: texts, chat, whiteboard strokes, polls, the shared note,
  *     persisted app events, and COMPLETED files up to RELAY_PERSIST_FILE_MAX
- *     bytes each (default 8 MB). Larger files and in-flight transfers stay
+ *     bytes each (default 20 MB). Larger files and in-flight transfers stay
  *     live-only buffers — the sender simply re-shares after a restart.
  *   - live participants are NOT persisted (they are socket connections; a
  *     restored room starts empty and devices simply rejoin).
@@ -44,10 +44,12 @@ const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || "";
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
 const DATA_DIR = process.env.RELAY_DATA_DIR || "";
 
-/** Completed files up to this size ride along in snapshots (default 8 MB). */
-const FILE_MAX_BYTES = positiveInt(process.env.RELAY_PERSIST_FILE_MAX, 8 * 1024 * 1024);
-/** Hard cap on one room's snapshot size; heavier content sheds (files first). */
-const SNAPSHOT_MAX_BYTES = positiveInt(process.env.RELAY_PERSIST_SNAPSHOT_MAX, 24 * 1024 * 1024);
+/** Completed files up to this size ride along in snapshots (default 20 MB). */
+const FILE_MAX_BYTES = positiveInt(process.env.RELAY_PERSIST_FILE_MAX, 20 * 1024 * 1024);
+/** Hard cap on one room's snapshot size; heavier content sheds (files first).
+ *  Defaults to 48 MB so a full 20 MB file (≈27 MB once base64-chunked inside
+ *  the snapshot JSON) still fits alongside the room's conversational state. */
+const SNAPSHOT_MAX_BYTES = positiveInt(process.env.RELAY_PERSIST_SNAPSHOT_MAX, 48 * 1024 * 1024);
 
 function positiveInt(raw: string | undefined, fallback: number): number {
   const n = Number(raw);

@@ -49,10 +49,27 @@ room history comes back for the full 24-hour session lifetime.
 | Backend | When | Survives |
 | --- | --- | --- |
 | `redis` | `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` set | restarts, redeploys, spin-downs — best option on Render **free** tier |
-| `disk` | `RELAY_DATA_DIR` set | restarts + redeploys on hosts with a **persistent disk/volume** |
+| `disk` | `RELAY_DATA_DIR` set | restarts + redeploys on hosts with a **persistent disk/volume** (Render paid disks, Railway/Fly volumes, any VPS) |
 | `memory` | nothing set (default) | nothing — same as before the layer existed |
 
-### Deploying on Render
+The `disk` backend writes one JSON snapshot file atomically (tmp + rename)
+into `RELAY_DATA_DIR`; it does NOT help on hosts with an ephemeral disk.
+
+### Deploying on Render with Docker (this folder's Dockerfile)
+
+The repo ships `mini-services/relay-service/Dockerfile` (plus
+`.dockerignore`): oven/bun base, production-only dependency install, a
+`/healthz` HEALTHCHECK, and a pre-created `/data` mount point for the disk
+backend. On Render: create the service from this repo with **Runtime:
+Docker** and **Root Directory: `mini-services/relay-service`** — Render
+picks the Dockerfile up automatically, injects `PORT`, and uses your health
+check path (`/healthz`). Add the env vars below in the dashboard; for the
+redis backend no disk is needed, for the disk backend mount a Render Disk
+at `/data` and set `RELAY_DATA_DIR=/data`.
+
+> The image runs as root so a freshly mounted Render Disk is writable out
+> of the box. If you harden it to a non-root user, `chown` the mount path
+> first or the disk backend cannot write its snapshot.
 
 **Free tier (recommended setup):** Render's free instances have an ephemeral
 disk and spin down after 15 minutes idle, so point the relay at a free
@@ -83,14 +100,15 @@ Persisted for 24 h (bounded by the session's own expiry):
 - room content: texts, chat, whiteboard strokes, polls, the shared note,
   persisted app events
 - **completed files up to `RELAY_PERSIST_FILE_MAX` bytes each** (default
-  8 MB, including their base64 chunks)
+  20 MB, including their base64 chunks)
 
 Not persisted (by design):
 
 - live participants — they are socket connections; a restored room starts
   empty and devices simply rejoin by code
-- in-flight file transfers and files above the cap — they are relay-side
-  buffers for room history; the sender re-shares after a restart
+- in-flight file transfers and files above the 20 MB persistence cap —
+  they are relay-side buffers for room history; the sender re-shares after
+  a restart (the 50 MB live transfer cap is unchanged)
 - WebRTC media (calls, screen share) — peer-to-peer, dies with the
   connection regardless of persistence
 
@@ -108,8 +126,8 @@ backend; expired rows are pruned on load and by the 10-minute sweep.
 | `UPSTASH_REDIS_REST_URL` | — | enables the redis backend |
 | `UPSTASH_REDIS_REST_TOKEN` | — | redis auth token |
 | `RELAY_DATA_DIR` | — | enables the disk backend (snapshot file inside) |
-| `RELAY_PERSIST_FILE_MAX` | `8388608` | per-file persistence cap (bytes) |
-| `RELAY_PERSIST_SNAPSHOT_MAX` | `25165824` | per-room snapshot cap (bytes) |
+| `RELAY_PERSIST_FILE_MAX` | `20971520` | per-file persistence cap (bytes) |
+| `RELAY_PERSIST_SNAPSHOT_MAX` | `50331648` | per-room snapshot cap (bytes) |
 | `RELAY_PERSIST_INTERVAL_MS` | `4000` | dirty-room flush debounce |
 
 ### Capacity limits (unchanged)

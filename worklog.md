@@ -324,8 +324,10 @@ What shipped (48/48 checks pass in an end-to-end harness):
    intentionally excluded — they are connections, restored rooms start
    empty and devices rejoin); SIGTERM/SIGINT flush before exit;
    `/healthz` now also reports `store`.
-3. **Honest content policy**: completed files ≤ 8 MB persist with chunks
-   (`RELAY_PERSIST_FILE_MAX`), oversized room snapshots shed files → app
+3. **Honest content policy**: completed files ≤ 20 MB persist with chunks
+   (owner raised the cap from the initial 8 MB; `RELAY_PERSIST_FILE_MAX`),
+   snapshot ceiling raised to 48 MB so a full 20 MB file (≈27 MB base64)
+   still fits; oversized room snapshots shed files → app
    events → strokes so texts/chat/note/polls always survive; nothing
    outlives its session's 24 h expiry in any backend; in-flight transfers
    and WebRTC media remain live-only by design.
@@ -340,3 +342,13 @@ What shipped (48/48 checks pass in an end-to-end harness):
    owner's question directly: rooms vs sessions (registry vs live rooms),
    why the numbers reset, and the two Render recipes (Upstash free /
    persistent disk) with the full env-var table.
+6. **Follow-up (same day, owner request): `Dockerfile` + `.dockerignore`
+   added to `mini-services/relay-service/`** — no Dockerfile had ever
+   existed in any commit of this repo (verified via full history scan), so
+   the owner's deployment copy carried one that was never committed; the
+   repo now ships a production image (oven/bun, production deps, /healthz
+   HEALTHCHECK, pre-created /data for the disk backend) so a Render service
+   with Root Directory = mini-services/relay-service builds out of the box.
+   Persistence file cap raised 8 MB → 20 MB per the owner (snapshot ceiling
+   24 → 48 MB to match), boundary verified: 20 MB completed file persists,
+   20 MB + 1 byte does not.

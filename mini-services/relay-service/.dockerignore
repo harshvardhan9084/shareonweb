@@ -1,0 +1,7 @@
+# Keep the build context to what the image actually needs.
+node_modules
+data
+*.log
+relay-state.json
+relay-state.json.tmp
+README.md
