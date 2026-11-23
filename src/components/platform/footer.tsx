@@ -20,8 +20,9 @@ export function Footer() {
               </span>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Practical online services that run straight between browsers. A session exists
-              when you open it; when it ends or expires, everything inside it is discarded.
+              Everyday tools that run on your device or straight between browsers — never on
+              our servers. Instant tools upload nothing at all; live sessions exist only while
+              they are open, then everything inside them is discarded.
             </p>
             <button
               onClick={() => openJoin()}
@@ -80,8 +81,9 @@ export function Footer() {
 
         <div className="mt-8 border-t pt-5 text-xs text-muted-foreground">
           <span>
-            Toolhive works device to device. Nothing you share is stored beyond the life of
-            its session.
+            The same rule everywhere: instant tools compute on your device and upload nothing;
+            live tools pass content directly between the devices in the session and keep no
+            copy on our side.
           </span>
         </div>
       </div>

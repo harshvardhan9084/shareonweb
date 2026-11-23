@@ -1,12 +1,10 @@
 'use client'
 
 // Discover — the index. Do-it-first: the working controls (start a session,
-// search the catalog, join with a code) sit in the first viewport. Below the
-// action, the page follows the classic flow — problem, value, how it works,
-// the catalog, trust, answers, one last call — adapted to Toolhive rather
-// than copied from a template. The tool directory renders as individual cards
-// on small screens (a dense paragraph of links is unreadable) and as hairline
-// rows on large ones. Doctrine: DESIGN.md at the repo root.
+// search the catalog, join with a code) sit in the first viewport. The page
+// states the product's ethic plainly — nothing you do here ever lands on our
+// servers — and presents the two tool families (Instant, Live) as one honest
+// system instead of two competing stories. Doctrine: DESIGN.md at the root.
 
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { AppIcon } from '@/components/platform/app-icon'
@@ -36,6 +34,7 @@ import {
   CloudUpload,
   UserPlus,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -158,8 +157,12 @@ export function DiscoverView() {
             </h1>
             <p className="mt-4 max-w-[52ch] text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
               Zip, convert, compress, hash, format, generate — instantly, right in your browser.
-              Need two devices? Share files, screens and calls live with a code. No accounts,
-              no ads, nothing uploaded.
+              Need two devices? Share files, screens and calls live with a code.
+            </p>
+            {/* the ethic, stated where the eye lands first */}
+            <p className="mt-3 flex items-center gap-2 text-sm font-medium text-foreground/90">
+              <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              Nothing you do here ever lands on our servers.
             </p>
 
             {/* start controls: one filled action, its neighbours quiet */}
@@ -251,26 +254,35 @@ export function DiscoverView() {
 
             <p className="mt-6 text-sm text-muted-foreground">
               {APPS.length - liveCount > 0
-                ? `${liveCount} tools live today, ${APPS.length - liveCount} on the way, no accounts needed.`
-                : `${liveCount} tools, no accounts needed.`}
+                ? `${liveCount} tools live today, ${APPS.length - liveCount} on the way. No accounts, no ads, no uploads.`
+                : `${liveCount} tools. No accounts, no ads, no uploads.`}
             </p>
           </div>
 
-          {/* right: the session code, the product's one real artifact */}
+          {/* right: the two families, and the one artifact a live tool needs */}
           <div className="border-t pt-9 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-1">
+            <h2 className="font-display text-base font-semibold tracking-tight">
+              Two kinds of tools, one rule
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground">Instant</span> — Zip, PDF, images,
+              JSON, passwords. Open the page and it works on this device. No code, because
+              nobody else is involved.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <span className="font-medium text-foreground">Live</span> — Share, Call, Screen,
+              Notepad. Two or more devices, in real time. A session opens with a code like
+              this; hand it over by link, by QR, or by typing it in.
+            </p>
             <p
-              className="font-mono text-[clamp(2.75rem,6vw,4.5rem)] font-medium leading-none tracking-tight tabular-nums"
+              className="mt-4 font-mono text-[clamp(2.25rem,5vw,3.5rem)] font-medium leading-none tracking-tight tabular-nums"
               translate="no"
             >
               K7T<span aria-hidden="true" className="text-primary">-</span>29Q
             </p>
-            <p className="sr-only">Example session code.</p>
-            <p className="mt-3 max-w-[44ch] text-sm leading-relaxed text-muted-foreground">
-              Every session opens with a code like this. Pass it by link, by QR, or type it in
-              from any browser.
-            </p>
+            <p className="sr-only">Example session code for live tools.</p>
 
-            <div className="mt-6 max-w-sm">
+            <div className="mt-5 max-w-sm">
               <CodeInput
                 value={joinCode}
                 onChange={(raw) => {
@@ -327,9 +339,9 @@ export function DiscoverView() {
           </h2>
           <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-muted-foreground">
             Moving one photo, sharing one link, meeting for five minutes: each usually drags a
-            cable, an upload or a sign-up behind it. Toolhive strips that back to a single
-            idea: open a session, hand over a code, and the work happens live between the
-            browsers in the room.
+            cable, an upload or a sign-up behind it. Toolhive strips that back: open the tool
+            and the work happens here — on your device when it is a one-person job, between
+            your devices live when it needs a second one.
           </p>
           <ul className="mt-6 grid gap-x-10 lg:grid-cols-3">
             {DETOURS.map((d) => (
@@ -356,40 +368,84 @@ export function DiscoverView() {
           </ul>
         </section>
 
-        {/* ---------------------------------------------------- the process */}
+        {/* ---------------------------------------------------- the two paths */}
         <section className="border-t py-10 sm:py-12" aria-labelledby="how-it-works">
           <h2
             id="how-it-works"
             className="font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
           >
-            Three steps, every tool
+            Two ways in, one rule
           </h2>
-          <ol className="mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-3">
-            {[
-              {
-                title: 'Open a tool',
-                body: 'One click creates a temporary session for it. Nothing to configure.',
-              },
-              {
-                title: 'Share the code',
-                body: 'The link, the QR or the six characters bring anyone in, with no account.',
-              },
-              {
-                title: 'End it, it is gone',
-                body: 'Text, files and boards live only inside the session, then expire on their own.',
-              },
-            ].map((s, i) => (
-              <li key={s.title} className="border-t pt-4">
-                <p className="font-semibold">
-                  <span className="mr-2 font-mono text-sm tabular-nums text-primary" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  {s.title}
-                </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="mt-6 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+            <div className="border-t pt-4">
+              <h3 className="font-semibold">Alone — instant tools</h3>
+              <ol className="mt-3 space-y-2.5">
+                {[
+                  {
+                    title: 'Open the tool',
+                    body: 'Zip, PDF, images, text, JSON, passwords — the page is the tool.',
+                  },
+                  {
+                    title: 'It works immediately',
+                    body: 'On this device, with the browser’s own engines. No code, no upload, no waiting.',
+                  },
+                  {
+                    title: 'Take the result and go',
+                    body: 'Download it, copy it, close the tab. Nothing was sent anywhere in the first place.',
+                  },
+                ].map((s, i) => (
+                  <li key={s.title} className="flex items-start gap-3">
+                    <span
+                      className="pt-0.5 font-mono text-sm tabular-nums text-primary"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="text-sm leading-relaxed text-muted-foreground">
+                      <span className="font-medium text-foreground">{s.title}.</span> {s.body}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <button
+                onClick={() => openApp(startApps[0])}
+                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                Try it now
+              </button>
+            </div>
+            <div className="border-t pt-4">
+              <h3 className="font-semibold">Together — live tools</h3>
+              <ol className="mt-3 space-y-2.5">
+                {[
+                  {
+                    title: 'Open a live tool',
+                    body: 'Share, Call, Screen, Notepad — one click creates a temporary session and its code.',
+                  },
+                  {
+                    title: 'Hand over the code',
+                    body: 'The link, the QR or the six characters bring anyone in, with no account.',
+                  },
+                  {
+                    title: 'End it, it is gone',
+                    body: 'Text, files and boards travel directly between the devices, then expire with the session.',
+                  },
+                ].map((s, i) => (
+                  <li key={s.title} className="flex items-start gap-3">
+                    <span
+                      className="pt-0.5 font-mono text-sm tabular-nums text-primary"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="text-sm leading-relaxed text-muted-foreground">
+                      <span className="font-medium text-foreground">{s.title}.</span> {s.body}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
         </section>
 
         {/* ------------------------------------------------------- directory */}
@@ -490,24 +546,27 @@ export function DiscoverView() {
           </div>
         </section>
 
-        {/* ---------------------------------------------------------- trust */}
+        {/* ---------------------------------------------------------- ethic */}
         <section className="border-t py-10 sm:py-12" aria-labelledby="privacy-strip">
           <h2
             id="privacy-strip"
-            className="font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
+            className="max-w-[36ch] font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
           >
-            Privacy is a feature, not a settings page
+            The ethic: nothing you do here lands on a server
           </h2>
           <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-muted-foreground">
-            No sign-up, no profile, no tracking pixels. A session exists when you open it, and
-            everything inside it (text, files, boards, chats) is discarded when the session ends
-            or expires. Temporary by construction.
+            Instant tools compute on your device with the browser’s own engines — the file is
+            never sent anywhere. Live tools pass content directly between the devices in the
+            session. There is no storage bucket holding your files, no profile holding your
+            name, no tracker mining what you shared. When a session ends it is discarded —
+            and it never existed on our side to begin with.
           </p>
           <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-muted-foreground">
             {[
               'No accounts anywhere',
-              'Nothing stored after a session',
-              'Files never touch a cloud server',
+              'No ads, no trackers',
+              'Instant: files never leave your device',
+              'Live: content dies with the session',
               'Free, with no plans to pick',
             ].map((fact) => (
               <li key={fact} className="flex items-center gap-1.5">
@@ -543,8 +602,9 @@ export function DiscoverView() {
               Start with what you need right now.
             </h2>
             <p className="mt-2 max-w-[56ch] text-sm leading-relaxed text-muted-foreground">
-              One click opens a working session and its code. Anyone you hand it to joins from
-              their browser, with no account and no install.
+              Instant tools open ready to use. One click on a live tool opens a working session
+              and its code, and anyone you hand it to joins from their browser — no account, no
+              install, nothing stored.
             </p>
             <div className="mt-5 flex flex-wrap gap-2.5">
               {startApps.map((id, i) => (

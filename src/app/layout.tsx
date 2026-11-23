@@ -6,6 +6,7 @@ import { SwRegister } from "@/components/platform/sw-register";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
 import { APPS } from "@/lib/registry";
+import { HOME_FAQS } from "@/lib/seo";
 
 // Display face with character (see DESIGN.md): h1, h2, wordmark only.
 const displayFace = Bricolage_Grotesque({
@@ -77,7 +78,7 @@ export const metadata: Metadata = {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Toolhive — practical tools that run straight between browsers",
+        alt: "Toolhive — instant tools on your device, live sessions between them",
       },
     ],
   },
@@ -151,6 +152,16 @@ function buildJsonLd(): string {
               }
             : {}),
         },
+      })),
+    },
+    {
+      // Mirrors the FAQ section rendered on the home page (HOME_FAQS).
+      "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq`,
+      mainEntity: HOME_FAQS.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     },
   ];

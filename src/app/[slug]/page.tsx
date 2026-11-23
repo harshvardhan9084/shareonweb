@@ -6,7 +6,7 @@ import { AppShell } from '@/components/platform/app-shell'
 import { APP_ALIASES, APPS, getCategory, getTopApp } from '@/lib/registry'
 import { CODE_PATH_RE, normalizeCode } from '@/lib/code'
 import { SITE_URL, SITE_NAME } from '@/lib/site'
-import { appMeta } from '@/lib/seo'
+import { appMeta, defaultFaqsFor } from '@/lib/seo'
 
 // One dynamic segment resolves the shared namespace:
 //   /share       -> the Share tool page (statically generated, indexable)
@@ -35,6 +35,7 @@ function toolJsonLd(appId: string): string {
   const app = getTopApp(appId)!
   const category = getCategory(app.category)
   const url = `${SITE_URL}/${app.id}`
+  const faqs = defaultFaqsFor(app)
   const graph: Array<Record<string, unknown>> = [
     {
       '@type': 'BreadcrumbList',
@@ -71,6 +72,19 @@ function toolJsonLd(appId: string): string {
         '@type': 'HowToStep',
         position: i + 1,
         text: s,
+      })),
+    })
+  }
+  // FAQPage mirrors the Q&As the page shows on first paint (default mode +
+  // tool level) — same source, same order, same dedupe (defaultFaqsFor).
+  if (faqs.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
       })),
     })
   }

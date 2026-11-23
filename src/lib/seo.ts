@@ -36,6 +36,12 @@ const SEO_TITLES: Record<string, string> = {
   'co-browse': 'Collaborative Browsing — browse the same page together',
   'location-share': 'Live Location — share where you are, live',
   'live-captions': 'Live Captions — caption and translate speech',
+  pdf: 'PDF Toolkit — merge, split, organize and rotate PDFs in your browser',
+  'pdf-view': 'PDF Viewer — read, search and zoom any PDF without installing anything',
+  'pdf-text': 'PDF to Text — extract every word, page by page, download as .txt',
+  'images-to-pdf': 'Images to PDF — turn photos and scans into one PDF, no upload',
+  'office-view': 'Word & Excel Viewer — open DOCX and XLSX online, convert them too',
+  'epub-view': 'EPUB Reader — read books in your browser with contents and progress',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -80,6 +86,18 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Share your live position with people in the session, from your browser. Only session members see it; nothing is stored afterwards.',
   'live-captions':
     'Live captions for speech in the session, with translation built in. Runs in the browser; speech recognition support varies by browser.',
+  pdf:
+    'Merge PDFs in any order, rearrange pages with live thumbnails, extract ranges like 1-3 or split every N pages into a ZIP. Local with pdf-lib — nothing uploads.',
+  'pdf-view':
+    'Read any PDF right in the browser: page navigation, zoom, rotation and a search that shows which pages match. Rendered locally with pdf.js, never uploaded.',
+  'pdf-text':
+    'Extract all text from a PDF page by page, copy it or download it as a .txt. Scanned image-only PDFs are detected honestly. Runs entirely on your device.',
+  'images-to-pdf':
+    'Combine JPEG, PNG, WebP and more into one PDF with ordered pages, A4 or Letter sizes, margins and EXIF-correct rotation. Built locally with pdf-lib.',
+  'office-view':
+    'Open DOCX, XLSX and CSV files without Office: formatted documents, spreadsheet grids with sheet tabs, plus DOCX→HTML and CSV→XLSX conversion. All local.',
+  'epub-view':
+    'Read DRM-free EPUB books in the browser: paginated chapters, table of contents, text-size control and live progress. Rendered locally with epub.js.',
 }
 
 /**
@@ -231,6 +249,208 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Can it translate while captioning?',
       a: 'Yes, captions can be translated live for other people in the session, so a mixed-language room can still follow along.',
+    },
+  ],
+
+  // ------------------------------------------------- instant tools (14)
+  zip: [
+    {
+      q: 'Is there a file size limit?',
+      a: 'No hard wall. Packing and unpacking run on this device, so the practical limit is its memory — and a folder that would take minutes to upload finishes in seconds because nothing ever leaves the browser.',
+    },
+    {
+      q: 'Does the folder structure survive?',
+      a: 'Yes. Subfolders arrive nested exactly as they went in, and extracting a ZIP rebuilds its internal structure.',
+    },
+    {
+      q: 'Can I see what is inside a ZIP before extracting?',
+      a: 'Yes — every entry is listed first, so you can take a single file or download everything at once.',
+    },
+  ],
+  image: [
+    {
+      q: 'Are my photos uploaded anywhere?',
+      a: 'No. Compression, conversion and resizing use the browser’s own image encoder on this device. The files never leave your machine.',
+    },
+    {
+      q: 'Can I hit an exact file size, like “under 100 KB”?',
+      a: 'Yes — target-size mode searches the quality scale automatically until the output fits under your number where the format allows.',
+    },
+    {
+      q: 'Which formats can I convert between?',
+      a: 'PNG, JPEG and WebP in any direction, for one image or a whole batch, with a preview showing the real before/after size before you download.',
+    },
+  ],
+  hash: [
+    {
+      q: 'Can this verify a download is intact?',
+      a: 'Yes: paste the hash the publisher published and the tool gives a clear match / no-match. A match proves the file is byte-for-byte what was published.',
+    },
+    {
+      q: 'How big can the file be?',
+      a: 'Files are hashed in streaming chunks, so multi-gigabyte ISOs work without freezing the tab — and without uploading anything.',
+    },
+    {
+      q: 'Which algorithms are supported?',
+      a: 'MD5, SHA-1, SHA-256 and SHA-512, computed in one pass for both files and plain text.',
+    },
+  ],
+  encode: [
+    {
+      q: 'Does it handle emojis and non-Latin text?',
+      a: 'Yes. Encoding is Unicode-safe: text is UTF-8 encoded before Base64, so emoji, CJK and accented text round-trip exactly.',
+    },
+    {
+      q: 'What is a data URL for?',
+      a: 'It embeds a file directly inside HTML, CSS or JSON — an inline image in a stylesheet, for example — so the file ships with the code instead of as a separate request.',
+    },
+    {
+      q: 'Can I turn Base64 back into a file?',
+      a: 'Yes. Drop or paste Base64 and decode it into a downloadable file, byte-for-byte.',
+    },
+  ],
+  json: [
+    {
+      q: 'What does “exact error position” mean?',
+      a: 'When JSON fails to parse, the validator reports the line and column and the parser’s message — a stray comma takes seconds to find, even in a large document.',
+    },
+    {
+      q: 'Is my JSON sent to a server?',
+      a: 'No. Parsing and formatting happen in this tab, so API responses with tokens or private data are safe to paste.',
+    },
+    {
+      q: 'Can I sort keys alphabetically?',
+      a: 'Yes — sorted keys make two documents easy to diff and compare side by side.',
+    },
+  ],
+  text: [
+    {
+      q: 'What counts as a word?',
+      a: 'Whitespace-separated tokens, the same way most word processors count. Character, sentence, paragraph and reading-time counts update live as you type.',
+    },
+    {
+      q: 'Can I remove duplicate lines?',
+      a: 'Yes, along with sorting, trimming, numbering, reversing and removing empty lines — each one click on the same text.',
+    },
+    {
+      q: 'Does find and replace support regex?',
+      a: 'Yes — switch the pattern to regex for bulk edits; plain-text mode stays the default for simple swaps.',
+    },
+  ],
+  password: [
+    {
+      q: 'Are these passwords really random?',
+      a: 'They come from the browser’s cryptographic random source, not Math.random, and they are generated on your device — never transmitted, never stored.',
+    },
+    {
+      q: 'What is the passphrase mode for?',
+      a: 'Word-based passphrases are easier to type and remember — on a TV remote or a phone — while still carrying high entropy. Separators and numbering are optional.',
+    },
+    {
+      q: 'What does the strength estimate mean?',
+      a: 'It is the entropy of what was generated: how many tries a brute-force attack would need on average. Longer and more varied means more entropy.',
+    },
+  ],
+  qr: [
+    {
+      q: 'Do the QR codes expire?',
+      a: 'Never. The code is rendered on your device and encodes your content directly — it works offline, forever, and you download the PNG.',
+    },
+    {
+      q: 'Can guests join my Wi-Fi without me reading out the password?',
+      a: 'Yes — Wi-Fi mode encodes the network name and password; a phone camera scan offers to join the network.',
+    },
+    {
+      q: 'What can I put in a QR code here?',
+      a: 'A link, plain text, a Wi-Fi network, or a contact card (vCard) that a phone camera saves straight into contacts.',
+    },
+  ],
+  pdf: [
+    {
+      q: 'Are my PDFs uploaded to a server?',
+      a: 'No. Merging, organizing and splitting run entirely in your browser with pdf-lib — the files never leave your device.',
+    },
+    {
+      q: 'How do I extract specific pages?',
+      a: 'Type ranges like 1-3, 7, 12- into the extract box and the tool builds a fresh PDF from exactly those pages. “Split every N” cuts the file into parts delivered as a ZIP.',
+    },
+    {
+      q: 'Can I delete or rotate pages?',
+      a: 'Yes — every page shows as a live thumbnail; rotate, delete or reorder from there, and deleted pages stay restorable until you rebuild.',
+    },
+    {
+      q: 'What about password-protected PDFs?',
+      a: 'Encrypted files are detected and explained up front, rather than failing silently or coming out mangled.',
+    },
+  ],
+  'pdf-view': [
+    {
+      q: 'Does the whole PDF upload for viewing?',
+      a: 'No. pdf.js renders it locally in this tab — the document never leaves your device, which is also why it works offline once loaded.',
+    },
+    {
+      q: 'Can I search inside the PDF?',
+      a: 'Yes — the search scans every page and lists which pages contain the phrase, with hit counts; click a result to jump straight there.',
+    },
+    {
+      q: 'What about password-protected PDFs?',
+      a: 'They are refused with the reason. Honest refusal beats a broken viewer.',
+    },
+  ],
+  'pdf-text': [
+    {
+      q: 'Does it work on scanned PDFs?',
+      a: 'Scanned (image-only) PDFs have no text layer; the tool detects that and tells you honestly instead of returning empty pages — no fake OCR.',
+    },
+    {
+      q: 'How is the text exported?',
+      a: 'Copy everything at once, or download a .txt — continuous, or page-marked so you know which page each part came from.',
+    },
+    {
+      q: 'Where does extraction run?',
+      a: 'Locally, with pdf.js in this tab. Big documents show live per-page progress; nothing is uploaded.',
+    },
+  ],
+  'images-to-pdf': [
+    {
+      q: 'Which image formats can I combine?',
+      a: 'JPEG, PNG, WebP, GIF, BMP and AVIF — any mix, in the order you arrange.',
+    },
+    {
+      q: 'Will phone photos come out sideways?',
+      a: 'No. EXIF rotation is read and applied before embedding, so photos arrive straight-side-up in the PDF.',
+    },
+    {
+      q: 'What page sizes are supported?',
+      a: 'A4, US Letter, or a page exactly the size of each image — with auto, portrait or landscape orientation and none, small or large margins.',
+    },
+  ],
+  'office-view': [
+    {
+      q: 'Do I need Microsoft Office installed?',
+      a: 'No. DOCX renders as formatted HTML in a locked-down sandbox; XLSX, XLS and CSV show as a grid with sheet tabs — all inside this browser tab.',
+    },
+    {
+      q: 'Can I convert files here too?',
+      a: 'Yes — DOCX to HTML or plain text, CSV to XLSX, and any spreadsheet sheet to CSV, all produced locally.',
+    },
+    {
+      q: 'Why are old .doc and PowerPoint files refused?',
+      a: 'They are different binary formats this tool does not parse. It says so honestly and points at what works — convert to .docx, or use the PDF tools — rather than showing garbage.',
+    },
+  ],
+  'epub-view': [
+    {
+      q: 'Can it open DRM-protected library books?',
+      a: 'No — and it says so plainly. DRM-locked files cannot be rendered; DRM-free .epub books open fine.',
+    },
+    {
+      q: 'Where does the book go when I close the tab?',
+      a: 'Nowhere. The file is read locally each visit and nothing about you or your library is kept. The table of contents makes it easy to jump back to a chapter.',
+    },
+    {
+      q: 'Can I change the text size?',
+      a: 'Yes, from 12 to 28 px, applied without reloading the book.',
     },
   ],
 
@@ -388,16 +608,20 @@ export const APP_FAQS: Record<string, Faq[]> = {
 /** Home-page FAQs: the questions a first-time visitor asks. */
 export const HOME_FAQS: Faq[] = [
   {
+    q: 'What is the difference between Instant and Live tools?',
+    a: 'Instant tools (ZIP, PDF, images, JSON, passwords…) are one-device utilities: open the page and the work happens on your device in seconds — no session, no code, no upload. Live tools (Share, Call, Screen, Notepad…) connect two or more devices in real time through a six-character code.',
+  },
+  {
     q: 'Is Toolhive really free?',
-    a: 'Yes. There are no accounts, no plans and no paywalls: every tool opens straight into a working session.',
+    a: 'Yes. There are no accounts, no plans and no paywalls: instant tools open ready to use, and a live session starts with one click.',
   },
   {
     q: 'Do the people I invite need an account?',
-    a: 'No. They join with the six-character code, the QR code or the link, from any modern browser, on a phone or a computer.',
+    a: 'No. They join a live session with the six-character code, the QR code or the link, from any modern browser, on a phone or a computer. Instant tools never involve anyone else.',
   },
   {
     q: 'Where does my content go?',
-    a: 'It stays inside the live session. Text, files, boards and chats travel between the devices in the session and are discarded when the session ends or expires. Files sent with Share never touch a cloud server.',
+    a: 'Nowhere near us. Instant tools compute entirely on your device — the file never leaves it. Live tools pass content directly between the devices in the session, and it is discarded when the session ends or expires. There is no storage bucket and no profile on our side.',
   },
   {
     q: 'Does it work on phones?',
@@ -405,13 +629,36 @@ export const HOME_FAQS: Faq[] = [
   },
   {
     q: 'Can I use it once and leave?',
-    a: 'That is the design. Open the tool, do the thing, close the tab. Sessions expire on their own and nothing about you is kept.',
+    a: 'That is the design. Open the tool, do the thing, close the tab. Instant tools were never connected to anything; live sessions expire on their own and nothing about you is kept.',
   },
   {
     q: 'Is there something to install?',
     a: 'Installing is optional. When your browser supports it, an Install button appears; on iPhone the browser offers “Add to Home Screen”. Without installing, everything works the same in the tab.',
   },
 ]
+
+/**
+ * The FAQ set a tool page shows on first paint: the default mode's FAQs (for
+ * tools with modes) merged with the tool-level set, deduped. The server
+ * JSON-LD must mirror exactly what SSR renders, so both the landing view and
+ * the structured-data builder call this one function.
+ */
+export function defaultFaqsFor(app: AppDef): Faq[] {
+  const modes = app.variants ?? []
+  const defaultModeId =
+    modes.length > 1 ? (app.defaultVariantId ?? modes[0].id) : undefined
+  const seen = new Set<string>()
+  return [
+    ...(defaultModeId ? (APP_FAQS[defaultModeId] ?? []) : []),
+    ...(APP_FAQS[app.id] ?? []),
+  ]
+    .filter((f) => {
+      if (seen.has(f.q)) return false
+      seen.add(f.q)
+      return true
+    })
+    .slice(0, 4)
+}
 
 /** Metadata for one tool URL: title, description, keywords. */
 export function appMeta(app: AppDef): {

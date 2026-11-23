@@ -3,11 +3,14 @@
 // InstantSurface — renders an instant tool at its own URL (/zip, /image…).
 // Instant tools have no session, no code, no relay: the whole page is the
 // tool, running locally. Layout mirrors the session-tool landing pages so
-// the surfaces stay consistent.
+// the surfaces stay consistent. ACTION FIRST: header, then the working tool,
+// then everything else (how-it-works, what-it-does, FAQs) below the fold.
+// Doctrine: DESIGN.md at the repo root.
 
 import { AppIcon } from '@/components/platform/app-icon'
 import { BrandMark } from '@/components/platform/app-icon'
 import { getTopApp, type AppDef } from '@/lib/registry'
+import { APP_FAQS } from '@/lib/seo'
 import { ZipTool } from '@/components/instant/zip-tool'
 import { ImageTool } from '@/components/instant/image-tool'
 import { HashTool } from '@/components/instant/hash-tool'
@@ -22,6 +25,7 @@ import { PdfTextTool } from '@/components/instant/pdf-text-tool'
 import { ImagesToPdfTool } from '@/components/instant/images-to-pdf-tool'
 import { OfficeViewTool } from '@/components/instant/office-view-tool'
 import { EpubViewTool } from '@/components/instant/epub-view-tool'
+import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
   zip: ZipTool,
@@ -65,12 +69,15 @@ export function InstantSurface({ appId }: { appId: string }) {
   const Tool = TOOLS[appId]
   if (!app || app.kind !== 'instant' || !Tool) return null
 
+  const faqs = (APP_FAQS[app.id] ?? []).slice(0, 4)
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6">
       <ToolHeader app={app} />
       <div className="mt-6">
         <Tool />
       </div>
+
       {app.howItWorks?.length ? (
         <section className="mt-8 border-t pt-6" aria-label={`How ${app.name} works`}>
           <h2 className="font-display text-lg font-semibold tracking-[-0.02em]">How it works</h2>
@@ -86,6 +93,75 @@ export function InstantSurface({ appId }: { appId: string }) {
           </ol>
         </section>
       ) : null}
+
+      {/* --------------------------------- the written page (below the action) */}
+      <div className="mt-8 grid gap-10 border-t pt-6 lg:grid-cols-[1fr_300px] lg:gap-12">
+        <div>
+          <section aria-labelledby="what-it-does">
+            <h2
+              id="what-it-does"
+              className="font-display text-lg font-semibold tracking-[-0.02em]"
+            >
+              What {app.name} does
+            </h2>
+            <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-foreground/90">
+              {app.description}
+            </p>
+            <ul className="mt-4 space-y-2.5">
+              {app.features.map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm">
+                  <Check
+                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <span className="text-foreground/90">{f}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {faqs.length > 0 && (
+            <section className="mt-8" aria-labelledby={`faq-${app.id}`}>
+              <h2
+                id={`faq-${app.id}`}
+                className="font-display text-lg font-semibold tracking-[-0.02em]"
+              >
+                Quick answers about {app.name}
+              </h2>
+              <ul className="mt-3">
+                {faqs.map((f) => (
+                  <li key={f.q} className="border-t border-border py-4">
+                    <h3 className="text-sm font-semibold">{f.q}</h3>
+                    <p className="mt-1.5 max-w-[62ch] text-sm leading-relaxed text-muted-foreground">
+                      {f.a}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        <aside className="space-y-6 lg:pt-1">
+          <div className="rounded-lg border bg-card p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
+              Private by construction
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {app.name} runs entirely in this browser tab. Your files are processed on your
+              device and never touch a server — there is no upload step to trust, because there
+              is no upload.
+            </p>
+          </div>
+          <div className="border-t pt-4 text-sm">
+            <p className="text-xs font-semibold text-muted-foreground">Free to use</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              No account, no watermark, no daily limit. It is a tool, not a trial.
+            </p>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }

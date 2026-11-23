@@ -247,8 +247,7 @@ export function AppLandingView({ appId }: { appId: string }) {
                 </div>
               )}
 
-              <p className="mt-4 text-sm font-medium text-foreground/90">{shown.tagline}</p>
-
+              {/* the action, then the explanation — never the reverse */}
               <Button
                 size="lg"
                 className="mt-4 h-12 w-full text-base sm:w-auto sm:px-8"
@@ -263,6 +262,9 @@ export function AppLandingView({ appId }: { appId: string }) {
                   `Start ${mode && mode.name !== app.name ? mode.name.toLowerCase() : 'a session'} now`
                 )}
               </Button>
+              {mode && (
+                <p className="mt-2.5 text-sm text-muted-foreground">{mode.tagline}</p>
+              )}
               <p className="mt-2 text-xs text-muted-foreground">
                 One click creates it. No account, nothing to configure.
               </p>

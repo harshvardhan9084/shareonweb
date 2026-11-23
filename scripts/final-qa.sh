@@ -198,6 +198,52 @@ if [ "$u" = "http://localhost:81/share" ]; then ok "legacy ?app=drop -> /share";
 g=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:81/garbage123")
 if [ "$g" = "404" ]; then ok "/garbage123 404"; else bad "404: $g"; fi
 
+echo "== SEO + ethic checks (server HTML) =="
+# 17. home: ethic stated, families explained, FAQPage JSON-LD present
+h=$(curl -s http://localhost:81/)
+echo "$h" | rg -q "Nothing you do here ever lands on our servers" \
+  && ok "home states the ethic up front" || bad "home ethic line"
+echo "$h" | rg -q "Two kinds of tools, one rule" \
+  && ok "hero explains Instant vs Live" || bad "hero families"
+echo "$h" | rg -q "Two ways in, one rule" \
+  && ok "two honest paths section (no session-only claim)" || bad "two paths section"
+echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home FAQPage JSON-LD"
+
+# 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
+#     no old brand. Instant pages also render the written page below the tool.
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view"
+for p in $ALL_LIVE; do
+  h=$(curl -s "http://localhost:81/$p")
+  t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)
+  good=1
+  echo "$h" | rg -q '"@type":"WebApplication"' || { bad "$p: WebApplication JSON-LD"; good=0; }
+  echo "$h" | rg -q '"@type":"HowTo"' || { bad "$p: HowTo JSON-LD"; good=0; }
+  echo "$h" | rg -q '"@type":"FAQPage"' || { bad "$p: FAQPage JSON-LD"; good=0; }
+  echo "$h" | rg -q '<title>[^<]*· Toolhive</title>' || { bad "$p: title not tool-branded"; good=0; }
+  # old BRAND leak (not the unchanged domain shareonweb.vercel.app, which is
+  # legitimately present in canonical/JSON-LD URLs)
+  echo "$h" | rg -q '<title>[^<]*(ShareOnWeb|SHAREONWEB)[^<]*</title>' && { bad "$p: old brand in title"; good=0; }
+  [ "$good" = "1" ] && ok "$p: title + 3 JSON-LD graphs"
+done
+
+# 19. instant page body: action first, written content below
+agent-browser open "http://localhost:81/zip" --timeout 60000 > /dev/null 2>&1
+agent-browser wait --text "Drop files, a folder, or a .zip archive" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "What Zip & Unzip does" \
+  && ok "/zip shows What-it-does below the tool" || bad "/zip what-it-does"
+echo "$snap" | rg -q "Quick answers about Zip & Unzip" \
+  && ok "/zip shows FAQs below the tool" || bad "/zip faq section"
+echo "$snap" | rg -q "Private by construction" \
+  && ok "/zip privacy aside" || bad "/zip privacy aside"
+agent-browser close > /dev/null 2>&1
+
+# 20. session landing: action first (button before any mode explanation)
+agent-browser open "http://localhost:81/share" --timeout 60000 > /dev/null 2>&1
+agent-browser wait --text "Start files now" --timeout 40000 > /dev/null 2>&1
+if agent-browser snapshot -c 2>/dev/null | rg -q "Start files now"; then ok "/share CTA reachable"; else bad "/share CTA"; fi
+agent-browser close > /dev/null 2>&1
+
 echo "== console errors =="
 agent-browser errors 2>/dev/null | rg -v "stderr|launched" | head -4 || true
 
