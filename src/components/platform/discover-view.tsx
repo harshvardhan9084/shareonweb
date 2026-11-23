@@ -22,6 +22,7 @@ import {
   getVariant,
 } from '@/lib/registry'
 import { HOME_FAQS } from '@/lib/seo'
+import { HOME_ARTICLE } from '@/lib/content'
 import { createSession, fetchSession } from '@/lib/api'
 import { normalizeCode } from '@/lib/code'
 import { Button } from '@/components/ui/button'
@@ -329,8 +330,70 @@ export function DiscoverView() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4">
+        {/* ------------------------------------------------- the narrative */}
+        {/* Written for a brand-new visitor conceiving of this place for the
+            first time: what happens to a file here, what happens in a
+            session, the promise, the why. Importance-ordered, long-form. */}
+        <section
+          className="py-10 sm:py-12"
+          aria-labelledby="how-this-works"
+        >
+          <h2
+            id="how-this-works"
+            className="max-w-[34ch] font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
+          >
+            How this place works
+          </h2>
+          <div className="mt-5 max-w-[68ch]">
+            {HOME_ARTICLE.lede.map((p, i) => (
+              <p
+                key={i}
+                className={cn(
+                  'text-pretty leading-relaxed',
+                  i === 0
+                    ? 'text-base text-foreground sm:text-lg'
+                    : 'mt-4 text-foreground/85',
+                )}
+              >
+                {p}
+              </p>
+            ))}
+            {HOME_ARTICLE.sections.map((section) => (
+              <section key={section.heading} className="mt-9">
+                <h3 className="text-lg font-semibold tracking-tight">
+                  {section.heading}
+                </h3>
+                {section.paragraphs.map((p, i) => (
+                  <p
+                    key={i}
+                    className={cn(
+                      'text-pretty leading-relaxed text-foreground/85',
+                      i === 0 ? 'mt-4' : 'mt-3',
+                    )}
+                  >
+                    {p}
+                  </p>
+                ))}
+                {section.list && (
+                  <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-muted-foreground">
+                    {section.list.map((fact) => (
+                      <li key={fact} className="flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className="size-1.5 rounded-full bg-primary/70"
+                        />
+                        {fact}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
+          </div>
+        </section>
+
         {/* ------------------------------------------- the problem, answered */}
-        <section className="py-10 sm:py-12" aria-labelledby="why-this-exists">
+        <section className="border-t py-10 sm:py-12" aria-labelledby="why-this-exists">
           <h2
             id="why-this-exists"
             className="max-w-[34ch] font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
@@ -366,86 +429,6 @@ export function DiscoverView() {
               </li>
             ))}
           </ul>
-        </section>
-
-        {/* ---------------------------------------------------- the two paths */}
-        <section className="border-t py-10 sm:py-12" aria-labelledby="how-it-works">
-          <h2
-            id="how-it-works"
-            className="font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
-          >
-            Two ways in, one rule
-          </h2>
-          <div className="mt-6 grid gap-x-10 gap-y-6 sm:grid-cols-2">
-            <div className="border-t pt-4">
-              <h3 className="font-semibold">Alone — instant tools</h3>
-              <ol className="mt-3 space-y-2.5">
-                {[
-                  {
-                    title: 'Open the tool',
-                    body: 'Zip, PDF, images, text, JSON, passwords — the page is the tool.',
-                  },
-                  {
-                    title: 'It works immediately',
-                    body: 'On this device, with the browser’s own engines. No code, no upload, no waiting.',
-                  },
-                  {
-                    title: 'Take the result and go',
-                    body: 'Download it, copy it, close the tab. Nothing was sent anywhere in the first place.',
-                  },
-                ].map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-3">
-                    <span
-                      className="pt-0.5 font-mono text-sm tabular-nums text-primary"
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="text-sm leading-relaxed text-muted-foreground">
-                      <span className="font-medium text-foreground">{s.title}.</span> {s.body}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-              <button
-                onClick={() => openApp(startApps[0])}
-                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                Try it now
-              </button>
-            </div>
-            <div className="border-t pt-4">
-              <h3 className="font-semibold">Together — live tools</h3>
-              <ol className="mt-3 space-y-2.5">
-                {[
-                  {
-                    title: 'Open a live tool',
-                    body: 'Share, Call, Screen, Notepad — one click creates a temporary session and its code.',
-                  },
-                  {
-                    title: 'Hand over the code',
-                    body: 'The link, the QR or the six characters bring anyone in, with no account.',
-                  },
-                  {
-                    title: 'End it, it is gone',
-                    body: 'Text, files and boards travel directly between the devices, then expire with the session.',
-                  },
-                ].map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-3">
-                    <span
-                      className="pt-0.5 font-mono text-sm tabular-nums text-primary"
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
-                    <span className="text-sm leading-relaxed text-muted-foreground">
-                      <span className="font-medium text-foreground">{s.title}.</span> {s.body}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
         </section>
 
         {/* ------------------------------------------------------- directory */}
@@ -544,37 +527,6 @@ export function DiscoverView() {
               )
             })}
           </div>
-        </section>
-
-        {/* ---------------------------------------------------------- ethic */}
-        <section className="border-t py-10 sm:py-12" aria-labelledby="privacy-strip">
-          <h2
-            id="privacy-strip"
-            className="max-w-[36ch] font-display text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
-          >
-            The ethic: nothing you do here lands on a server
-          </h2>
-          <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-muted-foreground">
-            Instant tools compute on your device with the browser’s own engines — the file is
-            never sent anywhere. Live tools pass content directly between the devices in the
-            session. There is no storage bucket holding your files, no profile holding your
-            name, no tracker mining what you shared. When a session ends it is discarded —
-            and it never existed on our side to begin with.
-          </p>
-          <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2.5 text-sm text-muted-foreground">
-            {[
-              'No accounts anywhere',
-              'No ads, no trackers',
-              'Instant: files never leave your device',
-              'Live: content dies with the session',
-              'Free, with no plans to pick',
-            ].map((fact) => (
-              <li key={fact} className="flex items-center gap-1.5">
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-primary/70" />
-                {fact}
-              </li>
-            ))}
-          </ul>
         </section>
 
         {/* ------------------------------------------------------------ FAQ */}

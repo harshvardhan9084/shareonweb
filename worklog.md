@@ -86,6 +86,7 @@ code covers all of them.* Implemented via family panels
 | **SEO depth pass: every live page owns title/desc/keywords + WebApplication + HowTo + FAQPage JSON-LD; 14 instant pages gained written content below the tool** | DONE (this run), QA-verified 64/64 |
 | **Homepage ethic rewrite: one rule, two honest families, no more conflicting logics** | DONE (this run), QA-verified |
 | **Action-first enforcement: CTA before mode explanation; instant pages open on the tool** | DONE (this run), QA-verified |
+| **Long-form reading pass (owner demand: "i want a long reading, importance-wise"): 26 tool articles (~10k words) + homepage narrative (~800 words), importance-ordered** | DONE (this run), QA-verified 72/72 |
 | Media tools (audio/video/GIF/recorder) — Batch 3 | NOT STARTED — checklist below |
 | AI upscaler / background removal (WASM) | NOT STARTED |
 
@@ -149,74 +150,39 @@ browser-verified through :81. Work top-down; one batch per run is realistic.
 - AI background removal, ffmpeg video conversion (model/codec download size)
 - Anything needing a backend proxy (URL fetchers, IP display)
 
-## 5. QA log — 2026-11-23 (SEO/ethic run, via :81, scripts/final-qa.sh)
+## 5. QA log — 2026-11-23 (long-form reading run, via :81, scripts/final-qa.sh)
 
-**64/64 PASS, zero console errors, hydration clean.** This run answered the
-owner's three fresh complaints, verified against real code first:
+**72/72 PASS, zero console errors.** This run answered the owner's next two
+complaints: the landing page must tell the ethic as a story a new visitor
+conceives of (not legal-consultancy strips), and pages must carry long,
+importance-ordered reading instead of ~200 words.
 
-1. "None of the standalone page is SEO powered!" — the metadata layer existed
-   (titles/descriptions/canonical/OG per tool) but the BODY was thin and the
-   structured data incomplete. Fixed:
-   - `src/lib/seo.ts`: hand-tuned titles + descriptions for the 6 Batch-2
-     tools (pdf, pdf-view, pdf-text, images-to-pdf, office-view, epub-view)
-     that had been falling back to generic taglines; **tool-level FAQs for
-     all 14 instant tools** (they had none); home FAQs re-anchored on the
-     ethic; new `defaultFaqsFor(app)` helper so SSR-visible FAQs and JSON-LD
-     can never drift apart.
-   - `src/app/[slug]/page.tsx`: **FAQPage graph** added to every tool page's
-     JSON-LD (mirrors the Q&As shown on first paint: default mode + tool
-     level, same dedupe/slice).
-   - `src/app/layout.tsx`: **FAQPage graph** for the home page's visible FAQ
-     section.
-   - `InstantSurface`: instant pages now carry a written page below the tool —
-     "What {tool} does" (registry description + features), "Quick answers"
-     (the new FAQs), and a "Private by construction" aside. Action stays
-     first; the copy lives below the fold, where it belongs.
-   - QA now asserts, for all 26 live pages: tool-branded title,
-     WebApplication + HowTo + FAQPage JSON-LD, no old brand in titles.
-2. "The action should be on top and the shit should be below" — session-tool
-   landing had a redundant mode tagline pushing the CTA down: button now sits
-   directly under the mode picker, mode tagline moved BELOW the button.
-   Instant pages were already action-first and keep their tightened header.
-3. "The homepage does not tell the ethic; it conflicts logics/ideas" — the
-   old homepage claimed "one click creates a temporary session" for EVERY
-   tool (false for the 14 instant ones) and called the session code "the
-   product's one real artifact". Rewritten:
-   - Hero states the ethic plainly under the value prop: "Nothing you do
-     here ever lands on our servers."
-   - Right column: "Two kinds of tools, one rule" — Instant explained
-     (no code because nobody else is involved), Live explained (the code),
-     join input kept prominent under the Live half.
-   - "Three steps, every tool" replaced by "Two ways in, one rule" —
-     honest per-family paths.
-   - Trust section renamed to THE ETHIC with explicit claims (no accounts,
-     no ads/trackers, instant = files never leave the device, live =
-     content dies with the session, free).
-   - Footer copy no longer describes the whole product as
-     "device-to-device sessions"; OG alt text updated likewise.
+What was built:
 
-**>15-min "reconnecting forever" — investigated, no code bug reachable.**
-Verified: client retries infinitely (5 s backoff cap), re-joins on every
-connect, dead-end escalates at 90 s with working "Dial again now"
-(`forceReconnect` closes the engine and re-dials); relay `join` is
-synchronous, always acks, wrapped in try/catch, and recreates rooms on join
-(that permissiveness is what makes recovery work — do not "fix" it without
-a persistent session source in the relay); empty rooms sweep after 2 h,
-registry rows after 24 h; no 15-minute constant exists anywhere. Remaining
-causes are environmental (sandbox kills processes; device network switches),
-and the UI already degrades honestly into actionable options. No change made
-this run — a blind relay validation change would break post-restart joins.
-
-Previous QA log (Batch 2) — 30/30 PASS — is retained in git history.
-
-Checks this run: `bun run lint` clean; `bunx tsc --noEmit` clean on src.
-
-### Credentials note (2026-11-23, this run)
-`.git-credentials` (project-level) and `~/.git-credentials` were both wiped by
-a sandbox recycle again — the credential helper still points at the missing
-file, so pushes fail with auth errors until the owner supplies a fresh
-fine-grained PAT (repo `harshvardhan9084/shareonweb`, Contents: Read & write)
-and the file is rewritten with it. Everything else is committed locally.
+1. **Long-form article library** — `src/lib/article-types.ts`,
+   `src/lib/articles-live.ts` (12 session tools), `src/lib/articles-instant.ts`
+   (14 instant tools), merged in `src/lib/content.ts`. Every tool now carries
+   a full article below the action: lede (what it is) → mechanics (how it
+   works, implementation-accurate) → scenarios (when it beats the usual way)
+   → privacy mechanics for THIS tool → honest details/limits. ~10,100 words
+   total across 26 articles (300–530 words each, on top of features/FAQ/how-
+   it-works already on the page).
+2. **Tool pages render the article** — `AppLandingView` (session tools)
+   and `InstantSurface` (instant tools) both replaced their thin
+   description paragraph with the article; FAQ, features and asides follow.
+   Action stays first; the reading lives below, importance-ordered.
+3. **Homepage narrative** — new "How this place works" section
+   (`HOME_ARTICLE`, ~800 words): what happens when you zip a file here, what
+   happens in a live session, the five-fact promise, why it is built this
+   way, what a session is, who this is for. Replaces the old bullet-strip
+   ethic section; the redundant "Two ways in" section was removed (its
+   content is the narrative now). Order: hero → narrative → the problem →
+   the tools → FAQ → last CTA.
+4. **Homepage SEO** — `src/app/page.tsx` gained OpenGraph/Twitter metadata
+   and a WebSite JSON-LD entity alongside the FAQPage graph.
+5. **QA extended** — `scripts/final-qa.sh` now asserts the homepage
+   narrative sections render and that the long-form article renders below
+   the action on both /zip (instant) and /share (session tool).
 
 ## 6. Sandbox lifecycle constraint (IMPORTANT for future runs)
 
@@ -229,11 +195,11 @@ check against a dead server is not a defect.
 ## 7. Git / deploy
 
 - Commits go out under the owner's identity (harshvardhan9084) — configured
-  in-repo. Credentials: `.git-credentials` **inside the project** (gitignored)
-  via `credential.helper=store --file=…`. NOTE (2026-11-23): the file was once
-  lost to a sandbox recycle and had to be re-created from the owner's PAT;
-  `~/.git-credentials` does NOT survive recycles — always restore the
-  project-level file. If pushes ever fail with auth errors, ask the owner for
+  in-repo. Credentials: `~/.git-credentials` (chmod 600) via
+  `credential.helper=store --file=…`. NOTE (2026-11-23): the owner supplied a
+  fresh fine-grained PAT this run; the file was restored and three pushes
+  succeeded (through the long-form reading run). The file does NOT survive
+  sandbox recycles — if pushes ever fail with auth errors, ask the owner for
   a fresh fine-grained PAT (repo `harshvardhan9084/shareonweb`, Contents:
   Read & write) and rewrite that file.
 - Push after every meaningful milestone — always, unprompted.

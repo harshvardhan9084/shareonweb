@@ -205,8 +205,12 @@ echo "$h" | rg -q "Nothing you do here ever lands on our servers" \
   && ok "home states the ethic up front" || bad "home ethic line"
 echo "$h" | rg -q "Two kinds of tools, one rule" \
   && ok "hero explains Instant vs Live" || bad "hero families"
-echo "$h" | rg -q "Two ways in, one rule" \
-  && ok "two honest paths section (no session-only claim)" || bad "two paths section"
+echo "$h" | rg -q "How this place works" \
+  && ok "homepage narrative section present (ethic as story)" || bad "narrative section"
+echo "$h" | rg -q "What actually happens when you zip a file here" \
+  && ok "narrative explains instant mechanics" || bad "narrative instant mechanics"
+echo "$h" | rg -q "What actually happens in a live session" \
+  && ok "narrative explains live mechanics" || bad "narrative live mechanics"
 echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home FAQPage JSON-LD"
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
@@ -232,6 +236,14 @@ agent-browser wait --text "Drop files, a folder, or a .zip archive" --timeout 40
 snap=$(agent-browser snapshot -c 2>/dev/null)
 echo "$snap" | rg -q "What Zip & Unzip does" \
   && ok "/zip shows What-it-does below the tool" || bad "/zip what-it-does"
+echo "$snap" | rg -q "Zip & Unzip packs a pile of files" \
+  && ok "/zip long-form article renders below the action" || bad "/zip article lede"
+echo "$snap" | rg -q "How packing and unpacking works" \
+  && ok "/zip article mechanics section renders" || bad "/zip article mechanics"
+echo "$snap" | rg -q "When it beats the desktop way" \
+  && ok "/zip article scenarios section renders" || bad "/zip article scenarios"
+echo "$snap" | rg -q "What happens to your files" \
+  && ok "/zip article privacy section renders" || bad "/zip article privacy"
 echo "$snap" | rg -q "Quick answers about Zip & Unzip" \
   && ok "/zip shows FAQs below the tool" || bad "/zip faq section"
 echo "$snap" | rg -q "Private by construction" \
@@ -242,6 +254,11 @@ agent-browser close > /dev/null 2>&1
 agent-browser open "http://localhost:81/share" --timeout 60000 > /dev/null 2>&1
 agent-browser wait --text "Start files now" --timeout 40000 > /dev/null 2>&1
 if agent-browser snapshot -c 2>/dev/null | rg -q "Start files now"; then ok "/share CTA reachable"; else bad "/share CTA"; fi
+agent-browser wait --text "How a transfer actually happens" --timeout 40000 > /dev/null 2>&1
+agent-browser snapshot -c 2>/dev/null | rg -q "How a transfer actually happens" \
+  && ok "/share long-form article renders below the action" || bad "/share article"
+agent-browser snapshot -c 2>/dev/null | rg -q "Details worth knowing" \
+  && ok "/share article reaches the details section" || bad "/share article details"
 agent-browser close > /dev/null 2>&1
 
 echo "== console errors =="

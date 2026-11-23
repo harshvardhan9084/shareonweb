@@ -20,11 +20,12 @@ import {
   variantsOf,
   type AppVariant,
 } from '@/lib/registry'
+import { getArticle } from '@/lib/content'
 import { createSession, fetchSession } from '@/lib/api'
 import { quickStart } from '@/lib/quick-start'
 import { normalizeCode, formatCode } from '@/lib/code'
 import { APP_FAQS } from '@/lib/seo'
-import { humanError } from '@/lib/utils'
+import { cn, humanError } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { formatDistanceToNowStrict, isPast } from 'date-fns'
@@ -406,19 +407,75 @@ export function AppLandingView({ appId }: { appId: string }) {
       {/* ------------------------------------------------- details (below) */}
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
         <div>
-          <p className="text-pretty leading-relaxed text-foreground/90">{app.description}</p>
+          {/* the article: what it is, how it works, when to use it, privacy,
+              details — importance-ordered, written for real reading */}
+          {(() => {
+            const article = getArticle(app.id)
+            if (!article) {
+              return <p className="text-pretty leading-relaxed text-foreground/90">{app.description}</p>
+            }
+            return (
+              <article aria-label={`About ${app.name}`} className="max-w-[68ch]">
+                {article.lede.map((p, i) => (
+                  <p
+                    key={i}
+                    className={cnText(
+                      'text-pretty leading-relaxed',
+                      i === 0 ? 'text-foreground' : 'mt-4 text-foreground/85',
+                    )}
+                  >
+                    {p}
+                  </p>
+                ))}
+                {article.sections.map((section) => (
+                  <section key={section.heading} className="mt-8">
+                    <h2 className="text-lg font-semibold tracking-tight">{section.heading}</h2>
+                    {section.paragraphs.map((p, i) => (
+                      <p
+                        key={i}
+                        className={cnText(
+                          'text-pretty leading-relaxed text-foreground/85',
+                          i === 0 ? 'mt-4' : 'mt-3',
+                        )}
+                      >
+                        {p}
+                      </p>
+                    ))}
+                    {section.list && (
+                      <ul className="mt-4 space-y-2">
+                        {section.list.map((item) => (
+                          <li key={item} className="flex items-start gap-2.5 text-sm">
+                            <Check
+                              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                              aria-hidden="true"
+                            />
+                            <span className="text-foreground/90">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                ))}
+              </article>
+            )
+          })()}
 
-          <h2 className="mt-8 text-lg font-semibold tracking-tight">
-            {mode ? `What ${mode.name.toLowerCase()} does` : 'What it does'}
-          </h2>
-          <ul className="mt-4 space-y-2.5">
-            {shown.features.map((f) => (
-              <li key={f} className="flex items-start gap-2.5 text-sm">
-                <Check className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <span className="text-foreground/90">{f}</span>
-              </li>
-            ))}
-          </ul>
+          {/* mode feature list: what this mode does, scannable under the prose */}
+          {mode && shown.features.length > 0 && (
+            <section className="mt-8">
+              <h2 className="text-lg font-semibold tracking-tight">
+                What {mode.name.toLowerCase()} does
+              </h2>
+              <ul className="mt-4 space-y-2.5">
+                {shown.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm">
+                    <Check className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <span className="text-foreground/90">{f}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {faqs.length > 0 && (
             <section className="mt-8" aria-label={`Quick answers about ${app.name}`}>
@@ -484,6 +541,10 @@ export function AppLandingView({ appId }: { appId: string }) {
       </div>
     </div>
   )
+}
+
+function cnText(...classes: Array<string | false>): string {
+  return classes.filter(Boolean).join(' ')
 }
 
 function cnModeButton(active: boolean): string {

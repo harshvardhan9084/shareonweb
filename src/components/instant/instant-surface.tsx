@@ -10,6 +10,7 @@
 import { AppIcon } from '@/components/platform/app-icon'
 import { BrandMark } from '@/components/platform/app-icon'
 import { getTopApp, type AppDef } from '@/lib/registry'
+import { getArticle } from '@/lib/content'
 import { APP_FAQS } from '@/lib/seo'
 import { ZipTool } from '@/components/instant/zip-tool'
 import { ImageTool } from '@/components/instant/image-tool'
@@ -64,6 +65,10 @@ function ToolHeader({ app }: { app: AppDef }) {
   )
 }
 
+function cnInstant(...classes: Array<string | false>): string {
+  return classes.filter(Boolean).join(' ')
+}
+
 export function InstantSurface({ appId }: { appId: string }) {
   const app = getTopApp(appId)
   const Tool = TOOLS[appId]
@@ -104,9 +109,61 @@ export function InstantSurface({ appId }: { appId: string }) {
             >
               What {app.name} does
             </h2>
-            <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-foreground/90">
-              {app.description}
-            </p>
+            {/* the article: importance-ordered long-form, written for reading */}
+            {(() => {
+              const article = getArticle(app.id)
+              if (!article) {
+                return (
+                  <p className="mt-3 max-w-[62ch] text-pretty leading-relaxed text-foreground/90">
+                    {app.description}
+                  </p>
+                )
+              }
+              return (
+                <div className="mt-4 max-w-[68ch]">
+                  {article.lede.map((p, i) => (
+                    <p
+                      key={i}
+                      className={cnInstant(
+                        'text-pretty leading-relaxed',
+                        i === 0 ? 'text-foreground' : 'mt-4 text-foreground/85',
+                      )}
+                    >
+                      {p}
+                    </p>
+                  ))}
+                  {article.sections.map((section) => (
+                    <section key={section.heading} className="mt-7">
+                      <h3 className="text-lg font-semibold tracking-tight">{section.heading}</h3>
+                      {section.paragraphs.map((p, i) => (
+                        <p
+                          key={i}
+                          className={cnInstant(
+                            'text-pretty leading-relaxed text-foreground/85',
+                            i === 0 ? 'mt-4' : 'mt-3',
+                          )}
+                        >
+                          {p}
+                        </p>
+                      ))}
+                      {section.list && (
+                        <ul className="mt-4 space-y-2">
+                          {section.list.map((item) => (
+                            <li key={item} className="flex items-start gap-2.5 text-sm">
+                              <Check
+                                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                                aria-hidden="true"
+                              />
+                              <span className="text-foreground/90">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  ))}
+                </div>
+              )
+            })()}
             <ul className="mt-4 space-y-2.5">
               {app.features.map((f) => (
                 <li key={f} className="flex items-start gap-2.5 text-sm">
