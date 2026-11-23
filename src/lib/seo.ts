@@ -42,6 +42,11 @@ const SEO_TITLES: Record<string, string> = {
   'images-to-pdf': 'Images to PDF — turn photos and scans into one PDF, no upload',
   'office-view': 'Word & Excel Viewer — open DOCX and XLSX online, convert them too',
   'epub-view': 'EPUB Reader — read books in your browser with contents and progress',
+  audio: 'Audio Toolkit — trim, merge and normalize audio, export WAV or MP3, no upload',
+  gif: 'GIF Studio — turn video into a GIF or shrink an existing GIF, all in your browser',
+  'frame-grab': 'Frame Grabber — pull still PNG frames from any video, one shot or the whole clip',
+  recorder: 'Screen & Mic Recorder — capture your screen or voice to a file, never uploaded',
+  upscaler: 'Image Upscaler — enlarge photos 2–4× with stepped resampling and sharpening, locally',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -98,6 +103,16 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Open DOCX, XLSX and CSV files without Office: formatted documents, spreadsheet grids with sheet tabs, plus DOCX→HTML and CSV→XLSX conversion. All local.',
   'epub-view':
     'Read DRM-free EPUB books in the browser: paginated chapters, table of contents, text-size control and live progress. Rendered locally with epub.js.',
+  audio:
+    'Cut a clip from a recording, join files, change speed, normalize loudness and add fades — rendered by Web Audio and exported as WAV or MP3 on your device.',
+  gif:
+    'Convert video to a looping GIF with your own start, length, fps and width, or shrink a GIF by scaling and frame-skipping. Encoded locally, nothing uploaded.',
+  'frame-grab':
+    'Scrub a video and grab exact frames as PNGs at native resolution, or sweep the clip every N seconds and download the set as a ZIP. Fully local.',
+  recorder:
+    'Record the screen, a window or a tab — with mic narration mixed in — or capture voice alone. Pause, resume, stop and download the WebM. Nothing leaves your device.',
+  upscaler:
+    'Enlarge images 2×, 3× or 4× with stepped high-quality resampling plus unsharp sharpening. Before/after sizes shown side by side. Runs in your browser.',
 }
 
 /**
@@ -451,6 +466,76 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Can I change the text size?',
       a: 'Yes, from 12 to 28 px, applied without reloading the book.',
+    },
+  ],
+  audio: [
+    {
+      q: 'Which formats can I drop in?',
+      a: 'Whatever your browser decodes: WAV, MP3, OGG, FLAC, M4A and friends. If a file cannot be decoded, the page says so instead of guessing.',
+    },
+    {
+      q: 'Does speeding audio up change the pitch?',
+      a: 'Yes — like tape. The samples are resampled, so a 2× clip plays an octave up. It is stated on the control rather than hidden behind a lossy algorithm.',
+    },
+    {
+      q: 'Is the MP3 export real MP3?',
+      a: 'Yes — encoded on this device with the LAME engine compiled to JavaScript. WAV export is 16-bit PCM, which plays everywhere.',
+    },
+  ],
+  gif: [
+    {
+      q: 'How long a video should I convert?',
+      a: 'Short is better: every frame is captured and quantized in this tab, so a 5–10 second clip at 10 fps is the sweet spot and finishes in seconds.',
+    },
+    {
+      q: 'Why is my GIF bigger than the video?',
+      a: 'GIF stores every frame as raw indexed pixels — it cannot match video compression. Lower fps, smaller width, or skipping frames in the shrink mode brings the size down.',
+    },
+    {
+      q: 'What does frame-skip do when shrinking a GIF?',
+      a: 'It keeps every Nth frame and re-times the delays so the animation plays at the same speed, just with fewer frames to store.',
+    },
+  ],
+  'frame-grab': [
+    {
+      q: 'What resolution are the frames?',
+      a: 'The video’s own native resolution, straight from the decoder — a 1080p clip yields 1920×1080 PNGs unless you pick a smaller scale.',
+    },
+    {
+      q: 'Why does the video have to play in this browser?',
+      a: 'Frames are decoded by the browser’s video engine, so formats it supports (WebM, MP4/H.264 on most systems) work and DRM-protected streams are honestly refused.',
+    },
+    {
+      q: 'Can I grab every frame?',
+      a: 'You can sweep at a fixed interval (every 0.5 s, 1 s, …) or request an even count across the clip. True every-single-frame export is a job for desktop tools.',
+    },
+  ],
+  recorder: [
+    {
+      q: 'Where does the recording go?',
+      a: 'Into this tab’s memory only. When you stop, the WebM is handed to you as a download — there is no cloud copy, because there is no upload code here.',
+    },
+    {
+      q: 'Why does my browser ask for permission?',
+      a: 'Screen and microphone capture are protected browser features: you choose the surface (screen, window, tab) and can cancel any time. The page records only what you granted.',
+    },
+    {
+      q: 'What file do I get?',
+      a: 'WebM — VP8/VP9 video with Opus audio, or Opus alone for voice recordings. It plays in any modern browser and VLC.',
+    },
+  ],
+  upscaler: [
+    {
+      q: 'Is this AI super-resolution?',
+      a: 'No, and the page will not pretend otherwise. It uses stepped high-quality resampling plus an unsharp mask — real, predictable quality without a 50 MB model download.',
+    },
+    {
+      q: 'Why step through 2× doublings instead of one jump?',
+      a: 'Each doubling reuses smooth interpolation on an already-clean intermediate, which preserves far more edge structure than a single large resample.',
+    },
+    {
+      q: 'What does the sharpening slider do?',
+      a: 'An unsharp-mask pass: it exaggerates local contrast along edges. Small amounts crisp up enlargement; heavy amounts start to halo — the preview shows it honestly.',
     },
   ],
 

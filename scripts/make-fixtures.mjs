@@ -136,4 +136,56 @@ epub.file('OEBPS/chapter2.xhtml', chapter('Chapter Two', [
 ]))
 await epub.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }).then((b) => fs.writeFileSync(join(OUT, 'sample.epub'), b))
 console.log('wrote sample.epub')
+
+// ---------------------------------------------------------------- media
+// tone.wav — 3 s of 440 Hz sine, 16-bit PCM 44.1 kHz mono, written by hand.
+{
+  const rate = 44100
+  const seconds = 3
+  const n = rate * seconds
+  const data = Buffer.alloc(n * 2)
+  for (let i = 0; i < n; i++) {
+    // fade the sine in/out so normalization has a quiet edge to lift
+    const t = i / rate
+    const env = Math.min(1, t * 4, (seconds - t) * 4)
+    const v = Math.sin(2 * Math.PI * 440 * t) * 0.35 * env
+    data.writeInt16LE(Math.round(v * 32767), i * 2)
+  }
+  const header = Buffer.alloc(44)
+  header.write('RIFF', 0)
+  header.writeUInt32LE(36 + data.length, 4)
+  header.write('WAVE', 8)
+  header.write('fmt ', 12)
+  header.writeUInt32LE(16, 16)
+  header.writeUInt16LE(1, 20)
+  header.writeUInt16LE(1, 22)
+  header.writeUInt32LE(rate, 24)
+  header.writeUInt32LE(rate * 2, 28)
+  header.writeUInt16LE(2, 32)
+  header.writeUInt16LE(16, 34)
+  header.write('data', 36)
+  header.writeUInt32LE(data.length, 40)
+  fs.writeFileSync(join(OUT, 'tone.wav'), Buffer.concat([header, data]))
+  console.log('wrote tone.wav (3 s, 440 Hz sine)')
+}
+
+// clip.webm + anim.gif — real ffmpeg outputs (VP9 video; palettized GIF).
+{
+  const { execFileSync } = await import('node:child_process')
+  const mk = (args) => execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...args], { stdio: 'pipe' })
+  // 2 s animated test pattern with a moving element (frames must differ)
+  mk([
+    '-f', 'lavfi', '-i', 'testsrc=size=320x240:rate=15:duration=2',
+    '-c:v', 'libvpx-vp9', '-b:v', '200k',
+    join(OUT, 'clip.webm'),
+  ])
+  console.log('wrote clip.webm (2 s VP9)')
+  mk([
+    '-f', 'lavfi', '-i', 'testsrc=size=160x120:rate=10:duration=1.6',
+    '-vf', 'split[a][b];[a]palettegen[p];[b][p]paletteuse',
+    join(OUT, 'anim.gif'),
+  ])
+  console.log('wrote anim.gif (16 frames)')
+}
+
 console.log('fixtures ready in ' + OUT)

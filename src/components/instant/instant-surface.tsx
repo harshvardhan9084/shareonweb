@@ -26,6 +26,11 @@ import { PdfTextTool } from '@/components/instant/pdf-text-tool'
 import { ImagesToPdfTool } from '@/components/instant/images-to-pdf-tool'
 import { OfficeViewTool } from '@/components/instant/office-view-tool'
 import { EpubViewTool } from '@/components/instant/epub-view-tool'
+import { AudioTool } from '@/components/instant/audio-tool'
+import { GifTool } from '@/components/instant/gif-tool'
+import { FrameGrabTool } from '@/components/instant/frame-grab-tool'
+import { RecorderTool } from '@/components/instant/recorder-tool'
+import { UpscalerTool } from '@/components/instant/upscaler-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -43,6 +48,11 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'images-to-pdf': ImagesToPdfTool,
   'office-view': OfficeViewTool,
   'epub-view': EpubViewTool,
+  audio: AudioTool,
+  gif: GifTool,
+  'frame-grab': FrameGrabTool,
+  recorder: RecorderTool,
+  upscaler: UpscalerTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

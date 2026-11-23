@@ -26,6 +26,7 @@ echo "dev ready: HTTP $code"
 echo "== warming routes (curl) =="
 for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" "/qr" \
          "/pdf" "/pdf-view" "/pdf-text" "/images-to-pdf" "/office-view" "/epub-view" \
+         "/audio" "/gif" "/frame-grab" "/recorder" "/upscaler" \
          "/beam" "/call"; do
   printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
 done
@@ -165,6 +166,104 @@ echo "$snap" | rg -q "· Chapter Two" && echo "$snap" | rg -q "closing chapter" 
   && ok "/epub-view TOC jump + section label" || bad "/epub-view TOC jump"
 agent-browser close > /dev/null 2>&1
 
+# 11a. /audio: decode WAV, trim to 1-2.5s, render WAV result
+agent-browser open "http://localhost:81/audio" --timeout 60000 > /dev/null 2>&1
+sleep 2
+agent-browser upload "input[type=file]" "$FX/tone.wav" > /dev/null 2>&1
+sleep 4
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "0:03.0 · 44100 Hz · mono" && ok "/audio decodes WAV + waveform stats" || bad "/audio decode"
+agent-browser find label "Start (s)" fill "1" > /dev/null 2>&1
+agent-browser find label "End (s)" fill "2.5" > /dev/null 2>&1
+rbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Render clip" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$rbtn > /dev/null 2>&1
+sleep 4
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '"tone-toolhive.wav"' && echo "$snap" | rg -q '1\.5' \
+  && ok "/audio trim renders 1.5 s WAV" || bad "/audio render"
+agent-browser close > /dev/null 2>&1
+
+# 11b. /gif: video -> GIF end-to-end (VP9 webm fixture)
+agent-browser open "http://localhost:81/gif" --timeout 60000 > /dev/null 2>&1
+sleep 2
+agent-browser upload "input[type=file]" "$FX/clip.webm" > /dev/null 2>&1
+sleep 5
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'Video loaded' && ok "/gif loads video metadata" || bad "/gif video load"
+gbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Make GIF — [0-9]+ frames" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$gbtn > /dev/null 2>&1
+# 20 frames, each needing a seek+capture; under QA-suite load this can take a while
+for i in $(seq 1 12); do
+  sleep 5
+  if agent-browser snapshot -c 2>/dev/null | rg -q '"toolhive-clip.gif"'; then break; fi
+done
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '"toolhive-clip.gif"' && echo "$snap" | rg -q ' frames · ' \
+  && echo "$snap" | rg -q '"320"' && ok "/gif video→GIF renders 20 frames" || bad "/gif video→GIF"
+agent-browser close > /dev/null 2>&1
+
+# 11c. /gif: drop a GIF -> routes to shrink mode
+agent-browser open "http://localhost:81/gif" --timeout 60000 > /dev/null 2>&1
+sleep 2
+agent-browser upload "input[type=file]" "$FX/anim.gif" > /dev/null 2>&1
+sleep 4
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'GIF loaded' && ok "/gif routes a GIF to shrink mode" || bad "/gif gif load"
+sbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Shrink GIF" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$sbtn > /dev/null 2>&1
+sleep 8
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '"anim-small.gif"' && echo "$snap" | rg -q 'smaller' \
+  && ok "/gif shrink produces smaller GIF" || bad "/gif shrink"
+agent-browser close > /dev/null 2>&1
+
+# 11d. /frame-grab: grab a frame + sweep batch
+agent-browser open "http://localhost:81/frame-grab" --timeout 60000 > /dev/null 2>&1
+sleep 2
+agent-browser upload "input[type=file]" "$FX/clip.webm" > /dev/null 2>&1
+sleep 4
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'Video loaded' && echo "$snap" | rg -q '"320"' \
+  && ok "/frame-grab reads video dims" || bad "/frame-grab metadata"
+grbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Grab this frame" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$grbtn > /dev/null 2>&1
+sleep 2
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '" frame"' && ok "/frame-grab single frame lands in sheet" || bad "/frame-grab single"
+sweep=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Sweep every 1s" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$sweep > /dev/null 2>&1
+sleep 10
+snap=$(agent-browser snapshot -c 2>/dev/null)
+[ "$(echo "$snap" | rg -c 'Frame at' || true)" = "3" ] \
+  && ok "/frame-grab sweep brings sheet to 3 frames" || bad "/frame-grab sweep"
+agent-browser close > /dev/null 2>&1
+
+# 11e. /recorder: surfaces + honest explainer render (headless cannot grant
+#      capture permission, so the capture flow itself is verified on-device)
+agent-browser open "http://localhost:81/recorder" --timeout 60000 > /dev/null 2>&1
+sleep 2
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'Record screen' && echo "$snap" | rg -q 'Microphone' \
+  && echo "$snap" | rg -q 'Mix in microphone' \
+  && ok "/recorder renders surfaces + mic mix + explainer" || bad "/recorder render"
+agent-browser close > /dev/null 2>&1
+
+# 11f. /upscaler: 2x upscale with dimensions shown
+agent-browser open "http://localhost:81/upscaler" --timeout 60000 > /dev/null 2>&1
+sleep 2
+agent-browser upload "input[type=file]" "$FX/photo.png" > /dev/null 2>&1
+sleep 3
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '"480"' && echo "$snap" | rg -q '"360"' \
+  && ok "/upscaler reads source dims" || bad "/upscaler source"
+ubtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Upscale" \[.*ref=(e[0-9]+)\]' -r '$1')
+agent-browser click @$ubtn > /dev/null 2>&1
+sleep 4
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'After — 960×720' && echo "$snap" | rg -q 'Download 960×720' \
+  && ok "/upscaler produces 2× result" || bad "/upscaler result"
+agent-browser close > /dev/null 2>&1
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -216,7 +315,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

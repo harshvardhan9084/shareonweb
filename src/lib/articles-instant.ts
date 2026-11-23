@@ -1,6 +1,6 @@
 import type { AppArticle } from '@/lib/article-types'
 
-// Long-form articles for the 14 instant tools. Every fact here reflects the
+// Long-form articles for the 19 instant tools. Every fact here reflects the
 // real implementation: the browser engines used, the honest limits (memory,
 // formats, DRM, encryption), and the privacy model (files never leave the
 // device because there is no upload code at all).
@@ -620,6 +620,223 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
         paragraphs: [
           'DRM-protected books (typically library or store purchases tied to a vendor app) are refused by design: breaking DRM is not legal in most places, and the page explains this instead of pretending otherwise. DRM-free epubs, including most project titles and self-published books, open freely.',
           'Corrupted files are detected and reported with the reason, so a bad download is a clear message rather than a blank reader.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------ audio
+  audio: {
+    lede: [
+      'Audio Toolkit is a small bench for the audio jobs that come up in a normal week: cut the dead air off a voice memo, join two recordings into one, speed a lecture up to save twenty minutes, bring a quiet recording up to a sane loudness, or soften a hard cut with a fade. Everything happens in one page, on one device.',
+      'The page decodes your file with the browser\u2019s own Web Audio engine, draws the waveform from the real samples \u2014 not a proxy thumbnail \u2014 and renders your edits into a finished clip that is encoded right here as 16-bit WAV or real MP3. There is no upload step anywhere in that journey, which is why there is nothing to promise about privacy: your audio never leaves the tab.',
+    ],
+    sections: [
+      {
+        heading: 'How the edits actually work',
+        paragraphs: [
+          'Trimming slices the decoded samples between your two points \u2014 the waveform shows exactly what is inside and outside the selection, so the cut is not a guess. Merging concatenates files end to end; when their sample rates differ, the extra files are resampled to the first file\u2019s rate first, because concatenating mismatched rates is how you get chipmunk audio.',
+          'Speed resamples the audio: 2\u00d7 plays twice as fast and an octave up, like a tape machine, and the page says so on the control instead of hiding behind a lossy time-stretch. Normalization comes in two honest flavors: peak mode scales the loudest sample up to a ceiling you set (-1 dB by default) so nothing clips, and loudness (RMS) mode targets perceived level, with a peak ceiling applied after so the result is both loud and safe.',
+          'Fades are equal-power ramps applied at the very end of the chain, on the trimmed clip you are actually exporting \u2014 not baked into the source, so re-trimming never double-fades.',
+        ],
+      },
+      {
+        heading: 'When it beats the desktop way',
+        paragraphs: [
+          'Most audio jobs people actually have are thirty-second jobs. Installing an audio editor for them is like buying a lathe to sharpen a pencil.',
+        ],
+        list: [
+          'Trim a voice memo to the useful 40 seconds and send it',
+          'Bring a recording made too quietly up to normal loudness',
+          'Join three chapter recordings into one file for a podcast host',
+          'Speed up a lecture recording 1.5\u00d7 before your commute',
+          'Export a WAV snippet as MP3 without uploading it to a converter site',
+        ],
+      },
+      {
+        heading: 'What happens to your audio',
+        paragraphs: [
+          'The file is read into this tab\u2019s memory, decoded to raw samples, edited there and re-encoded to the download you take away. No network request carries any of it \u2014 open the browser\u2019s network tab and watch: nothing leaves. A recording of a private meeting stays as private as it was on your phone.',
+          'Close the tab and the samples are gone. There is no server copy to request deletion of, no retention window to trust, no account history to purge.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'Formats follow your browser\u2019s decoder: WAV and MP3 everywhere, plus OGG, FLAC and M4A on most systems. Undecodable files are refused with the reason, not rendered as silence.',
+          'Export sizes are bounded by memory: a one-hour stereo WAV at 44.1 kHz is around 600 MB \u2014 big but manageable on a laptop, optimistic on an old phone. MP3 export (128/192/320 kbps) uses the LAME engine compiled to JavaScript and runs at real-time-or-faster on modern hardware. The page shows progress honestly during the encode.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- gif
+  gif: {
+    lede: [
+      'GIF Studio does the two things people actually need with GIFs: turning a short piece of video into a looping animation, and making an existing GIF small enough to survive a chat app\u2019s upload limit. Both run entirely in this tab.',
+      'Video frames are captured by the browser\u2019s own video engine and each frame is quantized to a real 256-color palette \u2014 the classic GIF bottleneck, done properly with optional dithering \u2014 then encoded locally. Shrinking works the other way: the GIF is decoded frame by frame, scaled, frame-skipped and re-encoded with its original timing preserved.',
+    ],
+    sections: [
+      {
+        heading: 'Video to GIF, with the controls that matter',
+        paragraphs: [
+          'You choose the start point, the length, the frame rate and the output width \u2014 the four numbers that determine both what the GIF says and what it weighs. The frame rate is capped at a sensible 20 fps because GIF playback is delay-based anyway; the width defaults to 480 px, which is where chat apps display it.',
+          'Every frame is quantized against its own palette, which keeps colors honest even when the scene changes \u2014 a global palette from one frame would tint the rest. Dithering is optional: on for gradients and screen recordings, off for flat art where you want clean edges.',
+        ],
+      },
+      {
+        heading: 'Shrinking a GIF that is too big',
+        paragraphs: [
+          'Three levers, in order of how much they save: width (pixels are squared, so 320 px instead of 480 px cuts area nearly in half), frame skip (keep every 2nd or 3rd frame \u2014 the delays are re-timed so the animation plays at the same speed), and re-quantization with fresh palettes. The page shows the original and resulting size side by side before you download anything.',
+          'GIF cannot compete with video compression \u2014 it stores indexed pixels per frame \u2014 so \u201ccompress\u201d here means a genuinely smaller GIF, not magic. The honest numbers are on the result card.',
+        ],
+      },
+      {
+        heading: 'When it beats the converter sites',
+        paragraphs: [
+          'GIF converter sites have a failure mode everyone has met: the 50 MB upload of a clip you did not want on a server, the queue, the watermark. None of that applies here.',
+        ],
+        list: [
+          'Clip a reaction GIF from a video that never leaves your machine',
+          'Shrink a GIF to a chat app\u2019s limit before the upload bar stalls',
+          'Make a loop of your own screen recording without uploading it anywhere',
+          'Convert on a machine where you cannot install software',
+        ],
+      },
+      {
+        heading: 'What happens to your files, and the limits',
+        paragraphs: [
+          'Both directions are local: the video or GIF is decoded in this tab, the frames live in memory, the result is encoded and downloaded. Nothing is uploaded \u2014 the page has no endpoint to upload to.',
+          'Length and size are bounded by memory, honestly: a 10-second clip at 10 fps and 480 px is roughly a hundred frames and finishes in seconds; a two-minute conversion will make itself obvious on a small device. Very wide GIFs are scaled down for the preview, not for the file.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- frame-grab
+  'frame-grab': {
+    lede: [
+      'Frame Grabber pulls still images out of video. Scrub to the exact moment \u2014 down to the tenth of a second \u2014 and take a full-resolution PNG, or sweep the whole clip automatically and end up with a contact sheet of the entire video to pick from.',
+      'The frames come from the browser\u2019s video decoder at the clip\u2019s native resolution. There is no proxy service re-encoding your video somewhere else, no queue, no watermark, and no upload: the file is read locally, seeked locally, and every frame is drawn locally before it becomes a PNG.',
+    ],
+    sections: [
+      {
+        heading: 'One frame or a hundred',
+        paragraphs: [
+          'The single-shot path is the precise one: scrub the timeline, watch the preview, grab exactly what you see. The batch path is the thorough one \u2014 take a frame every half-second, every second, or ask for an even count (12 thumbnails across a 48-second clip means one every 4 seconds) and let the sweep run with a visible progress line.',
+          'Every grabbed frame lands in a contact sheet. Keep the good ones, discard the rest, then download individual PNGs or all kept frames as one ZIP with time-stamped names so you can still tell which is which after the fact.',
+        ],
+      },
+      {
+        heading: 'When it beats the desktop way',
+        paragraphs: [
+          'Pulling stills from video usually means either pausing a player and screenshotting the window (resolution wrong, UI in the shot) or installing a video tool for one frame. This page is the middle path.',
+        ],
+        list: [
+          'Get a clean cover image for a video post, without the player chrome',
+          'Turn a video of drawings or slides into their stills in one sweep',
+          'Pick the best moment from a burst of action for a thumbnail',
+          'Extract evidence frames on a machine you cannot install anything on',
+        ],
+      },
+      {
+        heading: 'What happens to your video',
+        paragraphs: [
+          'The clip is read into this tab and seeked by the browser\u2019s decoder; each frame is drawn to a canvas and encoded to PNG in memory. No part of the video is sent anywhere \u2014 the network tab stays quiet by construction, not by promise.',
+          'Close the tab and everything is gone: the video, the frames, the ZIP. Nothing was stored elsewhere, so nothing needs deleting.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'Formats are what the browser plays: WebM everywhere, MP4 on most systems. The page tells you the detected duration and resolution up front and refuses DRM-protected streams honestly rather than showing black frames.',
+          'Frames are named by their timestamp (frame-01.50s.png), so batch results survive being mixed with other exports. True every-single-frame extraction is a desktop job; the sweep here goes down to 0.25 s steps without pretending to be frame-accurate at 60 fps.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- recorder
+  recorder: {
+    lede: [
+      'Screen & Mic Recorder captures what is happening on your device \u2014 the screen, a window, or a single browser tab, with your microphone mixed in for narration \u2014 or your voice alone. It uses the browser\u2019s own capture and encoding, and hands you the file the moment you press stop.',
+      'The design rule of this page is that recording is a local act. The stream goes from the browser\u2019s capture API straight into its media recorder and into a download. No processing service, no cloud folder, no account \u2014 which is why a recording of anything sensitive (a customer\u2019s screen, an internal demo, a voice note) is exactly as private as your downloads folder.',
+    ],
+    sections: [
+      {
+        heading: 'How a take works',
+        paragraphs: [
+          'Pick the surface: the browser will ask which screen, window or tab to capture \u2014 that dialog is the browser\u2019s, and nothing records until you confirm it. Microphone mixing is a toggle, not a surprise: if it is on, your voice rides along into the same track.',
+          'While recording, a muted live preview and an elapsed timer that only counts recorded time (pause stops the clock) tell you where you are. Pause and resume mid-take for jumping over interruptions. When you stop, the take lands as a finished WebM with its duration and size, and you keep it or throw it away \u2014 nothing was written anywhere in the meantime.',
+        ],
+      },
+      {
+        heading: 'When it beats the extensions and apps',
+        paragraphs: [
+          'Screen recorders are a graveyard of upsells: watermarks on the free tier, minutes limits, an account required before the file downloads. This page has no tier.',
+        ],
+        list: [
+          'Record a bug with narration and attach it to the ticket, in two minutes',
+          'Capture a walkthrough of an internal tool that must not leave the company',
+          'Record voice notes that never pass through a transcription service',
+          'Make a quick tutorial for a colleague without installing anything',
+        ],
+      },
+      {
+        heading: 'What happens to the recording',
+        paragraphs: [
+          'The capture stream exists only inside this tab. When you stop, the encoded WebM lives in tab memory until you download or discard it. There is no upload code on the page, so there is no copy to subpoena, breach or accidentally share \u2014 the recording\u2019s privacy is the same as any other file in your downloads folder.',
+          'Close the tab mid-recording and the take is gone; the browser treats capture that way, and the page does not fight it.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'Output is WebM: VP8 or VP9 video with Opus audio when your browser supports it, chosen by capability negotiation rather than hard-coded. Voice recordings are Opus-only WebM, small and clear.',
+          'Permission prompts are the browser\u2019s own and are required \u2014 the page cannot record without them, and it explains what it is asking for before triggering the dialog. Refusing permission produces an honest state, not an error loop.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- upscaler
+  upscaler: {
+    lede: [
+      'Image Upscaler makes pictures bigger without the usual mush. Give it a photo and a target \u2014 2\u00d7, 3\u00d7, 4\u00d7 or an exact width \u2014 and it enlarges with stepped high-quality resampling followed by an unsharp-mask pass whose strength you control. Before and after dimensions and file weights are shown side by side, and the result downloads as PNG, JPEG or WebP.',
+      'The page is honest about what it is: careful resampling and sharpening, not an AI model that invents detail. That is a deliberate trade \u2014 model-based super-resolution needs tens of megabytes of download per use, while this runs instantly on any device \u2014 and for most real photos (screenshots, scans, product shots) the stepped path preserves more of what you actually shot.',
+    ],
+    sections: [
+      {
+        heading: 'Why stepping beats one big jump',
+        paragraphs: [
+          'Resampling 480 px to 1920 px in a single operation makes every new pixel an average of far-apart neighbors, which is how enlargements get soft. Doubling in stages \u2014 480 to 960, 960 to 1920 \u2014 reuses smooth interpolation on intermediates that are already clean, and the difference at 4\u00d7 is visible: text edges and thin lines survive.',
+          'After the enlargement, an unsharp mask compares each pixel to a blurred version of its neighborhood and exaggerates the difference along edges. At low strength it restores the crispness enlargement diluted; at high strength it starts to halo, and the preview shows you exactly which side of that line you are on before you download.',
+        ],
+      },
+      {
+        heading: 'When it beats the usual options',
+        paragraphs: [
+          'The alternatives for enlarging an image are a photo editor (install, learn, save) or an online upscaler (upload, wait, trust, often watermark). This page is the third option.',
+        ],
+        list: [
+          'Double a screenshot so text is readable on a projector',
+          'Bring an old 640\u00d7480 scan up to printable size, then judge the result honestly',
+          'Prepare a product image to a marketplace\u2019s minimum resolution',
+          'Upscale a private photo without uploading it to a stranger\u2019s service',
+        ],
+      },
+      {
+        heading: 'What happens to your image',
+        paragraphs: [
+          'The image is decoded in this tab, enlarged on canvases in memory, sharpened there, and encoded back out as your download. No request carries any pixel of it. The comparison preview is rendered from the same buffers, so what you judge is what you get.',
+          'Nothing about the image is kept: close the tab and the buffers are reclaimed. There is no history, no recent-uploads list, no account.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'PNG export is lossless and is the right choice for screenshots and line art; JPEG and WebP exports with a quality control are better for photographs heading to the web. Output dimensions are shown before download \u2014 no surprises.',
+          'Very large targets (a 4000\u00d73000 source at 4\u00d7) are bounded by device memory, and the page states the limit instead of failing silently. Sharpening is applied after enlargement only \u2014 your source file is never modified.',
         ],
       },
     ],

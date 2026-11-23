@@ -141,6 +141,11 @@ The only backend besides the Next.js API routes: an independent Bun process.
 | `instant/images-to-pdf-tool.tsx` | Images → single PDF (pdf-lib), ordering and page size controls. |
 | `instant/office-view-tool.tsx` | Office viewer: DOCX via Mammoth, spreadsheets via SheetJS, sandboxed rendering. |
 | `instant/epub-view-tool.tsx` | EPUB reader: metadata, TOC, paginated chapters (offline, in-browser). |
+| `instant/audio-tool.tsx` | Audio bench: waveform trim, merge, speed, peak/RMS normalize, fades; WAV/MP3 export (Web Audio + lamejs). |
+| `instant/gif-tool.tsx` | GIF studio: video→GIF with per-frame quantization (gifenc + Bayer dither) and GIF→smaller-GIF (gifuct-js decode, scale + frame-skip). |
+| `instant/frame-grab-tool.tsx` | Frame grabber: single stills and batch sweeps from video, contact sheet, PNG/ZIP export (browser decoder + canvas). |
+| `instant/recorder-tool.tsx` | Screen/mic recorder: getDisplayMedia/getUserMedia + MediaRecorder, pause/resume, muted preview, local WebM download. |
+| `instant/upscaler-tool.tsx` | Image upscaler: stepped high-quality resampling + unsharp mask, before/after comparison, PNG/JPEG/WebP export. |
 
 ## `src/components/ui/` — shadcn/ui primitives
 
@@ -186,6 +191,7 @@ the app: `accordion`, `alert`, `alert-dialog`, `aspect-ratio`, `avatar`, `badge`
 | `lib/articles-instant.ts` | Written articles for the instant tools, same shape. |
 | `lib/db.ts` | Lazy Prisma client singleton. |
 | `lib/utils.ts` | `cn()` class merger, `humanError()` (network/relay failures → human sentences). |
+| `lib/wav.ts` | WAV/PCM encoding + sample math (trim, resample, concat, peak/RMS normalize, equal-power fades) for the audio tools. |
 
 ## `src/hooks/` and `src/types/`
 
@@ -195,6 +201,7 @@ the app: `accordion`, `alert`, `alert-dialog`, `aspect-ratio`, `avatar`, `badge`
 | `src/hooks/use-pwa-install.ts` | Tracks `beforeinstallprompt` and installed-PWA state; only suggests install where it is actually possible. |
 | `src/hooks/use-toast.ts` | Toast state hook backing the shadcn toaster. |
 | `src/types/mammoth-browser.d.ts` | Type declarations for the browser build of Mammoth (DOCX → HTML). |
+| `src/types/gifenc.d.ts` | Type declarations for gifenc (GIF quantize/encode surface this app uses). |
 | `src/instrumentation.ts` | Next.js instrumentation hook: loads the relay watchdog once per server process (Node runtime only). |
 
 ## `scripts/` — engineering tools (not shipped)
@@ -232,7 +239,7 @@ the app: `accordion`, `alert`, `alert-dialog`, `aspect-ratio`, `avatar`, `badge`
 | `public/icon.svg` | Scalable app icon used by the manifest. |
 | `public/logo.svg` | Header/logo copy served statically. |
 | `public/icons/` | Generated PWA raster icons (192, 512, maskable 512, apple-touch). |
-| `public/og/` | Generated per-tool Open Graph images (24 PNGs, one per tool page). |
+| `public/og/` | Generated per-tool Open Graph images (one PNG per tool page). |
 | `public/og.png` | Site-level OG image for the homepage. |
 | `public/manifest.webmanifest` | PWA manifest: name, icons, theme colors, display mode. |
 | `public/sw.js` | Offline-shell service worker (app shell + assets caching). |
