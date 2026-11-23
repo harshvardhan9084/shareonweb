@@ -6,6 +6,7 @@
 import { mkdir } from 'node:fs/promises'
 import sharp from 'sharp'
 import { APPS } from '../src/lib/registry.ts'
+import { SITE_NAME } from '../src/lib/site.ts'
 
 const NODE = '#079fc2'
 const EDGE = '#00866d'
@@ -77,7 +78,7 @@ const svgFor = ({ name, tagline }) => {
   <rect width="1200" height="630" fill="${TINT}"/>
   ${glyph(76, 62, 0.17)}
   <text x="172" y="136" font-family="Bricolage Grotesque" font-weight="800" font-size="34"
-        letter-spacing="-0.8" fill="${EDGE}">ShareOnWeb</text>
+        letter-spacing="-0.8" fill="${EDGE}">${esc(SITE_NAME)}</text>
   <text x="80" y="${nameY}" font-family="Bricolage Grotesque" font-weight="800" font-size="${nameSize}"
         letter-spacing="-2" fill="${EDGE}">${esc(name)}</text>
   ${tagSvg}
@@ -89,17 +90,19 @@ const svgFor = ({ name, tagline }) => {
 
 await mkdir('public/og', { recursive: true })
 
-// Site card (unchanged design).
+// Site card — brand name and tool count are read from the source of truth,
+// so the card can never drift from the product again.
+const LIVE_COUNT = APPS.filter((a) => a.status === 'live').length
 const siteSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${TINT}"/>
   ${glyph(229.6, 153, 0.34)}
   <text x="415" y="276" font-family="Bricolage Grotesque" font-weight="800" font-size="96"
-        letter-spacing="-2.5" fill="${EDGE}">ShareOnWeb</text>
+        letter-spacing="-2.5" fill="${EDGE}">${esc(SITE_NAME)}</text>
   <text x="600" y="430" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="500"
         font-size="34" fill="${INK}">Practical tools that run straight between browsers.</text>
   <text x="600" y="492" text-anchor="middle" font-family="Bricolage Grotesque" font-weight="500"
-        font-size="24" fill="${MUTED}">31 tools · No accounts · Nothing stored · Sessions expire</text>
+        font-size="24" fill="${MUTED}">${LIVE_COUNT} tools · No accounts · Nothing stored · Sessions expire</text>
 </svg>`
 await sharp(Buffer.from(siteSvg), { density: 96 }).resize(1200, 630).png().toFile('public/og.png')
 console.log('wrote public/og.png')

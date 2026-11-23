@@ -80,9 +80,10 @@ code covers all of them.* Implemented via family panels
 | **One session covers every mode of a tool** | DONE, QA-verified (this run) |
 | **beam → share rename (URL + copy + SEO + OG)** | DONE (this run) |
 | **Rebrand to Toolhive (name, mark, icons, OG, manifest)** | DONE (this run) |
-| **Instant tools — Batch 1 (8 tools, deep, no placeholders)** | DONE (this run) |
-| Reconnect honest dead-end (>90 s → "Dial again now" + fresh session) | DONE client-side (this run) |
-| PDF suite, viewers, media tools | NOT STARTED — checklist below |
+| **Instant tools — Batch 1 (8 tools, deep, no placeholders)** | DONE (previous run) |
+| Reconnect honest dead-end (>90 s → "Dial again now" + fresh session) | DONE client-side |
+| **PDF & documents — Batch 2 (6 tools, deep, browser-verified)** | DONE (this run) |
+| Media tools (audio/video/GIF/recorder) | NOT STARTED — checklist below |
 | AI upscaler / background removal (WASM) | NOT STARTED |
 
 ## 4. THE CHECKLIST (extracted from the owner's list + ChatGPT plan)
@@ -91,7 +92,7 @@ Rules of engagement: **no breadth-first placeholders** — a tool is only
 "done" when its complete user journey works, with real edge cases handled,
 browser-verified through :81. Work top-down; one batch per run is realistic.
 
-### Batch 1 — Instant essentials (DONE this run, 8 tools / ~25 functions)
+### Batch 1 — Instant essentials (DONE previous run, 8 tools / ~25 functions)
 - [x] `/zip` — pack files+folders → ZIP; unpack ZIP with per-entry + bulk download
 - [x] `/image` — compress (quality + target-KB binary search), convert PNG/JPG/WebP, resize (%/px/aspect lock), batch, before/after sizes
 - [x] `/hash` — MD5 + SHA-1/256/512 for files & text, verify against expected hash
@@ -101,15 +102,16 @@ browser-verified through :81. Work top-down; one batch per run is realistic.
 - [x] `/password` — crypto-random passwords + passphrase mode, entropy, bulk
 - [x] `/qr` — link/text/Wi-Fi/vCard QR, ECC + size, PNG download
 
-### Batch 2 — PDF & documents (NEXT)
-- [ ] `/pdf` — merge, split, rotate, reorder, page extract (pdf-lib)
-- [ ] `/pdf-view` — PDF viewer (pdf.js) with page nav
-- [ ] `/office-view` — DOCX text (Mammoth), XLSX grid (SheetJS), CSV table view
-- [ ] `/images-to-pdf` — images → single PDF, ordering + page size
-- [ ] `/epub-view` — EPUB reader
-- [ ] `/pdf-text` — extract text from PDF
+### Batch 2 — PDF & documents (DONE this run, 6 tools / ~30 functions, all browser-verified)
+- [x] `/pdf` — merge (any count, ordered), organize with **live page thumbnails** (reorder/rotate/delete/restore), split: extract ranges (`1-3, 7, 12-`) + split-every-N → ZIP; encrypted files detected and explained (pdf-lib + pdf.js thumbs)
+- [x] `/pdf-view` — viewer with page box/prev/next, fit-width + stepped zoom, view rotation, DPR-sharp canvas, whole-document search with per-page hit chips (pdf.js)
+- [x] `/pdf-text` — per-page extraction with live progress, EOL-aware reading order, copy-all, continuous + page-marked .txt export, scanned-PDF honesty note (pdf.js)
+- [x] `/images-to-pdf` — JPEG/PNG/WebP/GIF/BMP/AVIF → one PDF; A4/Letter/fit-to-image, auto/portrait/landscape, margins, JPEG quality slider, EXIF rotation baked in (pdf-lib + canvas)
+- [x] `/office-view` — DOCX → formatted HTML in a **script-proof sandboxed iframe** (mammoth), XLSX/XLS/CSV grid with sheet tabs + expandable rows (SheetJS), conversions: DOCX→HTML/.txt, CSV→XLSX, sheet→CSV
+- [x] `/epub-view` — EPUB3 reader with TOC jump, pagination, arrow keys, 12–28 px text size, real progress % (background locations.generate), metadata readout, DRM honesty (epub.js)
+- Infrastructure: vendored `public/pdf.worker.min.mjs` synced on postinstall (`scripts/sync-pdf-worker.mjs`), shared `src/lib/pdf-loader.ts` (lazy ~400 KB import), `src/types/mammoth-browser.d.ts` shim
 
-### Batch 3 — Media (client-side)
+### Batch 3 — Media (client-side) — NEXT
 - [ ] `/audio` — trim, merge, speed, volume normalize (Web Audio + lamejs)
 - [ ] `/video-trim` — trim/mute/speed (ffmpeg.wasm, lazy-loaded)
 - [ ] `/gif` — video→GIF, GIF resize/compress
@@ -144,20 +146,43 @@ browser-verified through :81. Work top-down; one batch per run is realistic.
 - AI background removal, ffmpeg video conversion (model/codec download size)
 - Anything needing a backend proxy (URL fetchers, IP display)
 
-## 5. QA log — 2026-11-23 (this run, via :81, scripts/final-qa.sh)
+## 5. QA log — 2026-11-23 (Batch 2 run, via :81, scripts/final-qa.sh)
 
-**15/15 PASS, zero console errors, hydration clean:**
-- Home: new hub hero ("Every tool you need, already open."), Instant Tools
-  section, Toolhive brand, no old brand anywhere (title/OG/manifest).
-- `/zip`, `/hash`, `/password` render with primary action visible (all 8
-  instant routes 200; build prerenders all 20 tool pages).
-- `/beam` → 307 `/share`; `/share` shows Text/Files/Folder/Quick Pair.
-- New session → `/R6MC6G`; in-session "Share modes" tablist present and the
-  Folder tab is reachable **in the same session** (one code, all modes).
-- Legacy `?s=` and `?app=drop` rewrites still work; garbage → 404.
+**30/30 PASS, zero console errors, hydration clean.** The QA script now drops
+REAL fixture files (generated by `scripts/make-fixtures.mjs`: two multi-page
+PDFs, a PNG, a CSV, a real DOCX, a real EPUB3) into the tools and verifies
+actual parsing/rendering, not just page loads:
+- `/pdf`: 3-page PDF opens the workspace with 3 live thumbnails; extract
+  `1-2` produces "extracted PDF is ready"; two PDFs → merge list "2 documents
+  · 5 pages total", merge completes without error.
+- `/pdf-view`: page box turns 1 → 2 via Next; search "fixture" reports
+  "3 pages contain…" with jump chips.
+- `/pdf-text`: all 3 pages extracted (219 chars), per-page cards with text.
+- `/images-to-pdf`: PNG accepted, "PDF built (5.6 KB)".
+- `/office-view`: CSV → "4 rows" grid with real cells; DOCX → "Word document"
+  rendering "Toolhive QA Letter" inside the sandboxed iframe.
+- `/epub-view`: metadata readout ("Toolhive QA Book"), TOC jump → "· Chapter
+  Two" + content of the closing chapter, progress % live.
+- Legacy: `/beam` → 307 `/share`; new session `/B9BK68` with in-session
+  Share-mode tabs; `?s=` and `?app=drop` rewrites; garbage → 404.
+- Production build verified too: `bun run build` (36 routes, 26 SSG tool
+  pages), standalone server served all 6 new routes + `/pdf.worker.min.mjs`
+  through :81; epub + pdf-tool browser checks passed against the prod server.
 
-Checks: `bun run lint` clean; `tsc` clean on src; `bun run build` succeeds
-(30 routes; 20 SSG tool pages).
+Bugs found and fixed by QA this run:
+1. epub `relocated` listener closed over stale `toc` state → section label
+   never updated. Fixed with a `tocRef` mirror.
+2. epub progress was stuck at 0% — epub.js only computes `percentage` after
+   `book.locations.generate()`. Now generated in the background after open.
+3. QA fixture EPUB had an undeclared `epub:` prefix → strict-XML parse error
+   inside the render iframe. Fixture fixed.
+4. Site OG card template still said "ShareOnWeb" + a hardcoded "31 tools" —
+   template now reads `SITE_NAME` and the live-tool count from the registry.
+5. ESLint was scanning the vendored minified pdf.js worker (7 errors) —
+   `public/**` added to eslint ignores.
+
+Checks: `bun run lint` clean; `tsc --noEmit` clean on src; `bun run build`
+succeeds (36 routes; 26 SSG tool pages).
 
 ## 6. Sandbox lifecycle constraint (IMPORTANT for future runs)
 
@@ -171,8 +196,10 @@ check against a dead server is not a defect.
 
 - Commits go out under the owner's identity (harshvardhan9084) — configured
   in-repo. Credentials: `.git-credentials` **inside the project** (gitignored)
-  via `credential.helper=store --file=…` — survives sandbox recycles, unlike
-  `~/.git-credentials`. If pushes ever fail with auth errors, ask the owner
-  for a fresh fine-grained PAT (repo `harshvardhan9084/shareonweb`, Contents:
+  via `credential.helper=store --file=…`. NOTE (2026-11-23): the file was once
+  lost to a sandbox recycle and had to be re-created from the owner's PAT;
+  `~/.git-credentials` does NOT survive recycles — always restore the
+  project-level file. If pushes ever fail with auth errors, ask the owner for
+  a fresh fine-grained PAT (repo `harshvardhan9084/shareonweb`, Contents:
   Read & write) and rewrite that file.
 - Push after every meaningful milestone — always, unprompted.

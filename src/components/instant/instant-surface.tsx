@@ -16,6 +16,12 @@ import { JsonTool } from '@/components/instant/json-tool'
 import { TextTool } from '@/components/instant/text-tool'
 import { PasswordTool } from '@/components/instant/password-tool'
 import { QrTool } from '@/components/instant/qr-tool'
+import { PdfTool } from '@/components/instant/pdf-tool'
+import { PdfViewTool } from '@/components/instant/pdf-view-tool'
+import { PdfTextTool } from '@/components/instant/pdf-text-tool'
+import { ImagesToPdfTool } from '@/components/instant/images-to-pdf-tool'
+import { OfficeViewTool } from '@/components/instant/office-view-tool'
+import { EpubViewTool } from '@/components/instant/epub-view-tool'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
   zip: ZipTool,
@@ -26,6 +32,12 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   text: TextTool,
   password: PasswordTool,
   qr: QrTool,
+  pdf: PdfTool,
+  'pdf-view': PdfViewTool,
+  'pdf-text': PdfTextTool,
+  'images-to-pdf': ImagesToPdfTool,
+  'office-view': OfficeViewTool,
+  'epub-view': EpubViewTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {
