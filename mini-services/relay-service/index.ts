@@ -424,6 +424,9 @@ async function handleControlRequest(req: IncomingMessage, res: ServerResponse): 
       store.putSession(meta).catch((err) =>
         console.error(`[relay-service] failed to persist rename for ${code}:`, err),
       );
+      // Live-sync the rename to every device inside the session room so the
+      // header title updates everywhere without a reload.
+      io.to(code).emit("session:title", { code, title: meta.title });
       sendJson(res, 200, sessionResponse(meta));
       return true;
     }
@@ -486,6 +489,9 @@ function roomStatePayload(room: Room, selfId: string) {
   return {
     code: room.code,
     createdAt: room.createdAt,
+    // Cosmetic session title (set via the registry PATCH). Late joiners read it
+    // from this snapshot; live renames arrive as a `session:title` broadcast.
+    title: sessions.get(room.code)?.title ?? null,
     selfId,
     participants: sortedParticipants(room),
     texts: room.texts.slice(),

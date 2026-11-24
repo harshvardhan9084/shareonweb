@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { format } from 'date-fns'
 import {
+  ChevronDown,
+  ChevronRight,
   CircleAlert,
   Download,
   File,
@@ -76,6 +78,12 @@ export function FolderPanel({
 }: FolderPanelProps) {
   const [dragging, setDragging] = useState(false)
   const [zipping, setZipping] = useState(false)
+  // Which folder groups are collapsed (the whole group is one toggle — loose
+  // files and the global ZIP stay outside of it).
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
+  // Folder whose per-group ZIP is currently being built ("photos/2024" while
+  // that group's download is in flight).
+  const [zippingDir, setZippingDir] = useState<string | null>(null)
   const filesInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
 
@@ -129,6 +137,50 @@ export function FolderPanel({
       await onSendItems(items)
     } catch {
       toast.error('Could not read the dropped items, try the buttons instead.')
+    }
+  }
+
+  function toggleDir(dir: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(dir)) next.delete(dir)
+      else next.add(dir)
+      return next
+    })
+  }
+
+  /** Build a ZIP of one folder group only, paths kept relative to that group. */
+  async function downloadGroupZip(dir: string, dirFiles: RoomFile[]) {
+    if (zippingDir || !dirFiles.every((f) => f.complete)) return
+    setZippingDir(dir)
+    try {
+      const JSZip = (await import('jszip')).default
+      const zip = new JSZip()
+      for (const f of dirFiles) {
+        const blob = chunksToBlob(f.chunks, f.type || 'application/octet-stream')
+        if (!blob) continue
+        // Keep the path inside the folder ("2024/beach.jpg" for "photos/2024"),
+        // so the ZIP mirrors what was shared, not the whole session tree.
+        const inner = f.relPath && f.relPath.includes('/')
+          ? f.relPath.slice(f.relPath.indexOf('/') + 1)
+          : f.name
+        zip.file(inner, blob)
+      }
+      const base = dir.includes('/') ? dir.slice(dir.lastIndexOf('/') + 1) : dir
+      const blob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${base}.zip`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      toast.success('Folder ZIP built, check your downloads.')
+    } catch {
+      toast.error('Could not build that folder ZIP, download its files individually instead.')
+    } finally {
+      setZippingDir(null)
     }
   }
 
@@ -295,18 +347,50 @@ export function FolderPanel({
         </div>
       ) : (
         <div className="space-y-4">
-          {grouped.map(([dir, dirFiles]) => (
+          {grouped.map(([dir, dirFiles]) => {
+            const isCollapsed = collapsed.has(dir)
+            const groupDone = dirFiles.every((f) => f.complete)
+            return (
             <div key={dir} className="overflow-hidden rounded-xl border">
               <div className="flex items-center gap-2 border-b bg-muted/40 px-3.5 py-2">
-                <Folder className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <span className="truncate text-xs font-semibold" title={dir}>
-                  {dir}
-                </span>
-                <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
-                  {dirFiles.length} {dirFiles.length === 1 ? 'file' : 'files'} ·{' '}
-                  {formatBytes(dirFiles.reduce((s, f) => s + f.size, 0))}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => toggleDir(dir)}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded text-left focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-expanded={!isCollapsed}
+                  aria-label={isCollapsed ? `Expand folder ${dir}` : `Collapse folder ${dir}`}
+                >
+                  {isCollapsed ? (
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  ) : (
+                    <ChevronDown className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                  )}
+                  <Folder className={cn('size-4 shrink-0', isCollapsed ? 'text-muted-foreground' : 'text-primary')} aria-hidden="true" />
+                  <span className="truncate text-xs font-semibold" title={dir}>
+                    {dir}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {dirFiles.length} {dirFiles.length === 1 ? 'file' : 'files'} ·{' '}
+                    {formatBytes(dirFiles.reduce((s, f) => s + f.size, 0))}
+                  </span>
+                </button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
+                  onClick={() => void downloadGroupZip(dir, dirFiles)}
+                  disabled={!groupDone || zippingDir === dir}
+                  title={groupDone ? `Download the contents of ${dir} as one ZIP` : 'ZIP is ready when every file in this folder is delivered'}
+                >
+                  {zippingDir === dir ? (
+                    <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Download className="size-3" aria-hidden="true" />
+                  )}
+                  ZIP
+                </Button>
               </div>
+              {!isCollapsed && (
               <div className="divide-y">
                 {dirFiles.map((f) => (
                   <FolderFileRow
@@ -318,8 +402,10 @@ export function FolderPanel({
                   />
                 ))}
               </div>
+              )}
             </div>
-          ))}
+            )
+          })}
           {loose.length > 0 && (
             <div className="overflow-hidden rounded-xl border">
               <div className="flex items-center gap-2 border-b bg-muted/40 px-3.5 py-2">

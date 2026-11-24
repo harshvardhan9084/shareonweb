@@ -150,9 +150,9 @@ browser-verified through :81. Work top-down; one batch per run is realistic.
 - [x] `/wifi-qr` is already inside `/qr`; QR **scanner** added as the Scan tab (camera + image decode, this round)
 
 ### Batch 6 — Session-tool polish (per owner feedback)
-- [x] >15 min reconnect: DONE client-side (honest dead-end); **relay-side session GC on wake DONE this round** (expired sessions + stale rooms swept right after boot restore, verified with a seeded store harness)
-- [ ] Session titles polish; folder share improvements; audio call quality
-- [x] PWA: cache instant tool shells for offline use in sw.js — DONE this round (v5 precaches 35 tool pages + their build assets at install; production-only, mirror-checked by QA)
+- [x] >15 min reconnect: DONE client-side (honest dead-end); **relay-side session GC on wake DONE** (expired sessions + stale rooms swept right after boot restore, verified with a seeded store harness)
+- [x] Session titles polish; folder share improvements; audio call quality — DONE this round (commit "Batch 6 session polish"): titles now live-sync to every device in the room (relay broadcast + snapshot field, harness-verified), folder groups collapse and download per-folder ZIPs, calls gained mic profiles (auto/voice/music, applied live) + a WebRTC connection-quality chip (RTT/loss/jitter/bitrate). Details in §12.
+- [x] PWA: cache instant tool shells for offline use in sw.js — DONE (v5 precaches 35 tool pages + their build assets at install; production-only, mirror-checked by QA)
 
 ### Deliberately deferred (heavy infra)
 - AI background removal, ffmpeg video conversion (model/codec download size)
@@ -540,3 +540,48 @@ Ops: ~/.git-credentials was wiped by the recycle again; restored from the
 owner's PAT and pushes succeeded. Remaining checklist: session titles
 polish / folder share / audio call quality, /video-trim (owner's 25 MB call),
 AI background removal (deferred).
+
+## 12. Batch 6 session polish (this run, 2026-11-24)
+
+**QA: 105/105 PASS, zero failures** (scripts/final-qa.sh via :81, run as
+PHASE=1 → PHASE=2 → PHASE=3). Relay title sync additionally verified with a
+dedicated two-party harness (scripts/relay-title-sync-verify.sh): boot a
+throwaway relay on :3004, join its room with a socket.io client, PATCH the
+title → the client receives the `session:title` broadcast ("Weekly sync"),
+clearing broadcasts null, and the join snapshot carries the current title.
+lint clean, src typecheck clean.
+
+What shipped (the last unchecked checklist item outside the deferred list):
+
+1. **Session titles live-sync** — renaming a session previously updated only
+   the renamer's own header; other devices never learned about it until they
+   reloaded. Relay PATCH now broadcasts `session:title` to the room
+   (mini-services/relay-service/index.ts), the join snapshot carries `title`
+   (roomStatePayload), RoomClient forwards it as a local `title` event, and
+   SessionView applies snapshot titles on join/rejoin + live renames (header
+   and this device's recents entry update without a reload).
+2. **Folder share improvements** (folder-panel.tsx): every folder group
+   header is now a collapse toggle (chevron + aria-expanded, rows hidden
+   while collapsed) and carries a per-folder "ZIP" button that builds a
+   download of just that folder's files with paths relative to the folder
+   root ("2024/beach.jpg" inside photos.zip) — the session-wide "Download
+   all" stays as is. Buttons stay disabled with an honest tooltip until
+   every file in the group is delivered.
+3. **Audio call quality** (media-rtc.ts + call-panel.tsx):
+   - Microphone profiles: Auto (browser defaults), Voice (EC+NS+AGC forced
+     on, mono), Music (processing off, stereo ideal). Applied LIVE to the
+     track via applyConstraints — no device re-open; remembered per device
+     in localStorage; the control bar gains an AudioLines popover showing
+     the current profile with one-line honest blurbs. When a device refuses
+     a constraint, the toast says what it kept instead of pretending.
+   - Connection quality chip: every 3 s while live, worst-case across peer
+     connections — RTT (currentRoundTripTime), packet-loss %, jitter,
+     inbound bitrate (bytes delta between polls). Grades: good (<150 ms,
+     <2 % loss), poor (>400 ms or >8 %), fair between, and "Measuring…"
+     while no stats exist yet — never an invented number. Tooltip lists the
+     raw numbers.
+
+Ops: ~/.git-credentials was wiped by this sandbox recycle too; restored from
+the owner's earlier fine-grained PAT (URL-style line, chmod 600) and the
+push for this run succeeded. Remaining checklist: /video-trim (owner's
+25 MB-core call pending), AI background removal (deferred).

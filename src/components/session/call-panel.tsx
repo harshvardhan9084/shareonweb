@@ -19,7 +19,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { RoomClient } from '@/lib/room-client'
-import { MediaRtc, LevelMeter, type MediaKind } from '@/lib/media-rtc'
+import {
+  AUDIO_PROFILES,
+  MediaRtc,
+  LevelMeter,
+  type AudioProfile,
+  type ConnQuality,
+  type MediaKind,
+} from '@/lib/media-rtc'
 import type { AppEvent, ChatMsg, Participant } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,6 +42,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
+  AudioLines,
   Camera,
   CameraOff,
   ChevronDown,
@@ -56,6 +64,9 @@ import {
   Radio,
   RefreshCw,
   Send,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
   Square,
   SwitchCamera,
   ThumbsUp,
@@ -490,6 +501,19 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
   // ptt
   const [pttTalking, setPttTalking] = useState(false)
 
+  // audio quality: mic processing profile + live connection stats. The
+  // profile initializes from this device's saved choice (SSR-safe lazy read).
+  const [audioProfile, setAudioProfileState] = useState<AudioProfile>(() => {
+    if (typeof window === 'undefined') return 'auto'
+    try {
+      const saved = window.localStorage.getItem('sow.audio.profile')
+      return saved === 'voice' || saved === 'music' || saved === 'auto' ? saved : 'auto'
+    } catch {
+      return 'auto'
+    }
+  })
+  const [quality, setQuality] = useState<ConnQuality | null>(null)
+
   // chat + notes
   const [chatOpen, setChatOpen] = useState(false)
   const [chatDraft, setChatDraft] = useState('')
@@ -516,6 +540,9 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
     if (!client) return
     const rtc = new MediaRtc(client)
     rtcRef.current = rtc
+    // Apply this device's saved microphone profile to the instance (state is
+    // already initialized from the same storage key above).
+    rtc.setAudioProfile(audioProfile)
 
     const offs = [
       rtc.on('localstream', (p) => {
@@ -702,6 +729,28 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
     return () => clearInterval(t)
   }, [])
 
+  const applyAudioProfile = useCallback(
+    (profile: AudioProfile) => {
+      setAudioProfileState(profile)
+      try {
+        window.localStorage.setItem('sow.audio.profile', profile)
+      } catch {
+        // private mode — session-only choice
+      }
+      void rtcRef.current
+        ?.setAudioProfile(profile)
+        .then(() => {
+          if (profile === 'music') {
+            toast.info('Music mode on: echo cancellation is OFF — use headphones to avoid feedback.')
+          } else {
+            toast.success('Microphone profile applied.')
+          }
+        })
+        .catch((err: Error) => toast.error(err.message))
+    },
+    [],
+  )
+
   // ---------------------------------------------------------- monitor beeper
   useEffect(() => {
     if (!alerting) return
@@ -793,6 +842,7 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
     rtcRef.current?.stopLocal()
     setPhase('idle')
     setAlerting(false)
+    setQuality(null)
     broadcastState({ micOn: false, camOn: false, screen: false })
   }, [broadcastState])
 
@@ -1085,6 +1135,31 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
     (id) => peerStates.get(id) === 'connected',
   ).length
 
+  // ------------------------------------------------------- connection quality
+  // Poll WebRTC stats every 3 s while the call is live. Absent stats keep the
+  // chip honest ("Measuring…") instead of inventing a grade. Re-polls when the
+  // first peer connects so a fresh call shows numbers without waiting a cycle.
+  // Leaving the call clears the reading in stop().
+  useEffect(() => {
+    if (phase !== 'live') return
+    let stopped = false
+    const poll = () => {
+      void rtcRef.current
+        ?.connectionStats()
+        .then((q) => {
+          if (!stopped) setQuality(q)
+        })
+        .catch(() => undefined)
+    }
+    poll()
+    const t = setInterval(poll, 3000)
+    return () => {
+      stopped = true
+      clearInterval(t)
+    }
+    // Re-poll when the first peer connects; the boolean dep is intentional.
+  }, [phase, connectedPeers > 0])
+
   const fmtRec = (s: number) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
@@ -1329,6 +1404,53 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
                   </div>
                 )}
 
+                {/* Microphone profile — only where this device sends audio */}
+                {config.kind !== 'camera' && phase === 'live' && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-11 gap-2 rounded-full bg-stage-raised px-4 text-stage-foreground hover:bg-stage-raised"
+                        title="Microphone profile"
+                        aria-label="Change microphone profile"
+                      >
+                        <AudioLines className="size-4.5" aria-hidden="true" />
+                        {AUDIO_PROFILES.find((p) => p.id === audioProfile)?.label ?? 'Auto'}
+                        <ChevronDown className="size-3.5 text-stage-muted" aria-hidden="true" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="center" className="w-72 p-2">
+                      <p className="px-2 pb-1.5 pt-1 text-sm font-semibold">Microphone profile</p>
+                      <p className="px-2 pb-2 text-xs text-muted-foreground">
+                        Applied live to this device's mic; remembered for your next calls.
+                      </p>
+                      <div className="space-y-1">
+                        {AUDIO_PROFILES.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => applyAudioProfile(p.id)}
+                            className={cn(
+                              'flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted',
+                              p.id === audioProfile && 'bg-muted',
+                            )}
+                            aria-pressed={p.id === audioProfile}
+                          >
+                            <span className="flex w-full items-center gap-2 text-sm font-medium">
+                              {p.label}
+                              {p.id === audioProfile && (
+                                <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">current</span>
+                              )}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{p.blurb}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+
                 {config.record && (
                   <Button
                     variant="secondary"
@@ -1448,6 +1570,29 @@ export function CallPanel({ client, config, selfId, participants, chat, connecte
                 <span>
                   P2P mesh · {connectedPeers}/{remotePeerIds.length} connected
                 </span>
+                {quality && quality.peers > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1.5 font-medium text-stage-foreground"
+                    title={
+                      quality.rttMs != null
+                        ? `Round-trip ${Math.round(quality.rttMs)} ms · packet loss ${quality.lossPct == null ? 'n/a' : `${quality.lossPct.toFixed(1)}%`}${quality.jitterMs != null ? ` · jitter ${Math.round(quality.jitterMs)} ms` : ''}${quality.kbpsIn != null ? ` · in ${quality.kbpsIn} kbps` : ''} — measured between this device and each peer`
+                        : 'Waiting for the first measurement…'
+                    }
+                  >
+                    {quality.grade === 'good' ? (
+                      <SignalHigh className="size-3.5 text-positive" aria-hidden="true" />
+                    ) : quality.grade === 'fair' ? (
+                      <SignalMedium className="size-3.5 text-warning" aria-hidden="true" />
+                    ) : quality.grade === 'poor' ? (
+                      <SignalLow className="size-3.5 text-destructive" aria-hidden="true" />
+                    ) : (
+                      <SignalHigh className="size-3.5 text-stage-muted" aria-hidden="true" />
+                    )}
+                    {quality.grade === 'unknown'
+                      ? 'Measuring connection…'
+                      : `Connection ${quality.grade}${quality.rttMs != null ? ` · ${Math.round(quality.rttMs)} ms` : ''}`}
+                  </span>
+                )}
                 {roleLocked && (
                   <span>
                     {config.role === 'teacher-student' ? 'Student view' : 'Viewer view'} (muted by design)

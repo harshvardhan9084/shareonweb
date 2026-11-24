@@ -260,6 +260,9 @@ export function SessionView({ session }: { session: SessionInfo }) {
         setInitialDoc(s.doc ?? null)
         setInitialEvents(Array.isArray(s.appEvents) ? s.appEvents : [])
         setRoomStateLoaded(true)
+        // Session titles sync: a device that joins (or rejoins) reads the
+        // current title straight from the snapshot.
+        if (s.title !== undefined) setTitle(s.title)
         // Honest reconnection feedback: if the relay restarted during the
         // outage, the fresh snapshot is empty and previously shared items are
         // gone — say so plainly instead of claiming everything "restored".
@@ -357,7 +360,20 @@ export function SessionView({ session }: { session: SessionInfo }) {
         }
         setFiles((prev) => prev.filter((f) => f.fileId !== fileId))
       }),
-      client.on('closed', () => setEnded('closed'))
+      client.on('closed', () => setEnded('closed')),
+      client.on('title', (p) => {
+        // Another device renamed the session — mirror it here (header + this
+        // device's recents entry), no reload needed.
+        const { title } = p as { title: string | null }
+        setTitle(title)
+        addRecent({
+          code: session.code,
+          appId: session.appId,
+          title,
+          createdAt: session.createdAt,
+          expiresAt: session.expiresAt,
+        })
+      }),
       ]
     })()
 
@@ -367,6 +383,8 @@ export function SessionView({ session }: { session: SessionInfo }) {
       client?.disconnect()
       clientRef.current = null
     }
+    // session.code keys the connection; appId/createdAt/expiresAt never change
+    // for a given code, and addRecent is a stable store action.
   }, [session.code, device])
 
   // Remember whether this session ever held anything, so a post-reconnect

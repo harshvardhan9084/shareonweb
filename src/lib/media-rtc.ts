@@ -22,6 +22,65 @@ const ICE_SERVERS: RTCIceServer[] = [
 
 export type MediaKind = 'av' | 'audio' | 'camera'
 
+/**
+ * Microphone processing profile. Browsers ship echo cancellation, noise
+ * suppression and auto gain as track constraints, so the profile is applied
+ * live (applyConstraints) without re-opening the device.
+ *  - auto  — the browser's defaults, best for voice/video calls
+ *  - voice — forced single-channel processing for flaky networks
+ *  - music — processing OFF, stereo when the device offers it: instruments
+ *            and singing survive, at the cost of possible echo feedback
+ */
+export type AudioProfile = 'auto' | 'voice' | 'music'
+
+export const AUDIO_PROFILES: Array<{ id: AudioProfile; label: string; blurb: string }> = [
+  { id: 'auto', label: 'Auto', blurb: 'Browser defaults — balanced for talking' },
+  { id: 'voice', label: 'Voice', blurb: 'Echo + noise cancellation forced on, mono' },
+  { id: 'music', label: 'Music', blurb: 'Processing off, stereo when possible — instruments, singing' },
+]
+
+function audioConstraintsFor(profile: AudioProfile): MediaTrackConstraints {
+  switch (profile) {
+    case 'voice':
+      return {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1,
+        sampleRate: { ideal: 48000 },
+      }
+    case 'music':
+      return {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+        channelCount: { ideal: 2 },
+        sampleRate: { ideal: 48000 },
+      }
+    default:
+      return {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      }
+  }
+}
+
+/** Worst-case connection quality across all live peer connections. */
+export interface ConnQuality {
+  /** Max measured round-trip time in ms (null — no peer reported one yet). */
+  rttMs: number | null
+  /** Packet loss percentage, 0..100 (null — nothing received yet). */
+  lossPct: number | null
+  /** Max RTP jitter in ms. */
+  jitterMs: number | null
+  /** Inbound bitrate in kbps since the previous poll (null on first poll). */
+  kbpsIn: number | null
+  /** How many peer connections were sampled. */
+  peers: number
+  grade: 'good' | 'fair' | 'poor' | 'unknown'
+}
+
 /** Payload shapes the relay forwards verbatim inside `rtc:signal`. */
 export interface MediaSignalData {
   description?: { type: RTCSdpType; sdp: string }
@@ -127,6 +186,9 @@ export class MediaRtc {
   localStream: MediaStream | null = null
   localKind: MediaKind | null = null
   facing: 'user' | 'environment' = 'user'
+  private audioProfile: AudioProfile = 'auto'
+  // Bitrate history for connectionStats(): bytes seen on the last poll.
+  private statsHistory = new Map<string, { bytes: number; at: number }>()
   private screenVideoTrack: MediaStreamTrack | null = null
   private screenStream: MediaStream | null = null
 
@@ -180,11 +242,7 @@ export class MediaRtc {
   async start(kind: MediaKind, opts?: { facingMode?: 'user' | 'environment' }): Promise<MediaStream> {
     if (opts?.facingMode) this.facing = opts.facingMode
     const video = kind === 'audio' ? false : { facingMode: this.facing, width: { ideal: 1280 }, height: { ideal: 720 } }
-    const audio = {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    }
+    const audio = audioConstraintsFor(this.audioProfile)
     // Stop any previous local stream first (e.g. switching kinds mid-session).
     this.stopLocal()
     const stream = await navigator.mediaDevices.getUserMedia({ video: video as MediaTrackConstraints, audio })
@@ -224,6 +282,105 @@ export class MediaRtc {
   isCameraEnabled(): boolean {
     const track = this.localStream?.getVideoTracks()[0]
     return track ? track.enabled : false
+  }
+
+  // ------------------------------------------------------- audio quality
+  getAudioProfile(): AudioProfile {
+    return this.audioProfile
+  }
+
+  /**
+   * Switch the microphone processing profile. Applies immediately to a live
+   * track via applyConstraints; when the browser rejects a constraint the
+   * error is surfaced to the caller (the UI explains it) and the profile is
+   * still remembered for the next start().
+   */
+  async setAudioProfile(profile: AudioProfile): Promise<void> {
+    this.audioProfile = profile
+    const track = this.localStream?.getAudioTracks()[0]
+    if (!track) return
+    try {
+      await track.applyConstraints(audioConstraintsFor(profile))
+    } catch (err) {
+      const settings = track.getSettings()
+      const applied = ['echoCancellation', 'noiseSuppression', 'autoGainControl']
+        .filter((k) => settings[k as keyof MediaTrackSettings] !== undefined)
+        .map((k) => `${k}=${settings[k as keyof MediaTrackSettings]}`)
+        .join(', ')
+      throw new Error(
+        `This device kept its current processing (${applied || 'browser defaults'}). The profile applies fully on the next call.`,
+        { cause: err },
+      )
+    }
+  }
+
+  /**
+   * Worst-case connection quality across live peers, from getStats():
+   * round-trip time, packet loss, jitter and inbound bitrate (delta of
+   * received bytes between polls). Returns grade 'unknown' when no peer
+   * connection is live or the stats have not arrived yet.
+   */
+  async connectionStats(): Promise<ConnQuality> {
+    let rtt: number | null = null
+    let lossPct: number | null = null
+    let jitter: number | null = null
+    let kbpsIn: number | null = null
+    let sampled = 0
+
+    const now = Date.now()
+    const nextHistory = new Map<string, { bytes: number; at: number }>()
+    let bytesDelta = 0
+    let msDelta = 0
+
+    for (const [peerId, entry] of this.peers) {
+      if (entry.pc.connectionState !== 'connected') continue
+      let stats: RTCStatsReport
+      try {
+        stats = await entry.pc.getStats()
+      } catch {
+        continue
+      }
+      sampled += 1
+      let inBytes = 0
+      for (const report of stats.values()) {
+        const r = report as Record<string, unknown> & { type: string; kind?: string }
+        if (r.type === 'candidate-pair' && r.state === 'succeeded' && typeof r.currentRoundTripTime === 'number') {
+          const ms = r.currentRoundTripTime * 1000
+          if (rtt == null || ms > rtt) rtt = ms
+        }
+        if (r.type === 'inbound-rtp' && !r.isRemote) {
+          if (typeof r.jitter === 'number') {
+            const j = r.jitter * 1000
+            if (jitter == null || j > jitter) jitter = j
+          }
+          const recv = typeof r.packetsReceived === 'number' ? r.packetsReceived : 0
+          const lost = typeof r.packetsLost === 'number' ? r.packetsLost : 0
+          if (recv + lost > 0) {
+            const pct = (lost / (recv + lost)) * 100
+            if (lossPct == null || pct > lossPct) lossPct = pct
+          }
+          if (typeof r.bytesReceived === 'number') inBytes += r.bytesReceived
+        }
+      }
+      const prev = this.statsHistory.get(peerId)
+      if (prev && inBytes >= prev.bytes) {
+        bytesDelta += inBytes - prev.bytes
+        msDelta += Math.max(1, now - prev.at)
+      }
+      nextHistory.set(peerId, { bytes: inBytes, at: now })
+    }
+    // Drop history for peers that disappeared between polls.
+    this.statsHistory = nextHistory
+
+    if (bytesDelta > 0 && msDelta > 0) kbpsIn = Math.round((bytesDelta * 8) / msDelta) // bytes*8/ms == kbit/s
+
+    let grade: ConnQuality['grade'] = 'unknown'
+    if (sampled > 0 && rtt != null) {
+      if ((lossPct ?? 0) < 2 && rtt < 150) grade = 'good'
+      else if ((lossPct ?? 0) > 8 || rtt > 400) grade = 'poor'
+      else grade = 'fair'
+    }
+    return { rttMs: rtt, lossPct, jitterMs: jitter, kbpsIn, peers: sampled, grade }
   }
 
   /** Toggle front/back camera on phones (re-acquires with the other lens). */
@@ -490,6 +647,7 @@ export class MediaRtc {
     this.destroyed = true
     for (const off of this.offs) off()
     this.offs = []
+    this.statsHistory.clear()
     for (const id of [...this.peers.keys()]) this.closePeer(id)
     this.listeners.clear()
     if (this.screenStream) {

@@ -90,6 +90,8 @@ export interface AppEvent {
 export interface RoomSnapshot {
   code: string
   createdAt: string
+  /** Cosmetic session title (registry PATCH). Null when the session is untitled. */
+  title?: string | null
   selfId: string
   participants: Participant[]
   texts: TextItem[]

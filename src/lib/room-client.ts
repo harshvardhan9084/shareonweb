@@ -184,6 +184,9 @@ export class RoomClient {
     this.socket.on('poll:update', (p: { poll: Poll }) => this.emitLocal('poll', p.poll))
     this.socket.on('doc:changed', (p: { doc: NoteDoc }) => this.emitLocal('doc', p.doc))
     this.socket.on('room:closed', () => this.emitLocal('closed', {}))
+    this.socket.on('session:title', (p: { code: string; title: string | null }) =>
+      this.emitLocal('title', p),
+    )
     this.socket.on('app:event', (m: AppEvent) => this.emitLocal('appevent', m))
     this.socket.on('rtc:signal', (m: { from: string; data: unknown }) =>
       this.emitLocal('rtcsignal', m),
