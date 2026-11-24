@@ -44,6 +44,8 @@ for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" 
          "/lorem" "/fake-data" "/css-tools" "/meta-tags" "/barcode" \
          "/calculator" "/percentage" "/date-calculator" "/bmi" "/loan" \
          "/timer" "/picker" "/regex" "/csv" "/color" \
+         "/signature" "/invoice" "/timezone" "/pdf-to-image" "/device-test" \
+         "/beautify" "/favicon" "/watermark" "/typing-test" "/markdown" \
          "/beam" "/call"; do
   printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
 done
@@ -701,6 +703,128 @@ if snap_hit 'Contrast ratio'; then ok "/color computes a real ratio"; else bad "
 if snap_hit 'Palettes from this color'; then ok "/color palette ramps render"; else bad "/color palette"; fi
 agent-browser close > /dev/null 2>&1
 
+# 11u3. Batch R2 — documents & media utilities (one real interaction per tool)
+
+# /signature: draw idle state, then Type mode renders the default name
+open_page "http://localhost:81/signature"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Sign here with your mouse'; then ok "/signature draw pad renders with the guide"; else bad "/signature draw pad"; fi
+stab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Type" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$stab > /dev/null 2>&1
+sleep 1
+if snap_hit 'Alex Morgan'; then ok "/signature type mode renders the name preview"; else bad "/signature type mode"; fi
+if snap_hit 'Download PNG'; then ok "/signature export action present"; else bad "/signature export"; fi
+agent-browser close > /dev/null 2>&1
+
+# /invoice: default line items land in the sheet, math breakdown visible
+open_page "http://localhost:81/invoice"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Website design'; then ok "/invoice default line items reach the sheet"; else bad "/invoice items"; fi
+if snap_hit 'Taxable base'; then ok "/invoice shows the math breakdown"; else bad "/invoice math"; fi
+if snap_hit 'Print invoice'; then ok "/invoice print action present"; else bad "/invoice print"; fi
+invtotal=$(agent-browser eval "(() => { const t = [...document.querySelectorAll('table')].map(x => x.textContent).join(' '); return t.includes('620.00') ? 'yes' : t.slice(0, 80) })()" 2>/dev/null)
+echo "$invtotal" | rg -q 'yes' && ok "/invoice computes 500+120 subtotal" || bad "/invoice total: $invtotal"
+agent-browser close > /dev/null 2>&1
+
+# /timezone: default convert rows with offsets, planner strip reachable
+open_page "http://localhost:81/timezone"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'New York'; then ok "/timezone convert lists the default target"; else bad "/timezone convert"; fi
+if snap_hit 'UTC'; then ok "/timezone rows show offsets"; else bad "/timezone offsets"; fi
+ptab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Meeting planner" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$ptab > /dev/null 2>&1
+sleep 1
+if snap_hit 'Work starts'; then ok "/timezone planner strip renders"; else bad "/timezone planner"; fi
+if snap_hit 'Everyone is at work during|No hour sits inside working hours'; then ok "/timezone planner gives an honest verdict"; else bad "/timezone verdict"; fi
+agent-browser close > /dev/null 2>&1
+
+# /pdf-to-image: real 3-page fixture renders, progress completes
+open_page "http://localhost:81/pdf-to-image"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/test-3pages.pdf" > /dev/null 2>&1
+agent-browser wait --text "rendered 3/3" --timeout 60000 > /dev/null 2>&1
+sleep 1
+if snap_hit 'rendered 3/3'; then ok "/pdf-to-image renders all 3 fixture pages"; else bad "/pdf-to-image render"; fi
+if snap_hit 'Download all 3 as ZIP'; then ok "/pdf-to-image offers the ZIP"; else bad "/pdf-to-image zip"; fi
+p2iW=$(agent-browser eval "(() => { const img = document.querySelector('figure img'); return img ? (img.naturalWidth > 100 ? 'yes' : 'blank:' + img.naturalWidth) : 'no-img' })()" 2>/dev/null)
+echo "$p2iW" | rg -q 'yes' && ok "/pdf-to-image thumbnails carry real pixels" || bad "/pdf-to-image thumb: $p2iW"
+agent-browser close > /dev/null 2>&1
+
+# /device-test: honest idle states + device info card values
+open_page "http://localhost:81/device-test"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Start camera test'; then ok "/device-test camera idle state"; else bad "/device-test camera idle"; fi
+if snap_hit 'Start microphone test'; then ok "/device-test mic idle state"; else bad "/device-test mic idle"; fi
+if snap_hit 'Pixel ratio'; then ok "/device-test info card renders"; else bad "/device-test info"; fi
+if snap_hit 'Secure context'; then ok "/device-test names the secure-context state"; else bad "/device-test secure"; fi
+agent-browser close > /dev/null 2>&1
+
+# /beautify: CSS beautified on load; compact preserves calc() spaces
+open_page "http://localhost:81/beautify"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Formatted output" --timeout 40000 > /dev/null 2>&1
+sleep 2
+bfOut=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; return pre.textContent.includes('box-shadow: 0 1px 3px') ? 'yes' : pre.textContent.slice(0, 100) })()" 2>/dev/null)
+echo "$bfOut" | rg -q 'yes' && ok "/beautify expands the default CSS" || bad "/beautify css: $bfOut"
+cbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Compact" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$cbtn > /dev/null 2>&1
+sleep 1
+bfC=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; const t = pre.textContent; return (t.includes('calc(100% - 24px)') && !t.includes('/*')) ? 'yes' : (t.includes('calc(') ? 'calc-mangled:' + t.match(/calc.{0,20}/)?.[0] : 'no-calc') })()" 2>/dev/null)
+echo "$bfC" | rg -q 'yes' && ok "/beautify compact keeps calc() spaces, drops comments" || bad "/beautify compact: $bfC"
+agent-browser close > /dev/null 2>&1
+
+# /favicon: fixture photo becomes the whole set incl. real .ico
+open_page "http://localhost:81/favicon"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/photo.png" > /dev/null 2>&1
+agent-browser wait --text "512 × 512" --timeout 60000 > /dev/null 2>&1
+sleep 1
+fvTiles=$(agent-browser eval "(() => { const t = document.body.textContent; return (t.includes('16 × 16') && t.includes('512 × 512')) ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$fvTiles" | rg -q 'yes' && ok "/favicon renders the 16px and 512px tiles" || bad "/favicon tiles: $fvTiles"
+fvSnip=$(agent-browser eval "document.body.textContent.includes('Paste this into your') ? 'yes' : 'no'" 2>/dev/null)
+echo "$fvSnip" | rg -q 'yes' && ok "/favicon generates the link snippet" || bad "/favicon snippet: $fvSnip"
+fvIco=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Download favicon.ico'); return b ? 'present' : 'no-btn' })()" 2>/dev/null)
+echo "$fvIco" | rg -q 'present' && ok "/favicon ico download reachable" || bad "/favicon ico btn: $fvIco"
+agent-browser close > /dev/null 2>&1
+
+# /watermark: fixture photo stamped, result file produced
+open_page "http://localhost:81/watermark"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/photo.png" > /dev/null 2>&1
+agent-browser wait --text "1 image" --timeout 40000 > /dev/null 2>&1
+sleep 1
+if snap_hit 'Live preview on photo.png'; then ok "/watermark previews the loaded image"; else bad "/watermark preview"; fi
+wbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Watermark the image" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$wbtn > /dev/null 2>&1
+agent-browser wait --text "watermarked file" --timeout 40000 > /dev/null 2>&1
+sleep 1
+if snap_hit '1 watermarked file ready'; then ok "/watermark stamps and produces the file"; else bad "/watermark apply"; fi
+if snap_hit 'photo.watermarked.png'; then ok "/watermark names the output file"; else bad "/watermark filename"; fi
+agent-browser close > /dev/null 2>&1
+
+# /typing-test: typing one word + space advances the stream (real input path)
+open_page "http://localhost:81/typing-test"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'New words'; then ok "/typing-test idle state renders with the stream"; else bad "/typing-test idle"; fi
+ttWords=$(agent-browser eval "(() => { const p = document.querySelector('p[aria-label]'); return p ? (p.textContent.trim().length > 40 ? 'yes' : 'thin') : 'no-stream' })()" 2>/dev/null)
+echo "$ttWords" | rg -q 'yes' && ok "/typing-test word stream is populated" || bad "/typing-test stream: $ttWords"
+ttRes=$(agent-browser eval "(() => { const el = document.getElementById('tt-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, 'the '); el.dispatchEvent(new Event('input', { bubbles: true })); return el.value === '' ? 'advanced' : 'stuck:' + el.value })()" 2>/dev/null)
+echo "$ttRes" | rg -q 'advanced' && ok "/typing-test space advances the word stream" || bad "/typing-test advance: $ttRes"
+ttRun=$(agent-browser eval "document.body.textContent.includes('Remaining') ? 'yes' : 'no'" 2>/dev/null)
+echo "$ttRun" | rg -q 'yes' && ok "/typing-test clock started on first keystroke" || bad "/typing-test clock: $ttRun"
+agent-browser close > /dev/null 2>&1
+
+# /markdown: default doc renders strong + table + escaped script
+open_page "http://localhost:81/markdown"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Preview" --timeout 40000 > /dev/null 2>&1
+sleep 2
+mdRes=$(agent-browser eval "(() => { const pv = document.getElementById('md-preview'); if (!pv) return 'no-preview'; const ok1 = pv.innerHTML.includes('<strong>live</strong>'); const ok2 = pv.innerHTML.includes('&lt;script&gt;'); const ok3 = pv.innerHTML.includes('<table'); return ok1 && ok2 && ok3 ? 'all' : 'strong:' + ok1 + ',esc:' + ok2 + ',table:' + ok3 })()" 2>/dev/null)
+echo "$mdRes" | rg -q 'all' && ok "/markdown renders emphasis, tables and escapes raw HTML" || bad "/markdown render: $mdRes"
+if snap_hit 'Table generator'; then ok "/markdown table generator present"; else bad "/markdown table gen"; fi
+if snap_hit 'Standalone HTML'; then ok "/markdown offers the standalone export"; else bad "/markdown exports"; fi
+agent-browser close > /dev/null 2>&1
+
 # 11v. /qr Scan tab: decode a real QR image end to end (headless cannot grant
 # a camera, so the image path carries the verification; the camera idle state
 # is checked honestly).
@@ -777,7 +901,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

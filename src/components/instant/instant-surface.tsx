@@ -56,6 +56,16 @@ import { PickerTool } from '@/components/instant/picker-tool'
 import { RegexTool } from '@/components/instant/regex-tool'
 import { CsvTool } from '@/components/instant/csv-tool'
 import { ColorTool } from '@/components/instant/color-tool'
+import { SignatureTool } from '@/components/instant/signature-tool'
+import { InvoiceTool } from '@/components/instant/invoice-tool'
+import { TimeZoneTool } from '@/components/instant/timezone-tool'
+import { PdfToImageTool } from '@/components/instant/pdf-to-image-tool'
+import { DeviceTestTool } from '@/components/instant/device-test-tool'
+import { BeautifyTool } from '@/components/instant/beautify-tool'
+import { FaviconTool } from '@/components/instant/favicon-tool'
+import { WatermarkTool } from '@/components/instant/watermark-tool'
+import { TypingTestTool } from '@/components/instant/typing-test-tool'
+import { MarkdownTool } from '@/components/instant/markdown-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -103,6 +113,16 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   regex: RegexTool,
   csv: CsvTool,
   color: ColorTool,
+  signature: SignatureTool,
+  invoice: InvoiceTool,
+  timezone: TimeZoneTool,
+  'pdf-to-image': PdfToImageTool,
+  'device-test': DeviceTestTool,
+  beautify: BeautifyTool,
+  favicon: FaviconTool,
+  watermark: WatermarkTool,
+  'typing-test': TypingTestTool,
+  markdown: MarkdownTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

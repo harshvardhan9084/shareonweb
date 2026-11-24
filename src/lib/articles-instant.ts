@@ -1784,4 +1784,326 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ---------------------------------------------------------------- signature
+  signature: {
+    lede: [
+      'Signature Studio makes the mark you drop into documents: draw it with mouse, finger or stylus on a canvas that behaves like paper, or type it in one of five handwriting-style faces — then download a transparent PNG trimmed to the ink, at the width your document wants.',
+      'The whole thing happens in this tab. The strokes never leave your device, the export is assembled on a local canvas, and the download is handed straight to your browser — there is no server in this loop to trust or to breach.',
+    ],
+    sections: [
+      {
+        heading: 'Drawing that behaves like a pen',
+        paragraphs: [
+          'The pad listens to Pointer Events, so the same stroke code covers trackpad, touchscreen and real stylus. Where the hardware reports pressure, the stroke widens and thins with it — the difference between writing and dragging a marker. A dashed baseline helps you sign level and never exports: the file contains only your ink, on transparency.',
+          'Undo removes your last stroke (signatures are negotiation with yourself — the third attempt is usually the keeper), Clear starts over, and the pen color and width cover the ink-pen to felt-tip range. The checkerboard behind the canvas is the standard transparency indicator, not part of the image.',
+        ],
+      },
+      {
+        heading: 'Typing, for people who prefer to type',
+        paragraphs: [
+          'Type mode renders your name through canvas in five faces — casual pen, formal script, elegant italic, rounded hand, clean print — with size and slant controls. It exists because plenty of people sign faster than they scrawl, and a typed signature is still a signature on the documents that accept one.',
+          'Because the render goes through the same canvas pipeline, what the preview shows is byte-identical to what the PNG contains: no font-substitution surprises when the file lands on another machine.',
+        ],
+      },
+      {
+        heading: 'The export: trimmed, transparent, sized',
+        paragraphs: [
+          'The download scans the image for the actual bounds of the ink, crops to it with a thin margin of breathing room, and resamples to your chosen width — 400 for inline email, 600 for documents, 800 for forms that print. Transparency is an alpha channel, so the signature sits on any background without a white box, and the page says so in the preview rather than leaving you to discover it in Word.',
+        ],
+      },
+      {
+        heading: 'What this page is not',
+        paragraphs: [
+          'It is not an e-signature platform: no certificate, no audit trail, no signing ceremony. What it produces is the mark itself — the thing you then place into a contract you control, or hand to a flow that does the legal wrapping. For regulated signing, the qualified services exist for a reason; this page is the pen, not the notary.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- invoice
+  invoice: {
+    lede: [
+      'Invoice Studio builds the invoice a working freelancer actually sends: seller and client blocks, an invoice number and dates, line items with quantity and rate, a discount that can be a percent or a flat amount, tax applied in the correct order, shipping, notes and payment terms — with a live sheet that prints exactly as previewed.',
+      'The math is shown, not hidden: subtotal, discount, taxable base, tax, shipping and total, each on its own line. The invoice is composed in this tab and printed by this tab; the browser\u2019s own print dialog is also where “Save as PDF” lives, so the PDF path needs no upload either.',
+    ],
+    sections: [
+      {
+        heading: 'The math order that matters',
+        paragraphs: [
+          'Discount first, tax second, shipping on top. A discount reduces the taxable amount in most jurisdictions, which is why the page computes tax on the post-discount base instead of the subtotal — the wrong order is the classic invoice bug that shows up as a few missing cents per line and an argument with an accountant per quarter.',
+          'The breakdown panel spells out every step with the numbers in it, so a client who asks “what did the 21% apply to?” can be answered by pointing at the sheet. Flat discounts switch cleanly from percent mode for the “$50 off this one” cases.',
+        ],
+      },
+      {
+        heading: 'Printing that prints the invoice, only',
+        paragraphs: [
+          'A print stylesheet isolates the invoice sheet: headers, footers, the editor column and everything else on the page are hidden the moment the browser prints, and the sheet takes the full page width. What you previewed is what comes out — on paper or, with “Save as PDF”, as a file you attach to the email you were about to write.',
+        ],
+      },
+      {
+        heading: 'Fields that earn their place',
+        paragraphs: [
+          'Invoice number, issue date and due date live in the header the way clients expect to find them. Notes carry the human line — thank you, late-fee terms, a joke — and the payment terms block states the when and the how so the “when will I get paid?” conversation happens before the work, not after. Currency runs across the whole sheet, with a custom slot for anything the list missed.',
+        ],
+      },
+      {
+        heading: 'Nothing stored, nothing to leak',
+        paragraphs: [
+          'There is no account and no database behind this page: the invoice exists in the fields of the open tab and nowhere else. That is a feature with teeth — a client\u2019s name and a day rate are exactly the data a breach turns into a pricing leak. Save the PDF as your record; edit the fields again any time.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- timezone
+  timezone: {
+    lede: [
+      'Time Zone Studio does the three jobs behind every “what time is it in…” search: convert one moment across any set of zones with the day shift named in words, keep a live world clock for the cities you actually care about, and lay out a meeting-planner strip that shows — hour by hour, in color — who is at work, who is awake and who is asleep.',
+      'Every zone comes from your browser\u2019s own Intl database, the same IANA tables your operating system updates. Conversions are computed on this device from those tables; there is no server round-trip and no hardcoded, quietly outdated timezone list baked into the page.',
+    ],
+    sections: [
+      {
+        heading: 'Convert: the day shift is the answer',
+        paragraphs: [
+          'A 23:00 call in New York is tomorrow in Tokyo, and a converter that only says “9:00 AM” invites the wrong-day calendar invite. Each row names the offset, the difference from your source zone, and — when the date flips — a badge that says “next day” or “previous day” with the actual calendar date. Same-date rows say so plainly, because the absence of a badge should mean something too.',
+        ],
+      },
+      {
+        heading: 'World clock: the cities you keep',
+        paragraphs: [
+          'Add the zones you collaborate with and the cards tick every second — time, weekday and date, offset from UTC and the difference from your own zone spelled out. It is the dashboard for the week where three people are three workdays apart, and it keeps running in the tab while you write the schedule.',
+        ],
+      },
+      {
+        heading: 'Meeting planner: colors, then a verdict',
+        paragraphs: [
+          'The strip lays out all 24 hours in your source zone\u2019s time, one row per zone, coloring each hour green (inside working hours), amber (awake, off the clock) or grey (asleep) against working hours you set. The current hour is marked. Below it, the verdict line names every window where all zones are green at once — or, honestly, says that none exists and someone will be taking the 7 AM or the 10 PM call.',
+          'Three zones maximum, deliberately: past that the strip stops being readable and the honest answer is “rotate the pain” — which the strip shows rather than hides.',
+        ],
+      },
+      {
+        heading: 'Why Intl instead of a timezone table',
+        paragraphs: [
+          'Timezone data changes: countries move DST rules, zone names get corrected, offsets shift by 30 minutes. The browser\u2019s Intl database carries the same updates your OS installs, so the page is never more current-ness-deprived than the machine it runs on — and never needs a network call to be right.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- pdf-to-image
+  'pdf-to-image': {
+    lede: [
+      'PDF to Image Studio is the reverse of images-to-PDF: each page of a PDF is rasterized to a real image — PNG or JPG, at 1×, 2× or 3× scale — with a thumbnail grid to check the run before you download one page or the whole set as a ZIP.',
+      'The rendering is done by pdf.js, the same engine Firefox uses to display PDFs, running in this tab. The file is read into local memory, drawn onto local canvases and written out as downloads; no request ever carries a page, which you can verify in the network tab.',
+    ],
+    sections: [
+      {
+        heading: 'Scale: what 1×, 2× and 3× mean',
+        paragraphs: [
+          'A PDF page is defined in points, and 1× renders it at screen resolution — roughly 72 dpi, fine for slides and embedding. 2× doubles every dimension (about 144 dpi, the sweet spot for print and archiving), and 3× gives the sharpest text edges at the cost of nine times the pixels. The choice is per-run, not per-page: switch it and the whole grid re-renders.',
+          'PNG keeps text crisp with lossless encoding; JPG with a quality slider shrinks scanned or photo-heavy pages dramatically. Both encode from the identical render — the difference is purely the container.',
+        ],
+      },
+      {
+        heading: 'Sequential rendering and the honest cap',
+        paragraphs: [
+          'Pages render one after another with a live progress count, so a hundred-page document fills its grid without freezing the tab. Memory is the real limit — a 3× render of a dense page is a large canvas — and when a run hits it, the page says so plainly: the first 100 pages are done, split the file for the rest. What it never does is fail silently or pretend a partial run is complete.',
+        ],
+      },
+      {
+        heading: 'Where this beats screenshots',
+        paragraphs: [
+          'A screenshot captures your zoom level, your scrollbars and your DPI; this renders the page at exact, chosen dimensions from the PDF\u2019s own vector data. Text comes out clean at every scale, dimensions are consistent across a run, and the filenames — document-page-01.png, page-02 — sort in order the moment the ZIP opens.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- device-test
+  'device-test': {
+    lede: [
+      'Device Check Studio is the pre-call check: start your camera and see its real resolution and frame rate — including a measured FPS that reflects what actually arrived, not what the track promised — start your mic and watch a level meter move with your voice, and copy a device-info card for the support ticket.',
+      'The privacy model is structural: this page contains no recording code at all. No MediaRecorder, no capture graph, nothing that could write a file. Streams exist only while a panel is open and stop the moment you press Stop or close the tab.',
+    ],
+    sections: [
+      {
+        heading: 'Camera: settings versus reality',
+        paragraphs: [
+          'The track settings report what the camera negotiated — 1280×720 at 30 fps is the usual promise. The measured counter then counts actual painted frames for two seconds and reports what showed up, which is the number that matters: browsers deliver less than the promise under load, in dim light, or when another app holds the device.',
+          'Every camera on the machine is enumerated once permission exists, and switching between them — front to back on a phone, webcam to capture card on a desk — happens in the page without losing the readouts.',
+        ],
+      },
+      {
+        heading: 'Microphone: a meter that moves',
+        paragraphs: [
+          'The mic feeds a WebAudio analyser: an RMS bar tracks your speaking level in real time, a peak-hold marker shows the loudest you got, and the sample rate readout confirms the stream is actually flowing. Speak at presentation distance and watch the bar — if it barely moves, the app that matters later will hear exactly as little.',
+        ],
+      },
+      {
+        heading: 'Device info: the ticket, pre-written',
+        paragraphs: [
+          'Screen and window size, pixel ratio, CPU cores, the memory hint, touch points, languages, timezone, the full user agent and a secure-context flag — laid out, with a copy-all button. The secure-context line is the one that saves the most time: camera and microphone APIs refuse to run on plain http, and the card says so instead of the symptoms confusing everyone.',
+        ],
+      },
+      {
+        heading: 'Permissions, stated before they are asked',
+        paragraphs: [
+          'Nothing opens a hardware light uninvited: the camera and mic start only when you press their Start buttons, and the browser\u2019s permission prompt explains itself. A denial is handled with instructions — where the address-bar control lives and what to flip — not with a silent black rectangle.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- beautify
+  beautify: {
+    lede: [
+      'Code Formatter Studio pastes four languages into shape with the real engines: js-beautify for HTML, CSS and JavaScript, sql-formatter for SQL with five dialects and keyword casing, a JSON side-check that pins parse errors to the exact line and column, and compact modes that are honest about exactly what they preserve.',
+      'Everything runs in this tab. The engines load once from the app bundle itself, and your code — client stylesheets, proprietary queries, someone\u2019s leaked config — never crosses the network to be formatted.',
+    ],
+    sections: [
+      {
+        heading: 'Engines, not regex pretending',
+        paragraphs: [
+          'Formatting is parsing, and the page uses parsers. js-beautify is the library behind browser devtools and JSFiddle; sql-formatter understands dialects — because MySQL and T-SQL are not the same language and reflowing one with the other\u2019s rules produces confident garbage. Indent size, wrap width and quote style are options that reach the engines, not labels next to a single hardcoded output.',
+        ],
+      },
+      {
+        heading: 'Compaction with stated limits',
+        paragraphs: [
+          'The compact modes do real work and name their edges. CSS compact strips comments and newlines but guards the argument lists of calc(), min(), max() and clamp() — those functions require spaces around + and −, and stripping them turns valid CSS invalid. HTML compact drops comments and inter-tag whitespace while leaving pre, textarea, script and style contents byte-exact, because collapsing a <pre> or a script changes what the browser shows or executes. SQL compact preserves string literals while stripping comments and runs of whitespace.',
+        ],
+      },
+      {
+        heading: 'The JS minifier that deliberately does not exist',
+        paragraphs: [
+          'JavaScript ships a beautifier only. Whitespace-stripping minifiers break automatic-semicolon-insertion: remove one newline and two statements merge, silently changing what the program does — the bug ships to production before anyone notices. Real minification parses first and re-emits, which is bundler work with source maps. A paste-and-pray box that pretends otherwise is a footgun, so this page refuses it in writing instead.',
+        ],
+      },
+      {
+        heading: 'The JSON side-check',
+        paragraphs: [
+          'Paste JSON and get it pretty-printed or compacted — or, when it is broken, the exact line and column of the failure instead of a truncated browser error. One misplaced comma in a 4,000-line API response is a two-second fix when the position is printed and an afternoon when it is not.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- favicon
+  favicon: {
+    lede: [
+      'Favicon Studio takes one image and produces the whole set a modern site references: 16, 32, 48, 64, 96, 128, 180 (apple-touch), 192 and 512 px PNGs, plus a genuine multi-size .ico built byte-by-byte to the ICO container spec, plus the copy-paste <link> tags — previewed at true pixel size on light and dark, packed as one ZIP.',
+      'The resampling is high-quality and stepped — an intermediate hop keeps a 2,000 px photo from falling to 16 px in one aliasing-prone drop — and every pixel is produced on this device. Nothing about your logo uploads.',
+    ],
+    sections: [
+      {
+        heading: 'The sizes, and what eats them',
+        paragraphs: [
+          'Browser tabs want 16 and 32; the classic favicon.ico carries 48; iOS home screens want the 180 apple-touch icon; PWA manifests reference 192 and 512. The generated HTML snippet maps each file to the tag that serves it, so the ZIP drops into a web root and the snippet drops into a <head> and the job is done in both directions at once.',
+        ],
+      },
+      {
+        heading: 'A real .ico, not a renamed PNG',
+        paragraphs: [
+          'The .ico is assembled per the spec: an ICONDIR header, one 16-byte directory entry per embedded image with size, color planes, bit depth, data length and offset, then the image payloads. Modern ICO entries carry PNG-encoded images, which is what this page embeds — the result works in the places that still demand an .ico, without a fake file that breaks one of them.',
+        ],
+      },
+      {
+        heading: 'Fit: cover, contain, and the 16-pixel test',
+        paragraphs: [
+          'Cover center-crops the source square and fills the tile edge to edge; contain letterboxes the whole mark with a background color or transparency, and an optional rounded-corner mask gives the tile look. The previews render every size at true pixel size on both light and dark chips — because a logo that dies at 16 px should die in your preview, not in a stranger\u2019s browser tab.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- watermark
+  watermark: {
+    lede: [
+      'Watermark Studio stamps text or your logo across a batch of photos — nine positions with margins, opacity, rotation, or a diagonal tile grid — previews the first image live, then applies the same treatment to every file and hands you the set individually or as one ZIP.',
+      'The work happens on canvases in this tab: images decode to bitmaps, the watermark composites on top, and the result re-encodes straight to your downloads. The originals and the watermarked copies never leave the device — which, for the agencies whose entire business is in those originals, is the requirement, not a bonus.',
+    ],
+    sections: [
+      {
+        heading: 'Text or logo, same grammar',
+        paragraphs: [
+          'Text scales as a percentage of the image\u2019s smaller side, so one setting reads correctly on a 1,200 px phone shot and a 6,000 px deliverable alike. A logo watermark uses your own PNG with its transparency intact — no white box — sized the same percentage way. Both support the nine-position grid, opacity down to a whisper, rotation in degrees, and tiling.',
+        ],
+      },
+      {
+        heading: 'Tile mode: the one they cannot crop out',
+        paragraphs: [
+          'A corner watermark is one crop away from gone; a diagonal grid across the whole frame is not. Tile spacing follows your watermark size automatically, and the density shows in the live preview before anything is committed. It is the pattern for proofs and preview sets where the point is “this is not the final file.”',
+        ],
+      },
+      {
+        heading: 'Format-faithful export',
+        paragraphs: [
+          'JPEG in, JPEG out, at a quality you set; PNG in, PNG out with alpha preserved. Files are named original.watermarked.ext so the batch sorts next to its sources. The preview canvas renders image one at full settings — check it at small size for legibility — and the apply pass runs the identical stamping across the batch.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------- typing-test
+  'typing-test': {
+    lede: [
+      'Typing Test Studio measures speed the way the numbers are defined: WPM is correct characters ÷ 5 ÷ minutes, CPM is raw characters ÷ minutes, and accuracy counts uncorrected errors against you — with durations from 15 seconds to 3 minutes and a clock that starts on your first keystroke, not on page load.',
+      'The word stream comes from a built-in list of common English words, shuffled locally each run. Nothing is fetched, nothing is stored, and there is no leaderboard — typing speed is between you and your keyboard.',
+    ],
+    sections: [
+      {
+        heading: 'What the meter counts while you type',
+        paragraphs: [
+          'The active word colors character by character: what matches goes solid, what does not goes red — and stays red until you fix it, because an uncorrected error is a real error by the standard definition. Space advances the word, the tally updates per keystroke, and the WPM/CPM/accuracy meters recompute live so you can watch pace collapse when you get sloppy and recover when you breathe.',
+        ],
+      },
+      {
+        heading: 'The finish, and what the result means',
+        paragraphs: [
+          'The test ends itself at zero — nobody grades their own stopping point. The result card shows WPM, CPM, accuracy, consistency (derived from the variance of your per-second pace, so bursts versus rhythm is visible) and the correct/raw character tally, with the formula written underneath. A session best is kept in the tab only; close it and it is gone.',
+        ],
+      },
+      {
+        heading: 'Why the words are common English',
+        paragraphs: [
+          'Speed on plausible prose is the speed that transfers to what you actually type; typing “quixotically” fast is a party trick. The stream draws from the most common words, shuffled with the same Fisher–Yates shuffle everywhere else in this app, so a New words button gives a fresh run without a network round-trip.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- markdown
+  markdown: {
+    lede: [
+      'Markdown Studio is the workbench for READMEs, blog drafts and documentation: the editor sits beside a live preview rendered by a built-in engine, a table generator builds the pipe syntax nobody remembers, and exports produce raw HTML, a standalone styled HTML document, or the .md source itself.',
+      'Raw HTML is escaped by default — a pasted <script> renders as the text it is — with an explicit switch for when you genuinely want tags live. Every render happens on this device; the document exists in this tab and nowhere else.',
+    ],
+    sections: [
+      {
+        heading: 'The subset that covers the writing',
+        paragraphs: [
+          'Headings through h6, bold, italic, strikethrough, inline and fenced code with a language label, links and images, blockquotes, horizontal rules, ordered and unordered lists with real nesting, and GFM tables with per-column alignment. The engine renders exactly this — the syntax people actually type in READMEs and issues — instead of failing quietly on the parts a lighter parser skipped.',
+        ],
+      },
+      {
+        heading: 'Escaped by default, and why that is the feature',
+        paragraphs: [
+          'A Markdown tool is where pasted text lands: issue bodies, chat logs, drafts written by strangers or by models. Rendering that text as live HTML executes whatever it embedded. With the switch off, every tag is escaped and shown as text — the safe default for other people\u2019s words. Turn it on for documents you wrote, and a URL guard still refuses javascript: links either way.',
+        ],
+      },
+      {
+        heading: 'Tables without the pipe-counting',
+        paragraphs: [
+          'The generator takes rows and columns and emits an aligned GFM table with placeholder cells, inserted into the editor or copied out — the syntax is generated once instead of miscounted four times. Edit the delimiter row\u2019s colons for center or right alignment and the preview follows immediately.',
+        ],
+      },
+      {
+        heading: 'Exports that match the preview',
+        paragraphs: [
+          'The HTML export produces the rendered fragment for embedding into an existing page or CMS. The standalone export wraps the same content in a complete document with embedded styles — typography, code, tables, quotes — so it opens in any browser as a finished file. The .md export is your source, byte for byte. What all three render is what the preview showed: there is no second renderer to disagree with.',
+        ],
+      },
+    ],
+  },
 }

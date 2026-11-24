@@ -617,17 +617,17 @@ work through them 10 per run. Selection rules used for this list:
 - [x] `/csv` — RFC4180 parser (quotes/CRLF/custom delimiter), CSV↔JSON both directions, type inference, malformed-quote warnings, table viewer + exports
 - [x] `/color` — HEX/RGB/HSL converter with alpha, Eyedropper + image sampling, WCAG contrast checker, shades/tints/harmony palettes
 
-### Batch R2 — documents & media utilities (next run)
-- [ ] `/signature` — draw + type signatures → transparent PNG at chosen size
-- [ ] `/invoice` — line items, tax/discount/shipping, notes, print-ready invoice
-- [ ] `/timezone` — time zone converter, world clock row, meeting-planner strip (Intl-based)
-- [ ] `/pdf-to-image` — PDF → PNG/JPG per page or ZIP (reuses vendored pdf.js)
-- [ ] `/device-test` — camera & mic test: resolution/FPS readout, level meters, browser/screen info — nothing recorded, nothing sent
-- [ ] `/beautify` — format + minify HTML, CSS, JS, SQL (js-beautify + sql-formatter)
-- [ ] `/favicon` — one image → full favicon pack (16/32/48/64/96/128/180/192/512 + .ico) as ZIP
-- [ ] `/watermark` — text or logo watermark on photos, batch, position/opacity/tile
-- [ ] `/typing-test` — WPM/CPM + accuracy, 15s/30s/1m/3m modes, real word stream
-- [ ] `/markdown` — markdown editor with live preview, HTML export, table generator
+### Batch R2 — documents & media utilities (shipped this run, 2026-11-25, QA-verified per tool)
+- [x] `/signature` — draw + type signatures → transparent PNG at chosen size
+- [x] `/invoice` — line items, tax/discount/shipping, notes, print-ready invoice
+- [x] `/timezone` — time zone converter, world clock row, meeting-planner strip (Intl-based)
+- [x] `/pdf-to-image` — PDF → PNG/JPG per page or ZIP (reuses vendored pdf.js)
+- [x] `/device-test` — camera & mic test: resolution/FPS readout, level meters, browser/screen info — nothing recorded, nothing sent
+- [x] `/beautify` — format + minify HTML, CSS, JS, SQL (js-beautify + sql-formatter)
+- [x] `/favicon` — one image → full favicon pack (16/32/48/64/96/128/180/192/512 + .ico) as ZIP
+- [x] `/watermark` — text or logo watermark on photos, batch, position/opacity/tile
+- [x] `/typing-test` — WPM/CPM + accuracy, 15s/30s/1m/3m modes, real word stream
+- [x] `/markdown` — markdown editor with live preview, HTML export, table generator
 
 ### Batch R3 — data & text utilities
 - [ ] `/stats` — mean/median/mode/range/variance/std-dev/quartiles from pasted numbers
@@ -728,3 +728,75 @@ the ×.
 sw.js bumped to sow-shell-v6 (45 instant shells precached). Ops:
 ~/.git-credentials was alive this run (restored by the previous one); the
 push below used it. Next run: Batch R2 per §13.
+
+## 15. Batch R2 — §13 expansion continues (this run, 2026-11-25)
+
+Owner directive from the previous round stands: /video-trim and AI
+background removal stay parked permanently; the §13 50-tool expansion
+continues 10 per run. This run shipped **Batch R2 — documents & media
+utilities**, complete with the full pipeline per tool (registry entry with
+SEO intents → component → instant-surface mount → long-form article →
+titles/descriptions/FAQs → app-icon → sw precache).
+
+**QA: 22 (PHASE=1) + 34 (PHASE=2) + 194 (PHASE=3) = 250 PASS, 0 FAIL** via
+scripts/final-qa.sh through the :81 gateway. The R2 block adds ~33 browser
+checks, one real interaction per tool: /pdf-to-image rasterizes the real
+3-page fixture (progress "rendered 3/3" + real thumbnail pixels), /favicon
+generates the full set from photo.png incl. the .ico and the <link> snippet,
+/watermark stamps photo.png and produces photo.watermarked.png, /typing-test
+types "the " through the real input path and proves the clock starts and the
+stream advances, /beautify proves calc(100% - 24px) survives compaction,
+/markdown proves strong + table + escaped <script> in one eval. lint clean.
+
+Shipped (all instant, 100% client-side):
+
+1. `/signature` — draw pad (Pointer Events, pen pressure → width), stroke
+   undo/clear, type mode in five faces, transparent PNG trimmed to ink bounds
+   at 400/600/800 px; baseline guide never exports.
+2. `/invoice` — line items, percent/flat discount, tax on the post-discount
+   base, shipping, currency selector + custom symbol, math breakdown panel,
+   print stylesheet that prints only the sheet (Print → Save as PDF).
+3. `/timezone` — convert with next/previous-day badges (Intl offset math via
+   formatToParts), live world clock cards, meeting planner 24-hour strip with
+   working-hours coloring and overlap windows; zones from Intl.supportedValuesOf.
+4. `/pdf-to-image` — pdf.js page rasterization at 1×/2×/3×, PNG or JPG with
+   quality slider, sequential render with progress, 100-page honest cap, ZIP.
+5. `/device-test` — camera track settings + measured FPS (2 s rAF window),
+   mic RMS bar + peak hold + sample rate via WebAudio, device info card with
+   copy-all; NO MediaRecorder anywhere; streams stop on Stop/unmount.
+6. `/beautify` — js-beautify (HTML/CSS/JS) + sql-formatter (5 dialects);
+   compact modes guard calc()/min()/max()/clamp() spaces and keep
+   pre/textarea/script/style byte-exact; JS minify deliberately refused (ASI)
+   and the refusal is written on the page; JSON error line+column.
+7. `/favicon` — 9 PNG sizes + real ICO container built to spec (ICONDIR +
+   entries + PNG payloads, 16/32/48), cover/contain fit, rounded mask,
+   true-size light/dark previews, <link> snippet, ZIP.
+8. `/watermark` — text or logo watermark, 9 positions + margin + rotation +
+   opacity + diagonal tile, batch of up to 60, format-faithful export
+   (JPEG→JPEG q-slider, PNG→PNG alpha), live preview, per-file or ZIP.
+9. `/typing-test` — 15s/30s/1m/3m, clock starts on first keystroke,
+   per-character coloring, WPM=correct÷5÷min, CPM, accuracy, consistency from
+   per-second variance, local word list (no network), tab-only session best.
+10. `/markdown` — built-in renderer (h1–h6, emphasis, strike, fenced code,
+    links/images, quotes, rules, nested lists, GFM tables), raw HTML escaped
+    by default with an explicit allow switch + javascript:-URL guard, table
+    generator, HTML/standalone-HTML/.md exports, live word/char/line stats.
+
+**Real bugs QA caught this run (both fixed, then re-run green):**
+- `/device-test` returned HTTP 500 on first warm: the device-info array read
+  `screen`/`window` during server render. Moved into a mount-time effect —
+  the card now fills client-side only.
+- `/beautify` compact re-wrapped calc() args in double parentheses on restore
+  (`calc((100% - 24px))`) — the placeholder restore added a second paren
+  pair. QA proved it, fix verified with the same eval.
+- QA-harness hardening along the way: favicon/typing/beautify assertions
+  moved from snapshot-text matching (truncation-sensitive) to DOM evals.
+
+sw.js bumped to sow-shell-v7 — **55 instant shells** precached; the mirror
+sweep asserts all 55 answer 200 through the gateway. New deps: js-beautify,
+sql-formatter (+ @types/js-beautify dev), both loaded lazily.
+
+Ops: ~/.git-credentials was empty again this run (sandbox recycle); restored
+from the owner's earlier fine-grained PAT (URL-style line, chmod 600). Push
+below uses it. Next run: **Batch R3** per §13 (stats, number-to-words, morse,
+font-changer, emoji, json-to-ts, compress-pdf, time-card, grade, todo).

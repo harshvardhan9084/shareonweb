@@ -72,6 +72,16 @@ const SEO_TITLES: Record<string, string> = {
   regex: 'Regex Studio — live JavaScript regex testing with groups, replace preview and a library',
   csv: 'CSV & JSON Studio — real RFC 4180 conversions between CSV and JSON, warnings included',
   color: 'Color Studio — convert, sample and check colors: HEX/RGB/HSL, WCAG contrast, palettes',
+  signature: 'Signature Studio — draw or type a signature, download a trimmed transparent PNG, all local',
+  invoice: 'Invoice Studio — line items, tax, discount, shipping and a print-ready invoice, nothing stored',
+  timezone: 'Time Zone Studio — convert times, world clock and meeting planner on the Intl database',
+  'pdf-to-image': 'PDF to Image Studio — render every PDF page to PNG or JPG at print scale, ZIP included',
+  'device-test': 'Device Check Studio — webcam and microphone tests with real readouts, nothing recorded',
+  beautify: 'Code Formatter Studio — beautify HTML, CSS, JS and SQL with real engines, honest compaction',
+  favicon: 'Favicon Studio — one image into every favicon size plus a real .ico, packed as a ZIP',
+  watermark: 'Watermark Studio — text or logo watermarks on a batch of photos, position, tile, opacity',
+  'typing-test': 'Typing Test Studio — WPM, CPM and accuracy over 15s to 3min, the clock starts on typing',
+  markdown: 'Markdown Studio — live preview, GFM tables and clean HTML export from a built-in engine',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -188,6 +198,26 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Convert CSV to JSON and JSON to CSV with a real RFC 4180 parser — quoted fields, escaped quotes, CRLF, custom delimiters, type inference and honest malformed-quote warnings.',
   color:
     'Convert any color between HEX, RGB and HSL with alpha, sample from an image or the screen, test WCAG 2.1 contrast, and build tints, shades and harmony palettes — all in your browser.',
+  signature:
+    'Draw with mouse, finger or stylus, or type your name in handwriting faces — a transparent PNG trimmed to the ink bounds downloads at your chosen width. Nothing is uploaded or stored.',
+  invoice:
+    'Build an invoice with line items, percent or flat discount, tax on the post-discount base, shipping and notes, then print or save as PDF from the browser dialog. No account, nothing stored.',
+  timezone:
+    'Convert a time across IANA zones with next-day badges, keep live world-clock cards, and read a meeting-planner strip that colors every hour and names the overlap windows. Fully local.',
+  'pdf-to-image':
+    'Turn PDF pages into PNG or JPG images at 1×, 2× or 3× scale with pdf.js — page thumbnails, single downloads or a ZIP of the run. The file never leaves your device.',
+  'device-test':
+    'Test your webcam and microphone before the real call: track resolution, measured FPS, a live mic level meter and a device info card. No recording code exists on the page.',
+  beautify:
+    'Format HTML, CSS and JavaScript with js-beautify and SQL with sql-formatter (five dialects), compact with calc-safe minifiers, and pin JSON errors to the exact line and column — all local.',
+  favicon:
+    'One image becomes every favicon: 16–512 px PNGs, a genuine multi-size .ico built to spec, an apple-touch icon and the copy-paste link tags — previewed at true size, packed as a ZIP.',
+  watermark:
+    'Stamp text or your logo across a batch of photos with position, rotation, opacity and tiling, preview live, and download the watermarked set as a ZIP. Nothing uploads.',
+  'typing-test':
+    'Measure real typing speed: WPM, CPM, accuracy and consistency over 15 seconds to 3 minutes on a locally generated word stream. The clock starts on your first keystroke, not on load.',
+  markdown:
+    'Write Markdown with a live preview, a table generator and HTML exports from a built-in engine that escapes raw HTML by default. READMEs, drafts and docs, rendered on your device.',
 }
 
 /**
@@ -1061,6 +1091,206 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'How are the palettes generated?',
       a: 'With real HSL math: the tint-and-shade ramp walks the lightness axis through nine steps at your exact hue and saturation, and the harmonies rotate the hue by 180° (complementary), ±30° (analogous) or ±120° (triadic). Click any swatch to make it the working color — and the contrast tab then tests it against your background immediately.',
+    },
+  ],
+
+  // --------------------------------------------------------------- signature
+  signature: [
+    {
+      q: 'Is a typed or drawn signature legally valid?',
+      a: 'The page produces an image, and the legal weight of an image comes from the agreement around it, not from the pixels. Many jurisdictions accept typed or drawn signatures on contracts (with the usual caveats), and the drawn PNG is what most e-sign flows ask you to supply anyway. For regulated documents, use a qualified e-signature service — this page is where you make the mark, not where you sign the deal.',
+    },
+    {
+      q: 'Why is the PNG trimmed instead of the full canvas?',
+      a: 'A signature pasted into a document works better without dead space around it: trimmed ink sits at the size you place it, scales predictably, and does not carry an invisible margin that pushes layouts around. The export crops to the actual bounds of the strokes with a little padding, then scales to the width you picked with high-quality resampling.',
+    },
+    {
+      q: 'Does the background really stay transparent?',
+      a: 'Yes — the canvas is transparent by default and the export encodes it as an alpha channel. The checkerboard behind the preview is the standard way of showing transparency honestly: it is not part of the image. If a tool you paste the PNG into shows a white box, that tool is flattening the alpha, not the file.',
+    },
+    {
+      q: 'Does my signature get stored or analyzed anywhere?',
+      a: 'No. The strokes live in this tab\u2019s memory, the export happens on a local canvas, and the download is handed to your browser directly. There is no upload endpoint on the page and no stroke data is kept after you close it — refresh and it is gone.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- invoice
+  invoice: [
+    {
+      q: 'How do I get a PDF of the invoice?',
+      a: 'Press Print invoice and choose “Save as PDF” as the destination — every browser\u2019s print dialog offers it. The print stylesheet hides everything except the invoice sheet, so the PDF contains exactly the document you previewed: header, parties, items, totals, notes and terms.',
+    },
+    {
+      q: 'Is tax computed before or after the discount?',
+      a: 'After. The subtotal gets the discount first, tax applies to the post-discount base, and shipping adds on top untaxed. That order is how most tax authorities describe it (a discount reduces the taxable amount) and the on-page math breakdown shows every step so your accountant can verify it in seconds.',
+    },
+    {
+      q: 'Can I use my own currency or symbol?',
+      a: 'Yes — pick Dollar, Euro, Pound, Rupee, Yen and more from the list, or choose Custom and type any symbol. The symbol applies consistently across the editor, the sheet and the totals, and the discount selector follows it when you switch between percent and flat discounts.',
+    },
+    {
+      q: 'Where is the invoice data saved?',
+      a: 'Nowhere. There is no account, no database and no draft folder — the invoice exists in the form fields of this tab and prints from this tab. If you need a copy for the next month, save the PDF; the fields are re-editable any time the page is open.',
+    },
+  ],
+
+  // ---------------------------------------------------------------- timezone
+  timezone: [
+    {
+      q: 'Where does the zone data come from?',
+      a: 'From your browser\u2019s own Intl database — the same IANA tzdata your operating system ships and updates. That means DST rule changes your OS has already downloaded are honored here automatically, and the page never serves a stale timezone table from a server.',
+    },
+    {
+      q: 'What do the “next day” / “previous day” badges mean?',
+      a: 'Exactly what they say about the wall-clock date: a 23:00 meeting in New York lands on the next calendar day in Tokyo, and the badge names it with the actual date — the mistake this prevents is scheduling the wrong day in a calendar invite. Same-date rows say so plainly.',
+    },
+    {
+      q: 'How is the meeting-planner strip colored?',
+      a: 'Green means the hour falls inside that zone\u2019s working hours (9:00–18:00 by default — adjustable), amber means the person is awake but off the clock, grey means asleep. Hours read left to right in your source zone\u2019s time, the current hour is marked, and the overlap line names every window where all zones are green at once.',
+    },
+    {
+      q: 'Can I compare more than three zones?',
+      a: 'Convert and world-clock modes take up to twelve zones each. The planner caps at three because a strip of colored cells stops being readable past that — if you are coordinating more than three zones, run the planner for the critical three and check the stragglers on the convert tab.',
+    },
+  ],
+
+  // ------------------------------------------------------------- pdf-to-image
+  'pdf-to-image': [
+    {
+      q: 'Which scale should I pick?',
+      a: '1× renders at the PDF\u2019s native point size (roughly 72 dpi — fine for screens), 2× doubles it (roughly 144 dpi — good for slides and most print), 3× gives the sharpest text at the cost of four to nine times the pixels per page. For archiving printed pages, 2× is the sweet spot; for zoomable page art, go 3×.',
+    },
+    {
+      q: 'PNG or JPG?',
+      a: 'PNG is lossless and keeps text edges crisp — it is the right call for documents, diagrams and screenshots of code. JPG compresses scans and photo-heavy pages far smaller, with the quality slider controlling artifacts. Either way the render is identical; only the encoding differs.',
+    },
+    {
+      q: 'How big a PDF can it handle?',
+      a: 'Pages render sequentially with a progress count, so long documents do not freeze the tab; the practical cap is memory, and the page states it honestly when a run hits it — the first 100 pages render, and splitting the PDF lets the rest through. A 500-page file is not a crash here, it is a number you are told.',
+    },
+    {
+      q: 'Does anything upload?',
+      a: 'No. The PDF is read into this tab\u2019s memory, each page is rasterized by pdf.js onto a local canvas, and the images go straight to your downloads. You can watch the network tab: no request ever carries a page.',
+    },
+  ],
+
+  // ------------------------------------------------------------- device-test
+  'device-test': [
+    {
+      q: 'Is my camera or microphone recording anything?',
+      a: 'No — there is no recording code on this page at all. No MediaRecorder, no capture graph, no buffer that could be saved: the camera stream paints to a video element and the mic stream feeds a level analyser, and both are stopped the instant you press Stop or close the tab.',
+    },
+    {
+      q: 'Why does the measured FPS differ from the track setting?',
+      a: 'The track setting is what the camera promises; the measured number is what actually arrived on screen during a two-second window. Browsers commonly deliver less than the promise under load, in dim light, or when another app holds the camera. If the measured FPS is far below the setting, close other capture apps or drop the resolution.',
+    },
+    {
+      q: 'The browser blocked the camera — what now?',
+      a: 'A denied permission is explained on the page, not hidden: click the lock or camera icon in the address bar, set camera (or microphone) to allow for this site, then press Start again. The page only asks for permission when you press a Start button, so nothing opens a hardware light uninvited.',
+    },
+    {
+      q: 'What is the device info card for?',
+      a: 'Support tickets. Screen size, pixel ratio, CPU cores, memory hint, touch support, languages, timezone and the full user agent are laid out with a copy-all button, so you can paste exactly what a support engineer asks for instead of describing it — with a secure-context line that explains why camera APIs refuse on plain http.',
+    },
+  ],
+
+  // ---------------------------------------------------------------- beautify
+  beautify: [
+    {
+      q: 'Which formatter engines are used?',
+      a: 'js-beautify for HTML, CSS and JavaScript — the same library that powers browser devtools and JSFiddle — and sql-formatter for SQL, with Standard, MySQL, PostgreSQL, T-SQL and PL/SQL dialects. They run in this tab after loading from the app bundle; your code is never sent anywhere to be formatted.',
+    },
+    {
+      q: 'Why is there no JavaScript minifier?',
+      a: 'Because whitespace-stripping minifiers break automatic-semicolon-insertion: remove the wrong newline and two statements merge, silently changing what the program does. Real minifiers parse first and re-emit — that is bundler territory, not a paste-and-pray box. This page ships the beautifier and says no to the footgun, out loud.',
+    },
+    {
+      q: 'What does CSS compact preserve, and why?',
+      a: 'Comments and newlines go away, but the spaces inside calc(), min(), max() and clamp() survive. Those functions require spaces around + and − operators — `calc(100% - 24px)` collapses into invalid CSS without them — so the compactor guards those argument lists and restores them byte-exact after collapsing everything else.',
+    },
+    {
+      q: 'How does HTML compact treat pre, textarea, script and style?',
+      a: 'As byte-exact islands. Comments and inter-tag whitespace are removed everywhere else, but the contents of those elements are protected verbatim: collapsing whitespace inside a <pre> or a script would change what the browser executes or displays, so the compactor simply never enters them.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- favicon
+  favicon: [
+    {
+      q: 'Which sizes does a modern site actually need?',
+      a: 'This page generates the set the standard <link> tags reference: 16 and 32 for browser tabs, 48 for the classic favicon.ico, 180 for apple-touch, and 192 plus 512 for PWA manifests — plus 64, 96 and 128 for the contexts that ask. The generated HTML snippet lists exactly which file serves which tag.',
+    },
+    {
+      q: 'Is the .ico file just a renamed PNG?',
+      a: 'No — it is a real ICO container built to the spec byte-by-byte: an ICONDIR header, one directory entry per size with planes, bit depth and data offsets, then the embedded 16, 32 and 48 pixel images. That is why it works everywhere, including the tools that still refuse anything else.',
+    },
+    {
+      q: 'Cover or contain — which fit should I choose?',
+      a: 'Cover center-crops the source to a square and fills the tile edge to edge — right for logos and photos. Contain letterboxes the whole image inside the square with a background color you pick (or transparency), which keeps a wide logo fully visible at the cost of empty margins. Check the 16 px preview either way: that is the size that actually decides legibility.',
+    },
+    {
+      q: 'Why do the previews sit on light and dark chips?',
+      a: 'Because a dark-mode browser tab is a different surface: a dark-grey logo that dies on dark needs to be caught in the preview, not in production. Every size renders at true pixel size on both backgrounds, so what you judge is what users get.',
+    },
+  ],
+
+  // --------------------------------------------------------------- watermark
+  watermark: [
+    {
+      q: 'Text or logo — which watermark should I use?',
+      a: 'Text for statements: copyright lines, “SAMPLE”, a name — it scales with the image and never needs a second file. A logo for brands: your PNG sits on the photo at a size you set, and its own transparency is preserved so there is no white box. Both support the same nine positions, opacity, rotation and tiling.',
+    },
+    {
+      q: 'What does tile mode do?',
+      a: 'It repeats the watermark across the whole image in a diagonal grid instead of one anchored spot — the pattern photographers use because it cannot be cropped or cloned out from a single corner. Spacing follows your watermark size automatically, and the preview shows the density before you commit the batch.',
+    },
+    {
+      q: 'Are my original files kept intact?',
+      a: 'Yes — the stamping happens on a canvas copy of each decoded image, and the originals are never modified or re-uploaded. Exports are format-faithful: a JPEG in gives a JPEG out (at the quality you set), a PNG in gives a PNG out with its transparency preserved, named original.watermarked.ext.',
+    },
+    {
+      q: 'How many images can the batch take?',
+      a: 'Up to sixty per run, processed sequentially with every result held in memory for the ZIP — the honest limit is device RAM, and large originals at high resolution are the thing that meets it. For phone-photo batches this is a non-issue; for 50-megapixel TIFFs, work in smaller runs.',
+    },
+  ],
+
+  // ------------------------------------------------------------- typing-test
+  'typing-test': [
+    {
+      q: 'How are WPM and CPM defined here?',
+      a: 'The standard way: WPM is correct characters ÷ 5 ÷ minutes, where five characters is the conventional “word” for typing measurement; CPM is raw characters ÷ minutes. Correct characters means the text that is right at the end — a mistake you fix stops counting against you, one you leave in does count.',
+    },
+    {
+      q: 'When does the timer start?',
+      a: 'On your first keystroke, not on page load — reading the word stream before you type is not cheating, it is how the test should work. The clock runs for the duration you picked (15 seconds to 3 minutes) and the test ends itself, so nobody grades their own stopping point.',
+    },
+    {
+      q: 'What does the accuracy number count?',
+      a: 'Correct keystrokes over total keystrokes, counted live as you type. The active word shows character-by-character what matches and what does not; uncorrected errors stay in the tally. Fixing as you go is the honest habit — and the consistency score (from the variance of your per-second pace) shows whether you type in bursts or in rhythm.',
+    },
+    {
+      q: 'Where do the words come from, and is my best score saved?',
+      a: 'The words come from a built-in list of the most common English words, shuffled locally each run — no network word API, no per-day unlocks. Your session best lives in this tab\u2019s memory only; close the tab and it is gone. There is no account and no leaderboard because typing speed is between you and your keyboard.',
+    },
+  ],
+
+  // ---------------------------------------------------------------- markdown
+  markdown: [
+    {
+      q: 'Which Markdown features are supported?',
+      a: 'What people actually write: headings through h6, bold, italic, strikethrough, inline and fenced code with a language label, links and images, blockquotes, horizontal rules, ordered and unordered lists with nesting, and GFM tables with :— alignment. Raw HTML is handled per the safety switch, not silently.',
+    },
+    {
+      q: 'Why is raw HTML escaped by default?',
+      a: 'Because a Markdown tool is where pasted text lands — issue bodies, chat logs, drafts written by strangers or models. Rendering that text as live HTML would execute whatever they embedded. Escaped, a pasted <script> displays as the text it is; the switch exists for documents you wrote, and a URL guard still refuses javascript: links.',
+    },
+    {
+      q: 'What is the difference between the two HTML exports?',
+      a: '“HTML” downloads the rendered fragment — the part you embed in an existing page or CMS. “Standalone HTML” wraps the same content in a complete document with embedded styles, so it opens in any browser as a finished file. Both render exactly what the preview shows.',
+    },
+    {
+      q: 'How does the table generator work?',
+      a: 'Set rows and columns, and it emits a properly aligned GFM table with placeholder cells — the pipe-and-dash syntax nobody remembers, generated once. Insert it into the editor (it renders in the preview immediately) or copy it for another tool. Alignment defaults to left; edit the dashes to :—: or —: for center or right.',
     },
   ],
 
