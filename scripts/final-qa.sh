@@ -42,6 +42,8 @@ for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" 
          "/archive" "/file-tools" "/encrypt" "/meta-scrub" "/jwt" "/hash-file-batch" \
          "/cron" "/diff" "/uuid" "/convert-units" \
          "/lorem" "/fake-data" "/css-tools" "/meta-tags" "/barcode" \
+         "/calculator" "/percentage" "/date-calculator" "/bmi" "/loan" \
+         "/timer" "/picker" "/regex" "/csv" "/color" \
          "/beam" "/call"; do
   printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
 done
@@ -583,6 +585,122 @@ echo "$snap" | rg -q "position 13 should be 1, not 2" \
   && ok "/barcode rejects a wrong check digit by name" || bad "/barcode wrong digit"
 agent-browser close > /dev/null 2>&1
 
+# 11u2. Batch R1 — calculators & generators (one real interaction per tool)
+
+# /calculator: set the expression, the live result must evaluate to 84
+open_page "http://localhost:81/calculator"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+calc1=$(agent-browser eval "(() => { const el = document.getElementById('calc-expr'); const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '12*(3+4)'); el.dispatchEvent(new Event('input', { bubbles: true })); const btn = document.querySelector('[aria-label^=\"Copy result\"]'); return btn ? btn.getAttribute('aria-label') : 'no-result' })()" 2>/dev/null)
+echo "$calc1" | rg -q 'Copy result 84' && ok "/calculator evaluates 12*(3+4) live" || bad "/calculator live eval: $calc1"
+if snap_hit 'Scientific pad'; then ok "/calculator scientific switch present"; else bad "/calculator scientific switch"; fi
+calc2=$(agent-browser eval "(() => { const el = document.getElementById('calc-expr'); const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '5/0'); el.dispatchEvent(new Event('input', { bubbles: true })); return document.querySelector('[role=alert]') ? document.querySelector('[role=alert]').textContent : 'no-alert' })()" 2>/dev/null)
+echo "$calc2" | rg -q 'Division by zero' && ok "/calculator names division by zero" || bad "/calculator div-by-zero: $calc2"
+agent-browser close > /dev/null 2>&1
+
+# /percentage: defaults 25% of 120 = 30, formula shown
+open_page "http://localhost:81/percentage"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit '25% of 120'; then ok "/percentage of-mode computes 25% of 120"; else bad "/percentage of-mode"; fi
+if snap_hit '25 ÷ 100. × 120'; then ok "/percentage shows the formula"; else bad "/percentage formula"; fi
+# discount mode: 250 at 20% off -> 200.00 you pay / 50.00 saved
+dtab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Discount" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$dtab > /dev/null 2>&1
+agent-browser eval "(() => { const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; const a = document.getElementById('pct-a'); s.call(a, '250'); a.dispatchEvent(new Event('input', { bubbles: true })); const b = document.getElementById('pct-b'); s.call(b, '20'); b.dispatchEvent(new Event('input', { bubbles: true })); return true })()" > /dev/null 2>&1
+sleep 1
+if snap_hit '200.00'; then ok "/percentage discount computes the final price"; else bad "/percentage discount"; fi
+if snap_hit 'You save'; then ok "/percentage discount names the savings"; else bad "/percentage savings"; fi
+agent-browser close > /dev/null 2>&1
+
+# /date-calculator: default age 1990-01-01 -> exact age + next birthday
+open_page "http://localhost:81/date-calculator"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Exact age'; then ok "/date-calculator age mode renders the breakdown"; else bad "/date-calculator age"; fi
+if snap_hit 'Next birthday'; then ok "/date-calculator next-birthday countdown"; else bad "/date-calculator birthday"; fi
+if snap_hit 'Total days'; then ok "/date-calculator total-days stat"; else bad "/date-calculator totals"; fi
+agent-browser close > /dev/null 2>&1
+
+# /bmi: metric defaults 175cm/72kg -> BMI 23.5, healthy band
+open_page "http://localhost:81/bmi"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit '23.5'; then ok "/bmi computes 72kg/175cm = 23.5"; else bad "/bmi value"; fi
+if snap_hit 'Healthy weight'; then ok "/bmi shows the WHO band"; else bad "/bmi band"; fi
+if snap_hit 'Mifflin-St Jeor'; then ok "/bmi names the calorie formula"; else bad "/bmi formula"; fi
+if snap_hit 'not medical advice'; then ok "/bmi carries the honesty note"; else bad "/bmi note"; fi
+agent-browser close > /dev/null 2>&1
+
+# /loan: defaults -> monthly payment + full schedule
+open_page "http://localhost:81/loan"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Monthly payment'; then ok "/loan computes the EMI headline"; else bad "/loan emi"; fi
+if snap_hit 'Amortization schedule'; then ok "/loan renders the amortization schedule"; else bad "/loan schedule"; fi
+if snap_hit 'CSV'; then ok "/loan offers the CSV export"; else bad "/loan csv"; fi
+agent-browser close > /dev/null 2>&1
+
+# /timer: stopwatch starts and runs, pomodoro phases render
+open_page "http://localhost:81/timer"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Press Lap while running'; then ok "/timer stopwatch idle state"; else bad "/timer idle"; fi
+agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim().startsWith('Start')); if (b) b.click(); return b ? 'clicked' : 'no-button' })()" > /dev/null 2>&1
+sleep 2
+timerRun=$(agent-browser eval "document.body.textContent.includes('Pause') ? 'yes' : 'no'" 2>/dev/null)
+echo "$timerRun" | rg -q 'yes' && ok "/timer stopwatch runs (Pause reachable)" || bad "/timer run"
+ptab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Pomodoro" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$ptab > /dev/null 2>&1
+sleep 1
+if snap_hit '25'; then ok "/timer pomodoro mode with defaults"; else bad "/timer pomodoro"; fi
+agent-browser close > /dev/null 2>&1
+
+# /picker: spin the wheel and read a real winner
+open_page "http://localhost:81/picker"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit 'Spin the wheel'; then ok "/picker wheel renders with entries"; else bad "/picker wheel"; fi
+agent-browser find text "Spin the wheel" click > /dev/null 2>&1
+agent-browser wait --text "wins" --timeout 15000 > /dev/null 2>&1
+sleep 1
+if snap_hit 'wins'; then ok "/picker wheel lands on a real winner"; else bad "/picker spin"; fi
+dtab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Dice roller" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$dtab > /dev/null 2>&1
+sleep 1
+if snap_hit 'Roll'; then ok "/picker dice mode reachable"; else bad "/picker dice"; fi
+agent-browser close > /dev/null 2>&1
+
+# /regex: default pattern matches the duplicate words, table + replace render
+open_page "http://localhost:81/regex"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+rxCount=$(agent-browser eval "document.body.textContent.includes('2 matches') ? 'yes' : 'no'" 2>/dev/null)
+echo "$rxCount" | rg -q 'yes' && ok "/regex finds the duplicate-word matches" || bad "/regex matches: $rxCount"
+if snap_hit 'Capture|Groups'; then ok "/regex match table renders"; else bad "/regex table"; fi
+if snap_hit 'Replace preview'; then ok "/regex replace preview present"; else bad "/regex replace"; fi
+agent-browser eval "(() => { const el = document.getElementById('rx-pattern'); const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '([a-z'); el.dispatchEvent(new Event('input', { bubbles: true })); return true })()" > /dev/null 2>&1
+sleep 1
+if snap_hit 'Invalid pattern'; then ok "/regex explains an invalid pattern"; else bad "/regex invalid"; fi
+agent-browser close > /dev/null 2>&1
+
+# /csv: default input parses 3 rows x 3 cols with the quoted newline field
+open_page "http://localhost:81/csv"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+if snap_hit '3 rows × 3 columns'; then ok "/csv RFC4180-parses the quoted sample"; else bad "/csv parse"; fi
+if snap_hit 'Asha, senior'; then ok "/csv keeps a comma inside quotes"; else bad "/csv quoted comma"; fi
+csvJson=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); return pre ? (pre.textContent.includes('\"name\": \"Asha, senior\"') ? 'found' : pre.textContent.slice(0, 80)) : 'no-pre' })()" 2>/dev/null)
+echo "$csvJson" | rg -q 'found' && ok "/csv JSON output renders" || bad "/csv json: $csvJson"
+jtab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "JSON → CSV" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$jtab > /dev/null 2>&1
+sleep 1
+if snap_hit 'Invalid JSON|Paste your JSON'; then ok "/csv JSON→CSV direction reachable"; else bad "/csv json2csv"; fi
+agent-browser close > /dev/null 2>&1
+
+# /color: default teal converts every format + contrast tab
+open_page "http://localhost:81/color"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+colorRgb=$(agent-browser eval "document.body.textContent.includes('rgb(15, 118, 110)') ? 'yes' : 'no'" 2>/dev/null)
+echo "$colorRgb" | rg -q 'yes' && ok "/color converts #0f766e to rgb" || bad "/color rgb: $colorRgb"
+colorHsl=$(agent-browser eval "document.body.textContent.includes('hsl(175') ? 'yes' : 'no'" 2>/dev/null)
+echo "$colorHsl" | rg -q 'yes' && ok "/color converts to hsl" || bad "/color hsl: $colorHsl"
+if snap_hit 'WCAG 2.1 contrast'; then ok "/color contrast section renders"; else bad "/color contrast"; fi
+if snap_hit 'Contrast ratio'; then ok "/color computes a real ratio"; else bad "/color ratio"; fi
+if snap_hit 'Palettes from this color'; then ok "/color palette ramps render"; else bad "/color palette"; fi
+agent-browser close > /dev/null 2>&1
+
 # 11v. /qr Scan tab: decode a real QR image end to end (headless cannot grant
 # a camera, so the image path carries the verification; the camera idle state
 # is checked honestly).
@@ -659,7 +777,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

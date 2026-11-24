@@ -1424,4 +1424,364 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // -------------------------------------------------------------- calculator
+  calculator: {
+    lede: [
+      'Calculator Studio evaluates real expressions — 12 × (3 + 4) ÷ 5, sin(30) + log(1000), 7! ÷ 2 — with a hand-written parser instead of a JavaScript eval, which is the difference between a calculator and a security rumor. Basic mode is the everyday pad; Scientific mode adds trigonometry with a DEG/RAD switch, logarithms, powers, roots, factorials and the π and e constants.',
+      'Everything answers as you type, commits to a scrollable tape you can reuse, and runs entirely in this tab: no eval(), no server round-trip, and a specific error message when something is wrong — division by zero, an unbalanced parenthesis, an unknown word — rather than a silent NaN.',
+    ],
+    sections: [
+      {
+        heading: 'Why a real parser matters',
+        paragraphs: [
+          'The usual web calculator wraps JavaScript’s eval() around your input, which is exactly as safe as it sounds and fails with "NaN" for anything malformed. This page tokenizes the expression, applies the shunting-yard algorithm to compile it to reverse-polish notation — the same pipeline 1970s HP calculators ran — and evaluates the RPN on an explicit stack. Operator precedence, right-associative powers, unary minus after an operator or opening parenthesis, and postfix factorial and percent all come out of that algorithm rather than from string hacks.',
+          'The practical payoff is honesty. An unbalanced parenthesis is caught and named; two numbers without an operator between them are called out; "2(3+4)" asks for the × the math teacher would ask for; a negative factorial or a square root of a negative number explains the domain problem instead of printing NaN.',
+        ],
+      },
+      {
+        heading: 'The scientific pad',
+        paragraphs: [
+          'Trigonometry runs through a DEG/RAD switch, and the default is DEG because that is what most people reaching for a calculator mean. The inverse functions return values in the selected unit as well, so asin(0.5) reads 30 in degree mode. ln and log are natural and base-10 respectively — the convention calculators have used forever — and exp, sqrt, abs, x^y, n!, π and e round out the set.',
+          'The keys are laid out for typing flow: functions insert their opening parenthesis, so sin( becomes sin(...) and you fill in the argument; the expression input stays a real text field, so keyboard warriors can type everything, with Enter committing and Escape clearing.',
+        ],
+      },
+      {
+        heading: 'Memory, ANS and the tape',
+        paragraphs: [
+          'The memory row works like the hardware calculator in a desk drawer: MS stores the current result, MR recalls it into the expression, M+ and M− add or subtract the current result to and from the stored value, and MC clears it. ANS inserts the last committed answer — the chain "compute a, then multiply by b, then subtract c" never needs retyping.',
+          'Every committed calculation lands on the tape, newest first, with the expression and the result. Tap any row to reuse its result as the start of the next expression. The tape lives in page memory — close the tab and it is gone, which is the honest version of "no history is stored".',
+        ],
+      },
+      {
+        heading: 'What it will not do',
+        paragraphs: [
+          'No graphing, no symbolic algebra, no equation solving — those are different tools wearing a calculator costume. No arbitrary precision beyond JavaScript’s 64-bit floats, stated rather than hidden: results carry 12 significant digits and switch to exponential notation past 10^15. And no implicit multiplication — 2π must be typed 2 × π — because the parser would rather ask than guess.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- percentage
+  percentage: {
+    lede: [
+      'Six percentage calculators that people search for by name — what is X% of Y, X is what percent of Y, percent change, discount, tip with splitting, sales tax and VAT — on one page because they share one idea. Every result shows the formula that produced it, so the answer can be checked on sight instead of trusted blindly.',
+      'The math runs in this tab as you type. Nothing is submitted, stored or logged; the only thing the page remembers is the tab it lives in.',
+    ],
+    sections: [
+      {
+        heading: 'The three core questions',
+        paragraphs: [
+          '"What is X% of Y" multiplies (X ÷ 100) × Y and also shows Y minus and plus that amount, which covers the discount-surcharge pair most shopping questions actually want. "X is what percent of Y" divides and scales to 100, declining to answer when Y is 0 — a share of zero has no meaning, and a page that invents one is lying. "Percent change" uses (New − Old) ÷ |Old| × 100, with the absolute value deliberately in the denominator so a fall from −40 to −20 reads as the 50% increase it is; the direction is spelled out ("increase" or "decrease") and a change from exactly zero is reported as undefined.',
+          'Those three are the grammar of every other percentage question. Once you see the formula printed under each card, the page stops being an oracle and becomes a shortcut.',
+        ],
+      },
+      {
+        heading: 'Discount, tip and tax — the shopping trio',
+        paragraphs: [
+          'Discount mode takes the price and the percent off and shows both what you pay and what you save — the saved amount is the number people argue about at the till. Tip mode adds a people count: tip, total, and each person’s share, with a round-up switch that rounds the tip to the next whole unit before splitting, the restaurant-friendly order of operations. Tax mode works in both directions: add a rate to a net price, or flip "extract from gross" and pull the tax back out of a price that already includes it — the backwards calculation VAT invoices and reimbursement forms actually need.',
+          'Every mode recomputes live and every card copies with one tap, because these numbers usually travel: into a chat, an expense row, a note to who owes what.',
+        ],
+      },
+      {
+        heading: 'Why the formulas are shown',
+        paragraphs: [
+          'Percentage answers are the most confidently wrong numbers in daily life — a "20% off plus an extra 10%" is not 30% off, and successive percentage changes do not add. Showing the formula is the cheapest way to teach the difference: you can see that the discount card computes a single percent off, not a compounding chain, and reach for the modes in sequence when the question really is sequential.',
+        ],
+      },
+      {
+        heading: 'Scope and privacy',
+        paragraphs: [
+          'No currency conversion, no compounding interest, no inflation math — the loan studio handles rates over time, and mixing the two would blur both. This page is the arithmetic you do at the counter and in the spreadsheet row: instant, formula-labeled, and computed nowhere but your own device.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------- date-calculator
+  'date-calculator': {
+    lede: [
+      'Date Math Studio answers the four date questions everyone asks: how old is someone exactly, how long between two dates, what date is N days/months/years away, and how many working days is that. The arithmetic is calendar-exact — months borrow from the real length of the month before, Jan 31 plus one month lands on Feb 28 or 29 rather than a phantom March 3rd, and business days are counted one day at a time instead of approximated with a 5/7 ratio.',
+      'Dates are built as local-time Y/M/D triples from the picker, never parsed from strings, which is what keeps the UTC off-by-one bugs out. Impossible dates like February 30 are rejected with a message rather than silently rolling over to March.',
+    ],
+    sections: [
+      {
+        heading: 'Age, counted the way birthdays feel',
+        paragraphs: [
+          'Age mode gives years, months and days — with the month borrow taken from the actual previous month’s length, so someone born on Jan 31 is 0 months and change older on Feb 28, not "-2 days". The totals run in both directions: months, weeks-plus-days, days, and hours-and-minutes from the actual timestamps for the "I have been alive for two billion seconds" moment. The next-birthday countdown lands on Feb 28 for Feb 29 birthdays in non-leap years, and says so.',
+        ],
+      },
+      {
+        heading: 'Differences, and the end-day question',
+        paragraphs: [
+          'Difference mode measures the span between two dates and settles the booking question with an explicit toggle: exclude the end day (default) counts Jan 1 → Jan 2 as one day, the hotel-night convention; include it and the same span is two days, the way a Monday-to-Friday job is five days. The weekday of each endpoint is shown, because "how long until Friday" and "how long until the 14th" are the same question wearing different clothes.',
+          'If the second date is earlier than the first, the page swaps and says it swapped — a negative age is a typo, not a result.',
+        ],
+      },
+      {
+        heading: 'Adding, subtracting and the month-end clamp',
+        paragraphs: [
+          'Add/Subtract shifts a date by any mix of years, months, weeks and days. Months use the clamp convention every serious calendar library uses: the day-of-month is capped at the real end of the target month, so Jan 31 + 1 month is Feb 28/29 — the date people mean when they say "a month from now". A note under the result names the clamp when it fires.',
+          'Business days walk the calendar one day at a time, skipping weekends, in either direction — an exact count for "ten working days from Friday", not a rounded guess. Public holidays are deliberately not assumed: they differ by country, company and year, and a calculator that guesses them produces confident wrong numbers. Count to the holiday and add the days it costs.',
+        ],
+      },
+      {
+        heading: 'Countdown and privacy',
+        paragraphs: [
+          'Countdown ticks live toward a future date — days, hours, minutes, seconds — updating every second while the tab is open. Everything is computed on this device in its local calendar: no server call, no storage, no timezone surprises, because the date never leaves the tab it was typed into.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------- bmi
+  bmi: {
+    lede: [
+      'Body Metrics Studio computes the four numbers behind "bmi calculator" and "how many calories should I eat" searches: BMI with the WHO classification band and the healthy weight range for your height, BMR and TDEE with calorie targets, ideal weight by four published formulas, and body fat by the US Navy circumference method with the Deurenberg estimate as a cross-check.',
+      'What makes this page different is not the math — the formulas are public — but the labeling: every result names its formula, the four ideal weights are shown side by side including their disagreement, and a standing note says plainly that these are population estimates, not a diagnosis.',
+    ],
+    sections: [
+      {
+        heading: 'BMI, with the honest band around it',
+        paragraphs: [
+          'BMI is weight ÷ height², in metric or imperial, classified against the WHO bands from severe thinness to obese class III. The more useful number is usually next to it: the weight range that would put your height in the 18.5–24.9 band, and the distance from wherever you are to the edge of it. BMI’s limits are famous — it cannot see muscle from fat — and the page says so rather than pretending otherwise; it is a screen, not a verdict.',
+        ],
+      },
+      {
+        heading: 'Calories: BMR, TDEE and the targets',
+        paragraphs: [
+          'BMR comes from Mifflin-St Jeor — the equation clinical guidelines generally rate best for the general population — from weight, height, age and sex. TDEE multiplies it by one of five activity levels from sedentary (×1.2) to very active (×1.9), and the honest description of each level matters more than the multiplier: "desk job, little exercise" versus "hard daily training" decides the answer more than the formula does.',
+          'The targets are the arithmetic of energy balance: TDEE − 500 for roughly half a kilo a week of loss, − 250 for the gentle version, + 500 for gain. They are stated as what they are — approximations of a process that varies person to person — not prescriptions.',
+        ],
+      },
+      {
+        heading: 'Four ideal weights, on purpose',
+        paragraphs: [
+          'Robinson, Miller, Devine and Hamwi are four published formulas built from the same height and sex inputs, and they disagree by several kilograms at many heights. Showing all four side by side — plus each in pounds — is a small honesty with a big effect: it makes visible that "ideal weight" is a range of conventions, not a fact, and the BMI-derived healthy range is usually the most defensible reference to keep.',
+        ],
+      },
+      {
+        heading: 'Body fat and the measurement craft',
+        paragraphs: [
+          'The Navy method uses neck and waist circumferences (plus hips for the female formula) against height — typically within a few percent of a DEXA scan when the tape is used well. The page guards its inputs: implausible measurements produce a "check the numbers" message instead of a confident nonsense percentage. The Deurenberg estimate runs off BMI, age and sex and is labeled the rougher cross-check it is. Neither replaces a clinician; both travel well to a check-in conversation.',
+        ],
+      },
+      {
+        heading: 'Privacy',
+        paragraphs: [
+          'Every number is computed in this tab from what you typed. There is no account, no upload, no storage — your measurements never exist outside the device you typed them on, which is how body data should always be handled.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------------- loan
+  loan: {
+    lede: [
+      'Loan & Interest Studio answers the three money questions behind every "loan calculator" search: what does a loan cost per month (with the full amortization schedule to prove it), what does compounding build over time, and what monthly saving reaches a goal. The payment comes from the standard annuity formula, the schedule is simulated month by month, and every table exports as CSV.',
+      'Nothing is submitted anywhere. There are no lender quotes, no lead forms, no data collection — the page is a calculator, not a funnel, and it says what its math cannot know instead of pretending.',
+    ],
+    sections: [
+      {
+        heading: 'The loan: EMI and the schedule behind it',
+        paragraphs: [
+          'The monthly payment is P·r·(1+r)ⁿ ÷ ((1+r)ⁿ − 1) — the annuity formula every amortizing loan uses — with r the monthly rate and n the months. Headline cards show the payment, total interest and total repaid before you have committed to anything, and the schedule table shows where every payment goes: interest is charged on the remaining balance first, the rest cuts principal, and the balance column walks to zero.',
+          'The extra-payment field is the one that pays for itself: add an amount per month and the loan is simulated again — the result names the interest saved and the months cut, computed from the real shortened schedule rather than a rule of thumb. At a 0% rate the page switches to simple division rather than pretending the formula applies.',
+        ],
+      },
+      {
+        heading: 'Compound interest, simulated honestly',
+        paragraphs: [
+          'Compound mode starts from a principal, adds a monthly contribution at each month end, and applies the annual rate at your chosen frequency — annual, monthly or daily — with a year-by-year table of balance, contributed and interest-so-far. The contribution timing is stated: money lands at month end, which is when salaries do. Daily compounding applies a sliver of the rate 365 times a year and earns slightly more than monthly, which earns slightly more than annual — the table makes the difference visible instead of rounding it away.',
+        ],
+      },
+      {
+        heading: 'The savings goal, worked backwards',
+        paragraphs: [
+          'Goal mode solves the annuity formula in reverse: target, horizon and expected return become the required monthly contribution. If your starting amount alone reaches the target at that rate, the page says no contribution is needed — the honest answer to "am I already there?" — and at a 0% rate it divides the shortfall by the months.',
+        ],
+      },
+      {
+        heading: 'What the math cannot know',
+        paragraphs: [
+          'Fees, insurance, rate resets, taxes and prepayment penalties exist in real offers and not in this calculator — the closing note says so on every mode. Treat the numbers as the exact behavior of what you typed, and treat a lender’s offer document as the only binding truth. That is the correct amount of trust for a calculator: full, for arithmetic; zero, for predictions.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- timer
+  timer: {
+    lede: [
+      'Timer Studio puts the four timers people actually open a browser for on one page: a stopwatch with split laps, a countdown with a repeating local alarm, a pomodoro that cycles its own phases, and a tabata trainer that runs prepare/work/rest rounds. All four are timestamp-driven — the clock is recomputed from performance.now() on every tick, never accumulated — so a throttled background tab can delay the picture but cannot make the alarm late.',
+      'The alarm is synthesized with WebAudio on this device (no audio file, works offline), a screen wake-lock is requested while running so phones stay awake, and the tab title mirrors the clock so a glance at the tab bar is enough.',
+    ],
+    sections: [
+      {
+        heading: 'Why timestamp clocks matter',
+        paragraphs: [
+          'The naive web timer counts setInterval fires, and browsers throttle background tabs to once per second or far worse — which is how a "10-minute" web timer quietly becomes eleven. Here, starting a timer records a timestamp; every frame recomputes elapsed time from the current timestamp; pausing banks the elapsed total. The interval only updates the picture. Switch tabs, lock the screen, come back — the next frame re-syncs to the truth, and the alarm fires at the computed instant, not at the throttled one.',
+        ],
+      },
+      {
+        heading: 'Stopwatch: laps that mean something',
+        paragraphs: [
+          'Laps record both columns athletes ask for: the split since the previous lap and the running total, at tenth-of-a-second precision from the high-resolution clock. The list is newest-first and clearable; the lap button lives next to pause so a single thumb can run the whole workout on a phone.',
+        ],
+      },
+      {
+        heading: 'Countdown, pomodoro, tabata',
+        paragraphs: [
+          'The countdown takes any h:m:s, one-tap presets for the common ones, and an alarm that repeats for twenty seconds until dismissed — with an optional auto-restart for kitchen rounds and call timers. Pomodoro runs configurable work, short-break and long-break lengths; after each work phase it advances automatically, and after every N completed rounds (four by tradition) it takes the long break, with a completed-round counter and a chime at each transition.',
+          'Tabata builds a prepare phase, then work/rest cycles for a configurable number of rounds, announcing each phase change with a distinct beep pattern — the protocol’s 20/10 default is one tap away and every number is editable.',
+        ],
+      },
+      {
+        heading: 'Sound, wake-lock and privacy',
+        paragraphs: [
+          'The alarm is an oscillator, not a downloaded sound: instant, offline, and free of notification permissions. Browsers may hold audio until your first interaction — press anything once if the very first alarm is silent. The wake-lock keeps the screen on where the platform allows it; where it refuses, the timer still runs and the tab title carries the clock. Nothing about your timers leaves the device — there is no account to sync them to, by design.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- picker
+  picker: {
+    lede: [
+      'Random Picker Studio is every "pick for me" tool on one page: a wheel of names that spins and decelerates like a real prize wheel, crypto-random number draws with a raffle mode, coin flips, dice of any shape, Fisher–Yates list shuffling, and team splits dealt the fair way. Every draw — wheel, number, coin, die, shuffle, team assignment — comes from crypto.getRandomValues with rejection sampling, which makes the distribution exactly uniform, not just "good enough".',
+      'Math.random is never used, nothing is drawn on a server, and nothing about your list is remembered after the tab closes.',
+    ],
+    sections: [
+      {
+        heading: 'The wheel reads the geometry, not a script',
+        paragraphs: [
+          'The spin gets a random number of full turns plus a random angle and decelerates with an ease-out curve — the physics-shaped slowdown a real wheel has. The winner is the segment actually sitting under the pointer when it stops, read from the wheel’s rotation at rest. That ordering matters: a wheel that pre-picks and animates toward its pick can be biased by the animation. This one cannot be, because the animation has no destination until the physics stops.',
+          'The remove-winner switch re-balances the wheel after each prize for successive draws — first prize, second prize, third — and the entries textarea stays the single source of truth.',
+        ],
+      },
+      {
+        heading: 'Numbers, coins and dice',
+        paragraphs: [
+          'Number mode draws between any bounds — negatives included — with a no-repeats raffle mode that removes each drawn number from the pool, an exact behavior for giveaway draws, and a sort switch for readable output. Asking for more unique numbers than the range contains gets a refusal instead of an infinite loop. Coin flips and dice rolls animate briefly and land on the same cryptographic source; dice run any count of d4 through d20 or a custom side count, with individual results and the total.',
+        ],
+      },
+      {
+        heading: 'Shuffles and teams',
+        paragraphs: [
+          'Shuffle runs Fisher–Yates — the algorithm whose every permutation is equally likely — over your pasted list, with an optional pick-K to extract a random subset in one step. Team splitter shuffles first, then deals round-robin into N teams, which guarantees balance to within one person per team: the playground-captain method with actual fairness under it. Team names are numbered, and re-splitting re-deals from scratch.',
+        ],
+      },
+      {
+        heading: 'Where the randomness comes from',
+        paragraphs: [
+          'crypto.getRandomValues is the browser’s cryptographic randomness source — the same one TLS uses. Rejection sampling discards the tiny bias that naive modulo introduces, so every entry, number and face is exactly equally likely. The history pane lists the session’s draws so a classroom can re-read who won what, and it vanishes with the tab. Nothing is uploaded because there is nothing to upload: the randomness is local, and that is the whole point.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- regex
+  regex: {
+    lede: [
+      'Regex Studio tests JavaScript regular expressions live — highlighted matches in place, a table of every match with capture and named groups, a replace preview using real String.replace semantics, a pattern library for the jobs that come up weekly, and a cheatsheet that stays honest. The engine under the page is the browser’s own RegExp, so what matches here is what will match in your code.',
+      'Two safety nets matter as much as the features: invalid patterns are caught and explained rather than crashing the page, and zero-length matches are stepped past explicitly — so the classic /a*/g infinite-loop trap cannot hang the tab. Nothing you paste is sent anywhere.',
+    ],
+    sections: [
+      {
+        heading: 'Testing against the real engine',
+        paragraphs: [
+          'The pattern, the flags (g, i, m, s, u, y as toggles) and the test string compile to a live RegExp on every keystroke. Matches highlight inside the original text so context survives, and the match table lists position, line number, the matched text, and every capture group — numbered as $1, $2… and named as $<name> — with ∅ marking groups that did not participate in a particular match, the detail alternations make common.',
+          'The replace tab previews String.replace with your replacement string, including backreferences, before the pattern ships to code. The library seeds eight patterns — e-mail, URL, ISO date, hex color, IPv4, duplicate words, time, HTML tag pairs — chosen because each demonstrates a class of syntax, not because lists of patterns impress anyone.',
+        ],
+      },
+      {
+        heading: 'The zero-length trap, disarmed',
+        paragraphs: [
+          'A pattern that can match the empty string — /a*/g, /\d*/g — matches forever at one position if the engine is not advanced, which is both a browser-tab freezer here and a production outage when the same loop runs in code. The page advances lastIndex past every zero-length match, the standard guard, and caps collection at 20,000 matches with a clear message. It is the same discipline the replacement code should carry, demonstrated where you can see it.',
+        ],
+      },
+      {
+        heading: 'Flags that mean something',
+        paragraphs: [
+          'g collects every match instead of the first; i folds case; m makes ^ and $ per line; s lets dot cross newlines; u enables unicode escapes and code-point matching; y anchors matching at lastIndex — each one a toggle with its meaning spelled out in the tooltip. Reading a pattern someone else wrote: paste it, tick the flags they claimed, paste their sample. The disagreement between what they said and what the engine does is visible immediately.',
+        ],
+      },
+      {
+        heading: 'Privacy where it matters most',
+        paragraphs: [
+          'The strings people test regexes against are logs, tokens, API responses, customer rows — exactly the data that should not be pasted into a random web form. This page has no form: matching runs on the device, the network tab shows nothing but the page itself, and no history survives the tab. That is not a feature bolted on; it is the only sane architecture for a regex tool.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------------- csv
+  csv: {
+    lede: [
+      'CSV & JSON Studio converts CSV to JSON and JSON to CSV with a real RFC 4180 parser — quoted fields, escaped quotes, embedded commas and newlines, CRLF endings, your choice of delimiter (comma, semicolon, tab, pipe) — instead of split(","), which is the difference between parsing a spreadsheet format and mangling one.',
+      'The parsed grid previews before you commit, type inference turns "42" into 42 when you want it, unclosed quotes are warned about by line number, and both directions download as .json or .csv. Everything runs in this tab; spreadsheets never leave the device.',
+    ],
+    sections: [
+      {
+        heading: 'Why a real parser, not split()',
+        paragraphs: [
+          'Real CSV is a state machine, not a string split. Quoted fields may contain commas ("Asha, senior"), embedded newlines (a note field that wraps), and escaped quotes ("""" inside quotes); CRLF is the official terminator and bare CR shows up in the wild. A split-based "parser" corrupts every one of those silently — the worst kind of bug, because the damage appears downstream in the JSON nobody re-checked.',
+          'This parser tracks quoted state character by character, warns when a quote opens and never closes — naming the line it started on — and treats a mid-field quote as literal text with a warning rather than a silent error. European Excel exports (semicolon), TSVs (tab) and pipe-delimited dumps all parse through the delimiter switch with no pre-conversion.',
+        ],
+      },
+      {
+        heading: 'CSV → JSON: keys, types and honesty',
+        paragraphs: [
+          'The first row becomes the object keys when the header switch is on, and column_1, column_2… when it is off. Type inference (on by default) converts number-shaped cells to numbers and true/false/null to their types — what most APIs expect. Switch it off when leading zeros are data: postal codes, phone numbers and part numbers are strings that happen to look like numbers, and "0123" as 123 is a corruption.',
+          'The grid preview shows exactly what was parsed — including rows with missing cells rendered honestly as empty — so the conversion can be checked before the download button does anything.',
+        ],
+      },
+      {
+        heading: 'JSON → CSV: the union of keys',
+        paragraphs: [
+          'The columns are the union of every key across all rows, so objects with different shapes still make a rectangular table — a missing field leaves its cell empty rather than dropping data to force the grid. Nested objects and arrays are serialized as JSON strings in their cell: lossless, re-parseable, and stated plainly instead of flattened with invented column names. A single top-level object is treated as a one-row table, because that is usually what it means.',
+        ],
+      },
+      {
+        heading: 'Outputs and privacy',
+        paragraphs: [
+          'JSON output is pretty-printed and copyable; CSV output re-quotes any field that contains the delimiter, a quote or a newline, so the file round-trips through Excel without damage. Both download with correct names and MIME types. The whole conversion happens in this tab — paste a customer export, a log dump or a payment file, and nothing leaves the device. For the files that legally cannot be uploaded, this is the tool that legally can be used.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- color
+  color: {
+    lede: [
+      'Color Studio does the color chores design and accessibility work actually need: convert any format into every other (hex, rgb, hsl, bare components, alpha included), sample colors from an image or the screen itself, test two colors against WCAG 2.1 with exact ratios and verdicts, and build palettes with real HSL math — tint and shade ramps plus complementary, analogous and triadic harmonies.',
+      'Everything is arithmetic in this tab. Images you sample are drawn to a local canvas and never uploaded; the EyeDropper API is used where the browser ships it and honestly absent where it does not.',
+    ],
+    sections: [
+      {
+        heading: 'Conversion that accepts what people actually paste',
+        paragraphs: [
+          'Real-world color input arrives as #f7a from a designer, rgba(255 122 69 / 0.8) from a stylesheet, hsl(18, 100%, 64%) from a tutorial. The parser takes hex in 3, 4, 6 and 8 digits, rgb()/rgba() and hsl()/hsla() in both comma and space syntax with % or raw components, and answers in every format at once — each with a copy button and a live swatch, because the person converting hex to hsl usually needs the value, not a lesson.',
+        ],
+      },
+      {
+        heading: 'Sampling: image and screen',
+        paragraphs: [
+          'Drop an image and it draws onto a local canvas; hovering reads the pixel under the cursor with getImageData and clicking commits the color. The image never leaves the tab — no upload endpoint exists. Where the browser ships the EyeDropper API (Chrome, Edge), one more button samples anywhere on screen; where it does not (Firefox, Safari), the button is not shown rather than replaced with a fake. Hover-then-click keeps inspection non-destructive: nothing changes until you commit.',
+        ],
+      },
+      {
+        heading: 'Contrast, computed per the spec',
+        paragraphs: [
+          'The ratio comes from the WCAG 2.1 relative-luminance formula — linearized sRGB channels, the standard coefficients — not from a quick perceptual guess. The verdicts map to the actual guidelines: 4.5:1 for AA normal text, 3:1 for AA large text (roughly 18.66px bold or 24px), 7:1 and 4.5:1 for AAA. A live preview renders sample text in the foreground color on the background color, so the verdict can be eyeballed alongside the number.',
+        ],
+      },
+      {
+        heading: 'Palettes from HSL, not vibes',
+        paragraphs: [
+          'The ramp walks the lightness axis through nine steps at your exact hue and saturation — the way design systems build 50–900 scales. Harmonies rotate the hue: 180° complementary, ±30° analogous, ±120° triadic — the classic color-wheel relationships, computed rather than hand-waved. Any swatch clicks into the working color, which feeds the contrast tab immediately: pick a palette, check it is readable, copy the hex. That loop is the whole job.',
+        ],
+      },
+    ],
+  },
 }

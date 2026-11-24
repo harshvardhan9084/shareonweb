@@ -46,6 +46,16 @@ import { FakeDataTool } from '@/components/instant/fake-data-tool'
 import { CssToolsTool } from '@/components/instant/css-tools-tool'
 import { MetaTagsTool } from '@/components/instant/meta-tags-tool'
 import { BarcodeTool } from '@/components/instant/barcode-tool'
+import { CalculatorTool } from '@/components/instant/calculator-tool'
+import { PercentageTool } from '@/components/instant/percentage-tool'
+import { DateMathTool } from '@/components/instant/date-calculator-tool'
+import { BmiTool } from '@/components/instant/bmi-tool'
+import { LoanTool } from '@/components/instant/loan-tool'
+import { TimerTool } from '@/components/instant/timer-tool'
+import { PickerTool } from '@/components/instant/picker-tool'
+import { RegexTool } from '@/components/instant/regex-tool'
+import { CsvTool } from '@/components/instant/csv-tool'
+import { ColorTool } from '@/components/instant/color-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -83,6 +93,16 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'css-tools': CssToolsTool,
   'meta-tags': MetaTagsTool,
   barcode: BarcodeTool,
+  calculator: CalculatorTool,
+  percentage: PercentageTool,
+  'date-calculator': DateMathTool,
+  bmi: BmiTool,
+  loan: LoanTool,
+  timer: TimerTool,
+  picker: PickerTool,
+  regex: RegexTool,
+  csv: CsvTool,
+  color: ColorTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

@@ -97,6 +97,8 @@ code covers all of them.* Implemented via family panels
 | **Batch 5 tail + QR scanner: lorem, fake-data, css-tools, meta-tags, barcode, /qr Scan tab** | DONE (this run), QA-verified per tool |
 | **Relay session GC on wake (expired sessions + stale rooms swept at boot)** | DONE (this run), verified with a seeded store harness |
 | **PWA offline instant shells (sw.js v5 precaches 35 tool pages + assets)** | DONE (this run), production-only, mirror-checked |
+| **§13 Recommended-tools expansion: 50 Google-search tools in 5 batches (owner directive)** | IN PROGRESS — Batch R1 DONE this run (10 tools, QA-verified) |
+
 
 ## 4. THE CHECKLIST (extracted from the owner's list + ChatGPT plan)
 
@@ -585,3 +587,144 @@ Ops: ~/.git-credentials was wiped by this sandbox recycle too; restored from
 the owner's earlier fine-grained PAT (URL-style line, chmod 600) and the
 push for this run succeeded. Remaining checklist: /video-trim (owner's
 25 MB-core call pending), AI background removal (deferred).
+
+## 13. RECOMMENDED-TOOLS EXPANSION — the new 50-tool checklist (2026-11-24)
+
+Owner directive: park the two owner-decision items (/video-trim, AI
+background removal) for good, and build a **new checklist of 50 more
+"recommended" tools — the things users already type into Google** — then
+work through them 10 per run. Selection rules used for this list:
+
+- real search demand (the intents below ARE the queries people type);
+- 100 % client-side feasible — no backend proxy, no heavy wasm unless the
+  owner explicitly accepts the download size (only /heic is flagged);
+- no duplicate of an existing tool (existing tools are named where a batch
+  item extends them);
+- every item gets the FULL pipeline: registry entry (intents = SEO
+  keywords) → component in `src/components/instant/` → mount in
+  instant-surface.tsx → long-form article → seo.ts titles/descriptions/FAQs
+  → app-icon mapping → sw.js precache + VERSION bump → lint → QA via :81.
+
+### Batch R1 — calculators & generators (the ten highest volumes) — DONE this run, QA-verified per tool
+- [x] `/calculator` — basic + scientific expression calculator (real shunting-yard parser, no eval), DEG/RAD, memory keys, ANS, tape history
+- [x] `/percentage` — what-is-X%-of-Y, X-is-what-%-of-Y, % change, discount, tip+split, sales tax/VAT
+- [x] `/date-calculator` — age (Y/M/D + next birthday), date difference, add/subtract, business days, countdown
+- [x] `/bmi` — BMI metric/imperial + WHO bands + healthy weight range, BMR/TDEE + calorie goals, ideal weight (4 formulas), body fat (Navy + Deurenberg)
+- [x] `/loan` — loan/EMI with amortization schedule + CSV export + extra-payment savings, compound interest with contributions, savings-goal planner
+- [x] `/timer` — stopwatch with laps, countdown with alarm, pomodoro, tabata (timestamp-based so throttled tabs stay accurate)
+- [x] `/picker` — wheel of names (canvas spin), random numbers (crypto-random, unique option), coin flip, dice (n×dN), list shuffle, team splitter
+- [x] `/regex` — live JS regex tester with flags, highlighted matches, groups table, replace preview, zero-length-loop guard, pattern library + cheatsheet
+- [x] `/csv` — RFC4180 parser (quotes/CRLF/custom delimiter), CSV↔JSON both directions, type inference, malformed-quote warnings, table viewer + exports
+- [x] `/color` — HEX/RGB/HSL converter with alpha, Eyedropper + image sampling, WCAG contrast checker, shades/tints/harmony palettes
+
+### Batch R2 — documents & media utilities (next run)
+- [ ] `/signature` — draw + type signatures → transparent PNG at chosen size
+- [ ] `/invoice` — line items, tax/discount/shipping, notes, print-ready invoice
+- [ ] `/timezone` — time zone converter, world clock row, meeting-planner strip (Intl-based)
+- [ ] `/pdf-to-image` — PDF → PNG/JPG per page or ZIP (reuses vendored pdf.js)
+- [ ] `/device-test` — camera & mic test: resolution/FPS readout, level meters, browser/screen info — nothing recorded, nothing sent
+- [ ] `/beautify` — format + minify HTML, CSS, JS, SQL (js-beautify + sql-formatter)
+- [ ] `/favicon` — one image → full favicon pack (16/32/48/64/96/128/180/192/512 + .ico) as ZIP
+- [ ] `/watermark` — text or logo watermark on photos, batch, position/opacity/tile
+- [ ] `/typing-test` — WPM/CPM + accuracy, 15s/30s/1m/3m modes, real word stream
+- [ ] `/markdown` — markdown editor with live preview, HTML export, table generator
+
+### Batch R3 — data & text utilities
+- [ ] `/stats` — mean/median/mode/range/variance/std-dev/quartiles from pasted numbers
+- [ ] `/number-to-words` — amounts in words (cheque style), multiple currency formats
+- [ ] `/morse` — text ↔ morse with live audio playback and speed control
+- [ ] `/font-changer` — unicode text styles (bold/italic/script/small-caps/strike/upside-down) for bios
+- [ ] `/emoji` — emoji finder by keyword with copy, grouped categories
+- [ ] `/json-to-ts` — JSON → TypeScript interfaces/types generator
+- [ ] `/compress-pdf` — PDF recompressor (rasterize pages at chosen JPEG quality, rebuild with pdf-lib)
+- [ ] `/time-card` — weekly time card: in/out rows, break deductions, wage math
+- [ ] `/grade` — GPA calculator, weighted grade, final-exam grade needed
+- [ ] `/todo` — local checklist with localStorage persistence, filter + reorder
+
+### Batch R4 — image & format utilities
+- [ ] Image Toolkit modes: **crop, rotate, flip** added to the existing /image workbench (4-in-1)
+- [ ] `/meme` — top/bottom caption meme maker on your own images (canvas)
+- [ ] `/svg-convert` — SVG → PNG/JPG at chosen size and background
+- [ ] `/cipher` — ROT13/Caesar/Atbash/Vigenère with Caesar brute-force view
+- [ ] `/due-date` — pregnancy due date + weeks-progress (clear "not medical advice" framing)
+- [ ] `/word-frequency` — keyword density table + Flesch reading ease
+- [ ] `/vcard` — contact card builder → .vcf download + QR (reuses QR engine)
+- [ ] `/calendar-link` — event → Google/Outlook/Yahoo links + .ics download
+- [ ] `/px-rem` — px ↔ rem/em/% converter with configurable root size + clamp() builder
+- [ ] `/binary` — text ↔ binary/hex/octal/decimal (ASCII/UTF-8, live both ways)
+
+### Batch R5 — sound, body & misc calculators
+- [ ] `/sound-tools` — dB meter (mic), tone generator, guitar tuner (pitch detect), metronome (4-in-1)
+- [ ] `/heic` — HEIC → JPG/PNG (lazy libheif wasm) — **flagged like /video-trim: needs the owner's size acceptance before building**
+- [ ] `/tts` — read text aloud with speechSynthesis (voice/rate/pitch, chunked playback)
+- [ ] `/fuel-cost` — trip fuel cost: distance, efficiency, price, passenger split
+- [ ] `/salary` — hourly ↔ annual ↔ monthly, overtime, unpaid-break adjustment (pre-tax, honest)
+- [ ] `/sleep` — sleep-cycle planner (90-min cycles, wake-at / sleep-now modes)
+- [ ] `/pace` — running pace/speed/splits table + race-time predictions (5K→marathon)
+- [ ] `/one-rep-max` — 1RM via Epley/Brzycki/Lander + training-percentage table
+- [ ] `/fraction` — fraction ↔ decimal, simplify, + − × ÷ with steps
+- [ ] `/quadratic` — roots, discriminant, vertex, complex roots, worked steps
+
+Rules: one batch of 10 per run, deep implementations only, same QA/commit/
+push discipline as every other batch. Update this section as items ship.
+
+## 14. Batch R1 — first 10 of the §13 expansion (this run, 2026-11-24)
+
+Owner directive executed: /video-trim and AI background removal are parked
+for good; a new 50-tool checklist built from real Google search demand was
+written into §13 (5 batches of 10, all client-side, one flagged size-decision
+item); the 8-hour cron was re-pointed at §13 (new job id 546373, old 545311
+deleted); and Batch R1 — the ten highest-volume tools — shipped complete.
+
+**QA: 22 + 34 + 151 = 207 PASS, 0 FAIL** (scripts/final-qa.sh via :81,
+PHASE=1 → PHASE=2 → PHASE=3; the R1 block added ~35 browser checks, one real
+interaction per tool, and every new page is in the warm list, ALL_LIVE JSON-LD
+sweep and the sw.js mirror sweep). lint clean.
+
+Shipped (full pipeline per tool: registry + intents, component, mount,
+long-form article, SEO titles/descriptions/FAQs, icon, sw precache):
+
+1. `/calculator` — hand-written tokenizer + shunting-yard + RPN stack machine,
+   no eval; DEG/RAD trig, memory keys, ANS, tape, named errors (division by
+   zero, unbalanced parens, unknown names, implicit-mult rejection).
+2. `/percentage` — six modes with every formula printed under its result;
+   tax extracts from gross; tip splits per person.
+3. `/date-calculator` — calendar-exact age (with Feb-29 birthday clamp),
+   difference with exclude-end toggle, add/subtract with real month-end
+   clamping, business days walked one day at a time, live countdown.
+4. `/bmi` — WHO bands + healthy weight range, Mifflin-St Jeor BMR → TDEE
+   targets, four ideal-weight formulas side by side, Navy + Deurenberg body
+   fat with plausibility guards, standing not-medical-advice note.
+5. `/loan` — annuity EMI, full amortization schedule (extra payment simulates
+   the shortened loan and names the savings), compound projection with
+   monthly contributions, backwards savings-goal solver, CSV exports.
+6. `/timer` — timestamp-driven clocks (performance.now, never counted
+   intervals), stopwatch laps, countdown with looped WebAudio alarm +
+   auto-restart, pomodoro auto-cycling, tabata rounds, wake-lock, tab-title
+   mirror.
+7. `/picker` — canvas wheel with ease-out spin whose winner is read from the
+   geometry at rest, crypto.getRandomValues everywhere with rejection
+   sampling, raffle mode, coin/dice, Fisher–Yates shuffle + pick-k,
+   round-robin team dealing.
+8. `/regex` — real RegExp engine, six flags, highlighted matches, group +
+   named-group table, replace preview, zero-length-match guard, 20k cap,
+   pattern library, cheatsheet.
+9. `/csv` — RFC 4180 state-machine parser (quoted fields, escaped quotes,
+   embedded newlines/CRLF, 4 delimiters), unclosed-quote warnings by line,
+   type inference, JSON→CSV key-union with lossless nested serialization,
+   grid preview + copy/download both directions.
+10. `/color` — tolerant parser (hex 3/4/6/8, rgb/hsl both syntaxes, alpha),
+    image canvas sampling + EyeDropper where supported, WCAG 2.1 luminance
+    math with AA/AAA verdicts, HSL ramps + harmony palettes that click into
+    the working color.
+
+**Real bug the new QA caught and this run fixed:** the calculator's number
+and identifier regexes were `^`-anchored while using the sticky `/y` flag —
+an anchored sticky regex only matches at position 0, so `12*(3+4)` errored
+on the `3`. Removing the `^` anchors fixed it; QA now proves 12*(3+4)=84,
+5/0 names division by zero, sin(30)+2^8=256.5, 7!=5040, and 2(3+4) asks for
+the ×.
+
+sw.js bumped to sow-shell-v6 (45 instant shells precached). Ops:
+~/.git-credentials was alive this run (restored by the previous one); the
+push below used it. Next run: Batch R2 per §13.

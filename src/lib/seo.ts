@@ -62,6 +62,16 @@ const SEO_TITLES: Record<string, string> = {
   'css-tools': 'CSS Style Studio — gradient, box-shadow and border-radius generators with live previews',
   'meta-tags': 'Meta Tag Studio — Open Graph and X card tags with live search and social previews',
   barcode: 'Barcode Studio — Code 128 and EAN-13 barcodes as SVG or PNG, checksum included',
+  calculator: 'Calculator Studio — expressions, scientific functions and a tape, computed locally',
+  percentage: 'Percentage Studio — discounts, tips, tax and percent change with the formulas shown',
+  'date-calculator': 'Date Math Studio — age, date differences, business days and countdowns, calendar-exact',
+  bmi: 'Body Metrics Studio — BMI, calories, ideal weight and body fat, formulas stated openly',
+  loan: 'Loan & Interest Studio — EMI, amortization schedules and compound projections, exportable',
+  timer: 'Timer Studio — stopwatch, countdown, pomodoro and tabata that stay accurate in any tab',
+  picker: 'Random Picker Studio — wheel of names, dice, raffle numbers and fair team splits',
+  regex: 'Regex Studio — live JavaScript regex testing with groups, replace preview and a library',
+  csv: 'CSV & JSON Studio — real RFC 4180 conversions between CSV and JSON, warnings included',
+  color: 'Color Studio — convert, sample and check colors: HEX/RGB/HSL, WCAG contrast, palettes',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -158,6 +168,26 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Build your page’s Open Graph, X card and search meta tags with live previews of the Google snippet, X card and Facebook card — escaped HTML output, length guidance, nothing uploaded.',
   barcode:
     'Generate scannable Code 128 and EAN-13 barcodes as vector SVG or 3× PNG, with real EAN-13 check-digit validation and adjustable bar width and height. Rendered locally, no watermark.',
+  calculator:
+    'A real online calculator: full expressions with precedence, scientific functions, DEG/RAD, memory keys and a reusable tape — parsed by hand, no eval, nothing uploaded.',
+  percentage:
+    'Six percentage calculators in one page: X% of Y, percent change, discounts, tips with splitting, and sales tax/VAT — every answer shows the formula behind it, computed live.',
+  'date-calculator':
+    'Age in years, months and days, days between dates, add or subtract time with real month-end clamping, business days and a live countdown — computed on your device.',
+  bmi:
+    'BMI with WHO bands, BMR and TDEE calorie targets, ideal weight by four published formulas and body-fat estimates — every formula shown, nothing stored, nothing sent.',
+  loan:
+    'Loan and mortgage payments with the full amortization schedule, extra-payment savings, compound-interest projections and a savings-goal planner — exact math, CSV exports, computed locally.',
+  timer:
+    'Online stopwatch with laps, countdown with alarm, pomodoro and tabata intervals — timestamp-driven so a throttled tab cannot drift, with a local WebAudio alarm.',
+  picker:
+    'Wheel of names, crypto-random numbers, coin flips, dice, list shuffling and balanced team splits — real randomness from crypto.getRandomValues, drawn entirely on your device.',
+  regex:
+    'Test JavaScript regexes live: highlighted matches, capture and named groups, replace preview with backreferences, zero-length-loop protection and a pattern library. Fully local.',
+  csv:
+    'Convert CSV to JSON and JSON to CSV with a real RFC 4180 parser — quoted fields, escaped quotes, CRLF, custom delimiters, type inference and honest malformed-quote warnings.',
+  color:
+    'Convert any color between HEX, RGB and HSL with alpha, sample from an image or the screen, test WCAG 2.1 contrast, and build tints, shades and harmony palettes — all in your browser.',
 }
 
 /**
@@ -831,6 +861,206 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Should I download SVG or PNG?',
       a: 'SVG for anything printed or sized after download: it is vector, so it stays sharp at any dimension. The PNG export renders at three times the display size with a white underlay — safe for slides, documents and screens where SVG support is awkward. Both are generated in this tab from the same rendering.',
+    },
+  ],
+
+  // -------------------------------------------------------------- calculator
+  calculator: [
+    {
+      q: 'Is this a real calculator or a JavaScript eval wrapper?',
+      a: 'A real calculator. The expression is tokenized and compiled to reverse-polish notation with the shunting-yard algorithm, then evaluated on an explicit stack — there is no eval() and no Function constructor anywhere in the page. Precedence, parentheses, unary minus and postfix factorial and percent all behave the way a math teacher would expect.',
+    },
+    {
+      q: 'How do the memory keys work?',
+      a: 'Like the hardware calculator on your desk: MS stores the current result, MR recalls it into the expression, M+ and M− add or subtract the current result from the stored value, and MC clears it. ANS inserts the last committed answer. The stored value lives only in this tab and disappears when you close it.',
+    },
+    {
+      q: 'Does sin(30) mean degrees or radians?',
+      a: 'It depends on the switch — DEG is the default because that is what most people mean, and RAD makes the trigonometric functions interpret arguments as radians for real math and engineering. The inverse functions return values in the selected unit too, so asin(0.5) is 30 in DEG mode and 0.524 in RAD mode.',
+    },
+    {
+      q: 'What happens when an expression is invalid?',
+      a: 'You get a specific message, not a NaN shrug: division by zero says so, an unbalanced parenthesis names which one, an unknown word lists the available functions, and two numbers without an operator between them are called out. The live preview shows the error before you commit anything to the tape.',
+    },
+  ],
+
+  // -------------------------------------------------------------- percentage
+  percentage: [
+    {
+      q: 'Which mode answers “what is 15% of 80”?',
+      a: 'The first mode, X% of Y — type 15 and 80 and it answers 12, with the formula (15 ÷ 100) × 80 printed right under the result so you can check the math on sight. It also shows 80 minus and plus that amount, which covers most shopping and markup questions in one view.',
+    },
+    {
+      q: 'How is percent change computed, and why does the direction matter?',
+      a: '(New − Old) ÷ |Old| × 100 — the absolute value in the denominator is deliberate, so a change from −40 to −20 reads as a 50% increase, not a negative mess. The result card names “increase” or “decrease” explicitly, and a change from exactly 0 is honestly reported as undefined instead of inventing a number.',
+    },
+    {
+      q: 'Can it extract tax from a price that already includes it?',
+      a: 'Yes — flip on “Extract from gross” in the tax mode. A gross of 121 at a 21% rate gives a net of 100 and 21 of tax, using Gross ÷ (1 + rate). That is the backwards calculation VAT invoices need, and it is shown with its formula like every other result.',
+    },
+    {
+      q: 'Does the tip mode split the bill?',
+      a: 'It does: set the people count and you get the tip, the total, and what each person pays. The “round tip up” switch rounds the tip to the next whole unit before splitting, which is the restaurant-friendly way to do it. Everything recomputes live as you type, and any card copies its value with one tap.',
+    },
+  ],
+
+  // ---------------------------------------------------------- date-calculator
+  'date-calculator': [
+    {
+      q: 'How exact is the age calculation?',
+      a: 'Calendar-exact: years, months and days are counted the way calendars actually work, with the month borrow taken from the real length of the previous month — not a 30-day approximation. Totals in weeks, months, days, hours and minutes are computed from the actual timestamps, and the next-birthday countdown handles Feb 29 birthdays by clamping to Feb 28 on non-leap years.',
+    },
+    {
+      q: 'What does “exclude the end day” mean in the difference mode?',
+      a: 'It settles the booking-style question: from Jan 1 to Jan 2 is that one day or two? With the toggle on (the default) it is one day — the hotel-night count. With it off, both endpoints count — the way you would count a job that runs from Monday to Friday as five working days.',
+    },
+    {
+      q: 'What happens when I add one month to January 31?',
+      a: 'You get February 28 or 29, not March 3rd. The month arithmetic clamps to the real end of the target month — the same convention most calendar libraries use and the one people actually mean. A note under the result tells you the clamp was applied.',
+    },
+    {
+      q: 'How are business days counted?',
+      a: 'Weekend days are skipped one day at a time, never approximated with a 5/7 ratio — the count between two dates is exact, and adding or subtracting N business days walks the calendar one day at a time until it has skipped past every weekend. Public holidays vary by country, so they are deliberately not assumed; count to a holiday and shift by the extra days it costs.',
+    },
+  ],
+
+  // ---------------------------------------------------------------------- bmi
+  bmi: [
+    {
+      q: 'Is BMI actually meaningful?',
+      a: 'As a population screen, yes; as a personal diagnosis, no. It cannot see muscle mass, bone density or fat distribution, which is why athletes read as overweight. The page shows the WHO band your BMI falls in and the weight range that would move you into the healthy band — and says plainly that this is an estimate, not medical advice.',
+    },
+    {
+      q: 'Why are there four different ideal weights?',
+      a: 'Because Robinson, Miller, Devine and Hamwi are four different published formulas, and they genuinely disagree — by several kilograms at some heights. Showing all four side by side is more honest than picking one and pretending it is authoritative. The BMI-derived healthy range is usually the most defensible reference.',
+    },
+    {
+      q: 'Which calorie formula does the page use?',
+      a: 'Mifflin-St Jeor for BMR — the equation most clinical guidelines consider the best general formula — then one of five activity multipliers (1.2 to 1.9) for TDEE. The targets (−500, −250, +500) correspond roughly to half a kilo per week of loss or gain, which is the rate most sources call sustainable.',
+    },
+    {
+      q: 'How accurate is the Navy body-fat method?',
+      a: 'It is a circumference estimate — typically within 3–4% of a DEXA scan for most people, better than the BMI-based estimate, and sensitive to how you measure. Measure the neck below the larynx and the waist at the navel (plus hips for the female formula), keep the tape level and snug, and read the result as an estimate. The Deurenberg number is shown only as a rougher cross-check.',
+    },
+  ],
+
+  // --------------------------------------------------------------------- loan
+  loan: [
+    {
+      q: 'How is the monthly payment computed?',
+      a: 'The standard annuity formula: P·r·(1+r)ⁿ ÷ ((1+r)ⁿ − 1), where r is the monthly rate (annual ÷ 12) and n the number of months. At a 0% rate the page switches to simple division. The same schedule then runs month by month — interest on the remaining balance first, the rest to principal — which is exactly how amortizing loans work.',
+    },
+    {
+      q: 'What does the extra payment field do?',
+      a: 'It simulates the loan again with your extra amount added to every payment, then compares: the result names how much interest you save and how many months earlier the loan ends. The savings come from the real simulation, not a rule of thumb — and the schedule table shows the shortened loan, not the original one.',
+    },
+    {
+      q: 'What is the difference between monthly and daily compounding?',
+      a: 'How often the rate is applied. Annual applies 6% once a year; monthly applies 0.5% twelve times, which earns slightly more through interest-on-interest; daily applies a sliver 365 times. The page simulates month by month with your chosen frequency and monthly contributions landing at month end, so the year-by-year table is honest about the timing.',
+    },
+    {
+      q: 'Does the calculator include fees, insurance or taxes?',
+      a: 'No, and it says so rather than pretending. Real loans carry arrangement fees, mandatory insurance, rate resets — none of that can be known from amount, rate and term. Treat the results as the exact math of the numbers you entered, and treat a real lender offer as the only binding truth.',
+    },
+  ],
+
+  // -------------------------------------------------------------------- timer
+  timer: [
+    {
+      q: 'Why does the countdown stay accurate when I switch tabs?',
+      a: 'Because the clock is not counted — it is computed. Every tick recalculates the remaining time from performance.now() timestamps instead of adding up interval fires, so the browser throttling a background tab can delay the picture but cannot make the alarm late. When you come back, the display re-syncs to the true time immediately.',
+    },
+    {
+      q: 'How does the alarm sound?',
+      a: 'It is synthesized locally with WebAudio — an oscillator, not an audio file — so it works offline and never waits on a download. Browsers may hold audio until your first interaction with the page; press anything once if the first alarm is silent. The alarm repeats for twenty seconds and can be dismissed or set to restart the countdown automatically.',
+    },
+    {
+      q: 'What does the pomodoro cycle do automatically?',
+      a: 'After each work phase it moves to a short break; after every N completed work rounds (four by default) it takes a long break instead, then the cycle repeats. A counter tracks completed rounds, and a chime marks each phase change. All the durations are editable — 25/5/15 is the tradition, not a requirement.',
+    },
+    {
+      q: 'Will my phone keep the screen on while the timer runs?',
+      a: 'The page requests a screen wake-lock while a timer is running, which keeps the display awake on supporting browsers. If the platform refuses it, the timer still runs — and the tab title mirrors the clock, so a glance at your tab switcher shows the time even from another app.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- picker
+  picker: [
+    {
+      q: 'How random is this, really?',
+      a: 'Cryptographically random. Every draw — wheel result, number, coin, die, shuffle, team assignment — comes from crypto.getRandomValues, the browser’s cryptographic randomness source, with rejection sampling used to keep the distribution exactly uniform. Math.random is never used. Nothing is drawn on a server, so nothing can be rigged or logged.',
+    },
+    {
+      q: 'How does the wheel decide the winner?',
+      a: 'The spin gets a random number of full turns and a random angle, decelerates with a real ease-out curve, and the winner is the segment actually sitting under the pointer when the wheel stops — read from the geometry at rest, not chosen in advance and animated toward.',
+    },
+    {
+      q: 'What is the raffle mode for numbers?',
+      a: 'The “no repeats” switch: each drawn number is removed from the pool before the next draw, so you get unique results — a raffle, not a dice roll. It needs integer bounds, and if you ask for more unique numbers than exist in the range, the page says so instead of looping forever.',
+    },
+    {
+      q: 'Are the teams split fairly?',
+      a: 'The names are shuffled first (Fisher–Yates with the same crypto source), then dealt round-robin into the teams — the same way a sensible playground captain does it, and balance is guaranteed to within one person per team. Changing the team count re-deals from scratch; nothing is remembered between runs.',
+    },
+  ],
+
+  // -------------------------------------------------------------------- regex
+  regex: [
+    {
+      q: 'Which regex flavor does this test?',
+      a: 'JavaScript’s own RegExp engine — the same one that will run your pattern in Node and the browser. That is the point: what matches here matches in your code. Perl, PCRE and Python have small differences (lookbehind support, unicode \\p classes, flag names), so verify there before shipping if your target is another language.',
+    },
+    {
+      q: 'Why does my /a*/g pattern not freeze the page?',
+      a: 'Zero-length matches are the classic infinite-loop trap: a pattern that matches the empty string can match forever at the same position. The page steps the engine past any zero-length match explicitly — the standard guard — so patterns like that return their matches and stop instead of hanging. The same trick your production code should use.',
+    },
+    {
+      q: 'How do I read the capture-group columns?',
+      a: 'Numbered groups appear as $1, $2… in match order, and named groups as $<name>. An empty circle means the group did not participate in that particular match — common with alternations. Those same references work in the replace preview and in real code: String.replace and String.replaceAll accept exactly this syntax.',
+    },
+    {
+      q: 'Is my test data sent anywhere?',
+      a: 'No. Matching runs on this device against the browser’s engine — there is no upload step at all, which matters when the test string is a production log, a token, or customer data. Close the tab and nothing persists; the page stores no history.',
+    },
+  ],
+
+  // ---------------------------------------------------------------------- csv
+  csv: [
+    {
+      q: 'Why not just split on commas?',
+      a: 'Because real CSV breaks: quoted fields containing commas (“Asha, senior”), embedded newlines, escaped quotes ("""), and CRLF line endings are all standard RFC 4180 behavior that split(",") mangles. The parser here is a real state machine for the spec — and it warns you by line number when a quote never closes, instead of silently corrupting the rest of the file.',
+    },
+    {
+      q: 'What does “infer types” change?',
+      a: 'With it on (the default), "42" becomes the number 42, "true" becomes boolean true and "null"/"n/a" become null in the JSON output — what most APIs expect. With it off, every cell stays a string exactly as written, which is safer when leading zeros matter (postal codes, phone numbers, part numbers).',
+    },
+    {
+      q: 'How does JSON → CSV handle objects with different keys?',
+      a: 'The columns are the union of every key found across all rows, so objects that are missing a field simply leave that cell empty — nothing is dropped to make the grid rectangular. Nested objects and arrays are serialized as JSON strings inside their cell, which is lossless and re-parseable, and a note in the description says so plainly.',
+    },
+    {
+      q: 'Can I use semicolons or tabs instead of commas?',
+      a: 'Yes — the delimiter switch covers comma, semicolon, tab and pipe, which covers European Excel exports (semicolon) and TSV files (tab) without any pre-conversion. The chosen delimiter is used for parsing in the CSV→JSON direction and for escaping/quoting in the JSON→CSV direction, and fields containing the delimiter are re-quoted on output.',
+    },
+  ],
+
+  // -------------------------------------------------------------------- color
+  color: [
+    {
+      q: 'Which color formats can I paste in?',
+      a: 'Hex in 3, 4, 6 or 8 digits (#f7a, #ff7a45, #ff7a45ff), rgb() and rgba() with commas or spaces and % or 0–255 components, and hsl()/hsla() in the modern and legacy syntaxes. The page answers in every format at once — hex, rgb, hsl plus the bare components — each with a one-tap copy and a live swatch.',
+    },
+    {
+      q: 'How does picking from an image work?',
+      a: 'The image you drop is drawn onto a local canvas; hovering reads the pixel under the cursor with getImageData and clicking commits that color as the working color. The image is never uploaded — the canvas lives in your tab. For picking anywhere on your screen, the browser’s EyeDropper API is used where it exists (Chrome, Edge); where it does not, the button simply is not shown rather than pretending.',
+    },
+    {
+      q: 'What do the WCAG verdicts mean?',
+      a: 'The ratio is computed with the WCAG 2.1 relative-luminance formula. 4.5:1 passes AA for normal text, 3:1 passes AA for large text (roughly 18.66px bold or 24px), and 7:1 / 4.5:1 are the AAA levels. The verdicts are shown for both normal and large text so you can match the verdict to the text you are actually styling.',
+    },
+    {
+      q: 'How are the palettes generated?',
+      a: 'With real HSL math: the tint-and-shade ramp walks the lightness axis through nine steps at your exact hue and saturation, and the harmonies rotate the hue by 180° (complementary), ±30° (analogous) or ±120° (triadic). Click any swatch to make it the working color — and the contrast tab then tests it against your background immediately.',
     },
   ],
 
