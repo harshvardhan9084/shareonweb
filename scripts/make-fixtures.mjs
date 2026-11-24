@@ -260,4 +260,18 @@ console.log('wrote sample.epub')
   console.log('wrote jwt-sample.txt (HS256, 1 h expiry)')
 }
 
+// qr-sample.png — a real QR encoding the scan-decode assertion string, so the
+// QR tool's Scan tab can be verified end to end from an image (headless runs
+// cannot grant a camera).
+{
+  const QRCode = (await import('qrcode')).default
+  const png = await QRCode.toBuffer('kontivo-scan-check-2026', {
+    width: 480,
+    errorCorrectionLevel: 'M',
+    margin: 2,
+  })
+  fs.writeFileSync(join(OUT, 'qr-sample.png'), png)
+  console.log('wrote qr-sample.png (encodes kontivo-scan-check-2026)')
+}
+
 console.log('fixtures ready in ' + OUT)

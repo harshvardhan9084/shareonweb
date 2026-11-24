@@ -1244,4 +1244,184 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ------------------------------------------------------------------ lorem
+  lorem: {
+    lede: [
+      'Placeholder Text Studio builds the filler text every wireframe, mockup and CMS migration needs: Lorem ipsum the way typesetters have used it since the 1500s, or plain-English wireframe copy for prototypes that go to people who find Latin distracting. Paragraphs, sentences, bare words or bullet lists, from one to a few thousand words, rebuilt as you change any setting.',
+      'The defining feature is the seed. The generator hashes the seed string with xmur3 and drives every word pick with mulberry32, so the same seed with the same settings always rebuilds the exact same text. A wireframe’s filler survives a refresh, a teammate who re-enters your seed sees precisely what you saw, and nothing needs to be stored anywhere to make that happen.',
+    ],
+    sections: [
+      {
+        heading: 'How the generator builds a sentence',
+        paragraphs: [
+          'Each sentence draws 6–24 words from the corpus, sprinkles a conjunction every so often so the rhythm does not read as a list, and inserts a mid-sentence comma in roughly three out of five sentences. Paragraphs are 3–7 such sentences. The classic “Lorem ipsum dolor sit amet, consectetur adipiscing elit” opening is a toggle, applied to the front of the first paragraph exactly the way print shops have done it for centuries.',
+          'The Latin corpus is the standard Lorem Ipsum vocabulary — the real words the traditional filler is built from — and the plain-English corpus is a hand-written bank of neutral interface vocabulary: sections, headers, controls, samples. Neither is scraped from anywhere, and neither can contain anything you would have to fact-check, which is the entire point of filler text.',
+        ],
+      },
+      {
+        heading: 'When seeded filler matters more than random filler',
+        paragraphs: [
+          'Random filler fights collaboration. A teammate reviews a mockup in the morning, the filler changed by lunch, and now “the second paragraph” means something different on every screen. A seed pins the text: screenshot it, review it, file bugs against it, and the same seed reproduces the same words on every machine that opens this page.',
+          'It also matters for testing. A layout that overflows with a 40-word paragraph keeps overflowing with the same 40-word paragraph every time you re-render, which turns an intermittent visual bug into a reproducible one.',
+        ],
+      },
+      {
+        heading: 'What happens to your settings',
+        paragraphs: [
+          'Nothing — there is nothing to store. The text is computed from your settings and seed on every render, in this tab, with no upload code on the page. The word, character and paragraph counters are computed from the same output, and the HTML mode strips tags before counting so the numbers reflect the visible text.',
+        ],
+      },
+      {
+        heading: 'Details worth knowing',
+        paragraphs: [
+          'The HTML mode emits one <p> element per paragraph, one per line — paste it straight into markup or a CMS block. The bullet-list shape emits one short sentence per item, which suits feature lists and menu stubs better than paragraph filler does.',
+          'Counts cap honestly: 50 paragraphs, 100 sentences or list items, 2,000 words per run. That is more than any single screen needs; the seed means you can always regenerate the same text again tomorrow instead of hoarding it.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- fake-data
+  'fake-data': {
+    lede: [
+      'Fake Data Studio generates test records that look real enough to exercise a form and are guaranteed never to belong to anyone: names, usernames, e-mails, phone numbers, street and city, company, job title, birthday with age, IPv4, user agent and hex color, across six name locales, up to 500 records per run, exportable as CSV or JSON.',
+      'Every value stays inside officially reserved space by construction. E-mails use only the IANA-reserved example.com, example.net and example.org domains. North-American phone numbers use the 555-01XX exchange that the numbering plan reserves for fiction. Other locales’ numbers carry a leading digit that makes them invalid for international dialing. IPv4s come from the RFC 5737 documentation blocks that are never routed on the public internet.',
+    ],
+    sections: [
+      {
+        heading: 'Why reserved ranges beat “just make something up”',
+        paragraphs: [
+          'A made-up phone number can ring. A made-up e-mail can belong to someone. Test data that leaks into a demo, a screenshot or a staging database is the classic way a developer accidentally doxxes a stranger — and the reason proper test suites demand obviously-fake values. Reserved space solves this at the protocol level: example.* can never receive mail, 555-01XX can never complete a call, documentation IPs can never route. A value drawn from those ranges is fake not by promise but by impossibility.',
+          'The trade-off is honesty about realism: an example.com address will not exercise an e-mail validation rule the way a real provider domain does, and that is exactly what you want in a test dataset — the field works, and nobody can be harmed by it.',
+        ],
+      },
+      {
+        heading: 'The seed makes bugs reproducible',
+        paragraphs: [
+          'The generator is deterministic: locale, field set, count and seed hash into the same stream of picks every time. A bug report that says “row 14 of seed ktv29x breaks the form” can be replayed exactly — same name, same address, same birthday — instead of chasing a shape of data you can no longer produce. Roll the dice only when you want a new shape of data, not when you want the same one back.',
+        ],
+      },
+      {
+        heading: 'Six locales, twelve fields',
+        paragraphs: [
+          'Name banks cover English, German, French, Spanish, Indian and Japanese (romaji) — first and last names, street names, city lists and locale-shaped postcodes, from five-digit ZIPs to Indian PIN codes that never start with 0 or 9 and Japanese NNN-NNNN codes. Company names take a locale-appropriate legal suffix: LLC, GmbH, SAS, S.L., Pvt Ltd or K.K.',
+          'Every field is a switch, and the table and exports show exactly the toggled set — so a spreadsheet that needs only names and e-mails exports two columns, not twelve. The table preview renders the first 25 rows; the CSV and JSON downloads always carry the full run.',
+        ],
+      },
+      {
+        heading: 'What happens to the data',
+        paragraphs: [
+          'It is computed in this tab from the seed and settings, rendered into the table, and downloaded straight to your disk when you export. There is no upload code on the page; the browser’s network tab will show nothing but the page itself. Close the tab and it is gone — the seed can rebuild it identically whenever you need it again.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- css-tools
+  'css-tools': {
+    lede: [
+      'CSS Style Studio is three generators under one roof — gradient, box-shadow and border-radius — each with a live preview and a formatted CSS block underneath. The rule that makes it useful: the preview element is styled by the exact same state that produces the copied CSS, so what you see is byte-for-byte what you paste into your stylesheet.',
+      'Everything runs in this tab. There is no account, no gallery of other people’s “styles” to browse, and no upload — just the controls, the preview, and the CSS that matches them.',
+    ],
+    sections: [
+      {
+        heading: 'Gradients, with as many stops as the design needs',
+        paragraphs: [
+          'Linear, radial and conic fills with up to eight color stops, each with its own position slider and the browser’s native color picker. The angle dial drives linear gradients; radial and conic gradients get a center point you can move anywhere on the surface, and conic adds a start angle for sweeps that do not begin at twelve o’clock. Five presets — Sunrise, Forest, Dusk, Ripple and a full color wheel — give you a starting point instead of a blank canvas.',
+          'The emitted CSS uses the modern one-line background-image syntax browsers have shipped for years, with stops in sorted order and the percentages explicit, so the output reads the same way a hand-written declaration would.',
+        ],
+      },
+      {
+        heading: 'Shadows as layers, not a single blur',
+        paragraphs: [
+          'Real interface shadows are composites: a tight contact shadow plus a wide ambient one, or a zero-blur ring layered over depth. The generator lets you stack up to six layers, each with offset X and Y, blur, spread, a hex color with alpha and the inset flag. The layer list writes the CSS list in the same order — first layer on top, exactly as the cascade paints it — and presets like “Ring + shadow” show the composition technique in one click.',
+        ],
+      },
+      {
+        heading: 'Radius corners, linked or separate',
+        paragraphs: [
+          'Four corner sliders cover the classic card work, and the link-all toggle turns any adjustment into a uniform radius. Shapes like Leaf (two opposite corners round, two tight) and Blob (four different values) demonstrate what asymmetric corners do to a box. When the corners differ, the copied CSS carries the TL TR BR BL comment so the next person to read the stylesheet knows the order.',
+          'One deliberate difference: the preview clamps corners to 100 px so extreme values stay visible on the screen, while the copied CSS keeps the true numbers — the comment under the preview says so rather than letting the clamp surprise you.',
+        ],
+      },
+      {
+        heading: 'Privacy and limits',
+        paragraphs: [
+          'There is nothing to upload: the controls, the preview and the output are one React state, computed in this tab. The studio aims at the design-the-component moment — for a full design system you outgrow any single page, but for “what does this shadow actually look like?” it is faster than editing a stylesheet and refreshing.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- meta-tags
+  'meta-tags': {
+    lede: [
+      'Meta Tag Studio builds the head snippet that decides how a link looks everywhere it is shared — the search-result title and description, the Open Graph card Facebook, LinkedIn and Slack draw, and the X card — with live previews of all three rendering from the same fields that produce the copied HTML.',
+      'The output is escaped and ordered: quotes and angle brackets in a title cannot break the tag structure, because every attribute value passes through HTML escaping before it lands in the snippet. Paste it into your page’s head and the platform crawlers read exactly what the previews showed.',
+    ],
+    sections: [
+      {
+        heading: 'The three previews, and why they clamp differently',
+        paragraphs: [
+          'The search preview clamps its title near 60 characters and its description near 160 — the approximate cut a results page applies before truncating with an ellipsis. The X and Open-Graph cards have their own geometry: image-led, domain on top, two description lines. Watching all three at once is the fastest way to write copy that fits every surface instead of perfecting one and breaking the others.',
+          'Length guidance runs as you type: titles measure against the 50–60 character sweet spot, descriptions against 120–158, with the exact distance named — “12 over the limit”, “8 below the sweet spot”, “in the sweet spot” — instead of a vague red bar.',
+        ],
+      },
+      {
+        heading: 'What the snippet actually contains',
+        paragraphs: [
+          'Title and description, the canonical link, robots policy, theme color, then the Open Graph set — og:title, og:description, og:url, og:image when set, og:type, og:site_name, og:locale — then the X card tags. Empty fields emit nothing rather than empty tags: a crawler never sees an og:image pointing at nothing. og:type and the card flavor are dropdowns with the values platforms actually parse, and the locale list covers the seven locales the page can label.',
+        ],
+      },
+      {
+        heading: 'Escaping, and why “5\\" speakers” cannot break the page',
+        paragraphs: [
+          'Attribute values sit inside double quotes, so an unescaped quote in a title would terminate the attribute early and corrupt the tag — the classic way a hand-edited head silently breaks a share preview. Escaping turns & into &amp;, \" into &quot;, and angle brackets into entities; browsers read the entities back as the original characters, so the text displays correctly everywhere it is shown.',
+        ],
+      },
+      {
+        heading: 'Privacy and honest limits',
+        paragraphs: [
+          'Nothing is fetched and nothing is submitted: the previews are drawn from your own fields inside this tab, no validator service is called, and the browser’s network tab shows nothing but the page. The honest limit is that a preview approximates the platform’s live rendering — font, country and A/B tests shift real cards slightly — but the structural truth (what is set, what clamps, what falls back) is exactly what the snippet will do.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- barcode
+  barcode: {
+    lede: [
+      'Barcode Studio renders scannable Code 128 and EAN-13 barcodes in this tab, as crisp vector SVG or a print-safe 3× PNG. Code 128 for any ASCII text — package codes, SKUs, serials, asset tags. EAN-13 for retail products, with real checksum discipline: 12 digits get the mod-10 check digit computed and appended, 13 are verified, and a mismatch names the expected digit instead of handing you a barcode scanners will reject.',
+      'The encoding runs on JsBarcode, the engine libraries and POS systems have relied on for a decade, into vector SVG you can size after download without blur. There is no lookup service, no account and no watermark — the only network traffic is the page itself.',
+    ],
+    sections: [
+      {
+        heading: 'The two formats, and when each is right',
+        paragraphs: [
+          'Code 128 is the logistics workhorse: variable length, full ASCII 0–127, self-checking, and compact for short strings. It is the right choice for inventory labels, serial numbers, membership cards and internal codes — anything where you control both ends of the scan.',
+          'EAN-13 is the worldwide retail standard: exactly 13 digits, printed on consumer packaging, scanned at every till. Its structure is strict — a leading system digit, manufacturer and product codes, and a final check digit computed from the rest — which is why the page verifies it rather than drawing whatever was typed: a wrong check digit means a real scanner rejects the code at the point of sale.',
+        ],
+      },
+      {
+        heading: 'Check digits, computed and explained',
+        paragraphs: [
+          'The EAN-13 check digit is a mod-10 weighting: odd positions count once, even positions count three times, and the check digit makes the total a multiple of ten. Type 12 digits and the page computes the thirteenth and shows it; type 13 and it verifies, naming the exact expected value on failure. Non-digit input reports its character position — the page refuses to encode garbage silently, because a barcode’s only job is to scan correctly the first time.',
+        ],
+      },
+      {
+        heading: 'Sizing for the destination',
+        paragraphs: [
+          'Bar width (1–4×) sets the module size; height sets the bar length; the human-readable value underneath is optional but every retail barcode must carry it. For print, download the SVG — vector stays sharp at any size, and thermal label software accepts it directly. For slides and documents, the PNG export renders at three times the preview size over a white underlay, which keeps contrast at the level scanners expect.',
+          'One honest limit: Code 128 is ASCII-only, so emoji, curly quotes and accented letters are reported with their exact position instead of being mangled into bars that will not scan. Replace them and the code renders.',
+        ],
+      },
+      {
+        heading: 'Privacy and scope',
+        paragraphs: [
+          'The barcode is drawn from your text in this tab — no account, no lookup service, nothing sent anywhere, which you can confirm in the network tab. What this page is not: a label-design tool or a batch generator for a warehouse. It is the make-one-good-barcode moment, done properly — correct encoders, honest validation, print-clean output.',
+        ],
+      },
+    ],
+  },
 }

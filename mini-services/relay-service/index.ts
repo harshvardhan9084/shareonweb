@@ -1232,6 +1232,56 @@ const flushTimer = setInterval(() => void flushDirtyRooms(), PERSIST_FLUSH_MS);
           `${state.rooms.length} rooms, ${state.closed.length} closed codes`,
       );
     }
+
+    // GC on wake: the 10-minute sweep only runs while this process is alive.
+    // Rows that expired while the process was asleep (deploy, crash, or a
+    // hosted free-tier spin-down) must be swept NOW — a boot is also a wake,
+    // and answering an expired code even briefly makes clients reconnect
+    // forever instead of failing fast to the "Dial again" path.
+    {
+      const now = Date.now();
+      const isExpired = (meta: { expiresAt: string }) =>
+        new Date(meta.expiresAt).getTime() < now;
+      let expiredSessions = 0;
+      let staleRooms = 0;
+      const forgets: Array<Promise<unknown>> = [];
+      for (const [code, meta] of [...sessions.entries()]) {
+        if (isExpired(meta)) {
+          sessions.delete(code);
+          closedCodes.delete(code);
+          dirtyRooms.delete(code);
+          forgets.push(
+            store
+              .forgetSession(code)
+              .catch((err: unknown) =>
+                console.error(`[relay-service] failed to forget session ${code}:`, err),
+              ),
+          );
+          expiredSessions++;
+        }
+      }
+      for (const [code] of rooms) {
+        // A room is only reachable while its session lives and is open.
+        const meta = sessions.get(code);
+        if (meta && !isExpired(meta) && !closedCodes.has(code)) continue;
+        rooms.delete(code);
+        dirtyRooms.delete(code);
+        forgets.push(
+          store
+            .forgetRoom(code)
+            .catch((err: unknown) =>
+              console.error(`[relay-service] failed to forget room ${code}:`, err),
+            ),
+        );
+        staleRooms++;
+      }
+      await Promise.allSettled(forgets);
+      if (expiredSessions > 0 || staleRooms > 0) {
+        console.log(
+          `[relay-service] wake GC: dropped ${expiredSessions} expired session(s) and ${staleRooms} stale room(s)`,
+        );
+      }
+    }
   } catch (err) {
     console.error("[relay-service] failed to restore persisted state:", err);
   }

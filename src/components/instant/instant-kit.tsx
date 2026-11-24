@@ -25,8 +25,15 @@ export function formatBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(2)} MB`
 }
 
-/** Click a hidden input programmatically. */
-export function useFilePick(accept?: string, multiple = true, directory = false) {
+/** Click a hidden input programmatically. Pass onFiles to have the hidden
+ *  input's change event routed straight to your handler (the input is
+ *  sr-only, so it never renders its own visible UI). */
+export function useFilePick(
+  accept?: string,
+  multiple = true,
+  directory = false,
+  onFiles?: (files: File[]) => void,
+) {
   const ref = useRef<HTMLInputElement>(null)
   const pick = useCallback(() => ref.current?.click(), [])
   const input = (
@@ -38,6 +45,11 @@ export function useFilePick(accept?: string, multiple = true, directory = false)
       tabIndex={-1}
       accept={directory ? undefined : accept}
       multiple={multiple}
+      onChange={(e) => {
+        const files = Array.from(e.target.files ?? [])
+        if (files.length) onFiles?.(files)
+        e.target.value = ''
+      }}
       {...(directory ? { webkitdirectory: '', directory: '' } : {})}
     />
   )

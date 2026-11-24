@@ -41,6 +41,7 @@ for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" 
          "/audio" "/gif" "/frame-grab" "/recorder" "/upscaler" \
          "/archive" "/file-tools" "/encrypt" "/meta-scrub" "/jwt" "/hash-file-batch" \
          "/cron" "/diff" "/uuid" "/convert-units" \
+         "/lorem" "/fake-data" "/css-tools" "/meta-tags" "/barcode" \
          "/beam" "/call"; do
   printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
 done
@@ -150,7 +151,7 @@ agent-browser find label "Search the document" fill "fixture" > /dev/null 2>&1
 fbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Find" \[.*ref=(e[0-9]+)\]' -r '$1')
 agent-browser click @$fbtn > /dev/null 2>&1
 agent-browser wait --text "3 pages contain" --timeout 40000 > /dev/null 2>&1
-if snap_hit'3 pages contain'; then ok "/pdf-view whole-document search"; else bad "/pdf-view search"; fi
+if snap_hit '3 pages contain'; then ok "/pdf-view whole-document search"; else bad "/pdf-view search"; fi
 agent-browser close > /dev/null 2>&1
 
 # 8. /pdf-text: extraction with real content
@@ -256,7 +257,7 @@ agent-browser click @$gbtn > /dev/null 2>&1
 # 20 frames, each needing a seek+capture; under QA-suite load this can take a while
 for i in $(seq 1 12); do
   sleep 5
-  if snap_hit'"toolhive-clip.gif"'; then break; fi
+  if snap_hit '"toolhive-clip.gif"'; then break; fi
 done
 snap=$(agent-browser snapshot -c 2>/dev/null)
 echo "$snap" | rg -q '"toolhive-clip.gif"' && echo "$snap" | rg -q ' frames · ' \
@@ -500,6 +501,110 @@ echo "$snap" | rg -q "MCMLXXXVII" && echo "$snap" | rg -q "1987" \
   && ok "/convert-units Roman tab converts both ways" || bad "/convert-units roman"
 agent-browser close > /dev/null 2>&1
 
+# 11q. /lorem: seeded filler builds + determinism (same seed → same text)
+open_page "http://localhost:81/lorem"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Copy text" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "Lorem ipsum dolor sit amet" \
+  && ok "/lorem opens on classic filler" || bad "/lorem default"
+agent-browser find label "Seed" fill "qa-seed-77" > /dev/null 2>&1
+sleep 1
+first=$(agent-browser snapshot -c 2>/dev/null)
+agent-browser find label "Seed" fill "qa-seed-88" > /dev/null 2>&1
+sleep 1
+second=$(agent-browser snapshot -c 2>/dev/null)
+[ "$first" != "$second" ] && ok "/lorem seed changes rebuild the text" || bad "/lorem seed"
+agent-browser close > /dev/null 2>&1
+
+# 11r. /fake-data: table of reserved-range records + CSV/JSON buttons
+open_page "http://localhost:81/fake-data"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Copy JSON" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q '@example\.(com|net|org)' \
+  && ok "/fake-data builds example-domain records" || bad "/fake-data emails"
+echo "$snap" | rg -q "555-01" \
+  && ok "/fake-data phones stay in the fictional 555-01XX range" || bad "/fake-data phones"
+echo "$snap" | rg -q "CSV" && echo "$snap" | rg -q "JSON" \
+  && ok "/fake-data offers CSV + JSON exports" || bad "/fake-data exports"
+agent-browser close > /dev/null 2>&1
+
+# 11s. /css-tools: gradient preview + CSS block on open; shadow tab renders
+open_page "http://localhost:81/css-tools"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Copy CSS" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "linear-gradient" && echo "$snap" | rg -q "135deg" \
+  && ok "/css-tools gradient emits live CSS" || bad "/css-tools gradient"
+stab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Box shadow" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$stab > /dev/null 2>&1
+agent-browser wait --text "Offset X" --timeout 30000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "box-shadow" && echo "$snap" | rg -q "Add layer" \
+  && ok "/css-tools shadow tab emits layered CSS" || bad "/css-tools shadow"
+agent-browser close > /dev/null 2>&1
+
+# 11t. /meta-tags: snippet + previews react to input
+open_page "http://localhost:81/meta-tags"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Copy snippet" --timeout 40000 > /dev/null 2>&1
+agent-browser find label "Page title" fill "How to brew better coffee at home" > /dev/null 2>&1
+agent-browser find label "Canonical URL" fill "https://example.com/guides/coffee" > /dev/null 2>&1
+agent-browser wait --text "og:title" --timeout 30000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q 'og:title' && echo "$snap" | rg -q 'How to brew better coffee at home' \
+  && ok "/meta-tags emits og:title from the field" || bad "/meta-tags og"
+echo "$snap" | rg -q "Search result preview" && echo "$snap" | rg -q "X card preview" \
+  && ok "/meta-tags renders SERP + social previews" || bad "/meta-tags previews"
+echo "$snap" | rg -q 'canonical' && echo "$snap" | rg -q 'example.com/guides/coffee' \
+  && ok "/meta-tags canonical lands in the snippet" || bad "/meta-tags canonical"
+agent-browser close > /dev/null 2>&1
+
+# 11u. /barcode: EAN-13 checksum completes 12 digits, renders SVG
+open_page "http://localhost:81/barcode"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Copy value" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "Code 128" \
+  && ok "/barcode opens on Code 128 with a rendered code" || bad "/barcode default"
+agent-browser find label "Format" click > /dev/null 2>&1
+sleep 1
+agent-browser find text "EAN-13 (retail products, 12–13 digits)" click > /dev/null 2>&1
+agent-browser find label "Digits (12 → check digit added, 13 verified)" fill "400638133393" > /dev/null 2>&1
+agent-browser wait --text "Check digit" --timeout 30000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "4006381333931" \
+  && ok "/barcode computes the EAN-13 check digit (…1)" || bad "/barcode checksum"
+agent-browser find label "Digits (12 → check digit added, 13 verified)" fill "4006381333932" > /dev/null 2>&1
+sleep 1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "position 13 should be 1, not 2" \
+  && ok "/barcode rejects a wrong check digit by name" || bad "/barcode wrong digit"
+agent-browser close > /dev/null 2>&1
+
+# 11v. /qr Scan tab: decode a real QR image end to end (headless cannot grant
+# a camera, so the image path carries the verification; the camera idle state
+# is checked honestly).
+open_page "http://localhost:81/qr"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "Download PNG" --timeout 40000 > /dev/null 2>&1
+stap=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Scan" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$stap > /dev/null 2>&1
+agent-browser wait --text "Start camera" --timeout 40000 > /dev/null 2>&1
+snap=$(agent-browser snapshot -c 2>/dev/null)
+echo "$snap" | rg -q "Point the camera at a QR code" \
+  && ok "/qr scan opens with honest camera idle state" || bad "/qr scan idle"
+itab=$(agent-browser snapshot -c 2>/dev/null | rg -o 'tab "Image file" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
+agent-browser click @$itab > /dev/null 2>&1
+agent-browser wait --text "Drop a QR image, or click to pick one" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/qr-sample.png" > /dev/null 2>&1
+# First decode lazily imports the jsQR engine — give it a real window.
+agent-browser wait --text "kontivo-scan-check-2026" --timeout 60000 > /dev/null 2>&1
+if snap_hit 'kontivo-scan-check-2026'; then ok "/qr Scan tab decodes an image QR end to end"; else bad "/qr scan decode"; fi
+if snap_hit 'decoded inside this tab'; then ok "/qr scan privacy line present"; else bad "/qr scan privacy"; fi
+agent-browser close > /dev/null 2>&1
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -554,7 +659,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)
@@ -589,6 +694,15 @@ echo "$snap" | rg -q "Quick answers about Zip & Unzip" \
 echo "$snap" | rg -q "Private by construction" \
   && ok "/zip privacy aside" || bad "/zip privacy aside"
 agent-browser close > /dev/null 2>&1
+
+# 19b. sw.js offline-shell mirror: every INSTANT_TOOLS path answers 200 —
+# the SW precache list must never drift from the registry.
+swmiss=0
+for p in $(rg -o "'(/[a-z0-9-]+)'" public/sw.js | tr -d "'" ); do
+  c=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:81$p")
+  [ "$c" = "200" ] || { bad "sw shell $p: $c"; swmiss=1; }
+done
+[ "$swmiss" = "0" ] && ok "sw.js INSTANT_TOOLS mirror: all paths live"
 
 # 20. session landing: action first (button before any mode explanation)
 open_page "http://localhost:81/share"

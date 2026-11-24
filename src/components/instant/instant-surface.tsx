@@ -41,6 +41,11 @@ import { CronTool } from '@/components/instant/cron-tool'
 import { DiffTool } from '@/components/instant/diff-tool'
 import { UuidTool } from '@/components/instant/uuid-tool'
 import { ConvertUnitsTool } from '@/components/instant/convert-units-tool'
+import { LoremTool } from '@/components/instant/lorem-tool'
+import { FakeDataTool } from '@/components/instant/fake-data-tool'
+import { CssToolsTool } from '@/components/instant/css-tools-tool'
+import { MetaTagsTool } from '@/components/instant/meta-tags-tool'
+import { BarcodeTool } from '@/components/instant/barcode-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -73,6 +78,11 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   diff: DiffTool,
   uuid: UuidTool,
   'convert-units': ConvertUnitsTool,
+  lorem: LoremTool,
+  'fake-data': FakeDataTool,
+  'css-tools': CssToolsTool,
+  'meta-tags': MetaTagsTool,
+  barcode: BarcodeTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

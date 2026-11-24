@@ -11,8 +11,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { PrivacyStrip, downloadBlob } from '@/components/instant/instant-kit'
+import { QrScanPanel } from '@/components/instant/qr-scan-panel'
 
-type Kind = 'link' | 'text' | 'wifi' | 'vcard'
+type Kind = 'link' | 'text' | 'wifi' | 'vcard' | 'scan'
 type Ecc = 'L' | 'M' | 'Q' | 'H'
 
 const KINDS: Array<[Kind, string]> = [
@@ -20,6 +21,7 @@ const KINDS: Array<[Kind, string]> = [
   ['text', 'Text'],
   ['wifi', 'Wi-Fi'],
   ['vcard', 'Contact card'],
+  ['scan', 'Scan'],
 ]
 
 function wifiPayload(ssid: string, password: string, encryption: 'WPA' | 'WEP' | 'nopass', hidden: boolean): string {
@@ -110,26 +112,41 @@ export function QrTool() {
   const hasContent = payload.trim().length > 0
   const error = drawError
 
+  const kindTabs = (
+    <div className="flex flex-wrap gap-1.5 rounded-full border bg-muted/40 p-1 w-fit" role="tablist" aria-label="QR type">
+      {KINDS.map(([k, label]) => (
+        <button
+          key={k}
+          role="tab"
+          aria-selected={kind === k}
+          onClick={() => setKind(k)}
+          className={
+            kind === k
+              ? 'rounded-full bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground'
+              : 'rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:text-foreground'
+          }
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
+  // The Scan tab replaces the whole generator surface — camera and image
+  // decoding live in their own panel with the same pill row on top.
+  if (kind === 'scan') {
+    return (
+      <div className="space-y-6">
+        {kindTabs}
+        <QrScanPanel />
+      </div>
+    )
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div>
-        <div className="flex flex-wrap gap-1.5 rounded-full border bg-muted/40 p-1 w-fit" role="tablist" aria-label="QR type">
-          {KINDS.map(([k, label]) => (
-            <button
-              key={k}
-              role="tab"
-              aria-selected={kind === k}
-              onClick={() => setKind(k)}
-              className={
-                kind === k
-                  ? 'rounded-full bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground'
-                  : 'rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:text-foreground'
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {kindTabs}
 
         <div className="mt-4 space-y-4">
           {kind === 'link' && (

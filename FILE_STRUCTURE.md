@@ -160,6 +160,12 @@ The only backend besides the Next.js API routes: an independent Bun process.
 | `instant/diff-tool.tsx` | Text Diff: patience diff with LIS anchors and word-level intra-line highlights, side-by-side/inline views, live stats, unified patch export validated byte-exact against git apply (incl. no-newline EOF markers). |
 | `instant/uuid-tool.tsx` | ID Generator: UUID v4/v7 (RFC 4122/9562) and ULID (Crockford base32, optional monotonic) from crypto.getRandomValues in bulk, plus an inspector decoding version/variant/embedded timestamps. |
 | `instant/convert-units-tool.tsx` | Unit & Number Converter: exact published factors for 8 categories, temperature via real formulas, kB/MB vs KiB/MiB kept separate, BigInt number bases 2–36, strict classical Roman numerals. |
+| `instant/lorem-tool.tsx` | Placeholder Text Studio: two corpora (classic Latin + plain-English wireframe), four shapes, xmur3+mulberry32 seeded generator (same seed rebuilds identical text), classic opening + HTML <p> modes. |
+| `instant/fake-data-tool.tsx` | Fake Data Studio: 12 toggleable fields × 6 name locales, up to 500 rows, reserved-range honesty (example.* domains, 555-01XX phones, RFC 5737 IPs), seeded, CSV/JSON export. |
+| `instant/css-tools-tool.tsx` | CSS Style Studio: gradient (linear/radial/conic, 8 stops, presets), layered box-shadow (6 layers, inset, alpha), per-corner radius — preview styled by the same state that emits the copied CSS. |
+| `instant/meta-tags-tool.tsx` | Meta Tag Studio: escaped <head> snippet (OG + X + canonical + robots), live search-result / X-card / Open-Graph previews, ideal-length guidance. |
+| `instant/barcode-tool.tsx` | Barcode Studio: Code 128 + EAN-13 via JsBarcode into SVG, 3× PNG export, EAN-13 mod-10 check digit computed (12 digits) or verified (13) with exact-position errors. |
+| `instant/qr-scan-panel.tsx` | Scan tab of /qr: camera (BarcodeDetector native → jsQR lazy fallback, torch when supported) + image decode, WIFI/vCard/Kontivo-session payload parsing, session-only history. |
 
 ## `src/components/ui/` — shadcn/ui primitives
 
@@ -256,7 +262,7 @@ the app: `accordion`, `alert`, `alert-dialog`, `aspect-ratio`, `avatar`, `badge`
 | `public/og/` | Generated per-tool Open Graph images (one PNG per tool page). |
 | `public/og.png` | Site-level OG image for the homepage. |
 | `public/manifest.webmanifest` | PWA manifest: name, icons, theme colors, display mode. |
-| `public/sw.js` | Offline-shell service worker (app shell + assets caching). |
+| `public/sw.js` | Offline-shell service worker (v5): app shell + 35 instant-tool page shells precached at install with their build assets; session links stay network-first with the honest offline page. |
 | `public/offline.html` | Static offline fallback page served by the SW. |
 | `public/robots.txt` | Generated robots rules (see `src/app/robots.ts`). |
 | `public/pdf.worker.min.mjs` | pdf.js worker build served to the PDF tools. |

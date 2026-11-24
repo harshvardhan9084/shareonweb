@@ -94,6 +94,9 @@ code covers all of them.* Implemented via family panels
 | AI upscaler / background removal (WASM) | Upscaler DONE (§9); background removal deferred (heavy infra) |
 | **Rebrand to Kontivo (invented "context aware" name, focus-frame mark v5, icons, OG, manifest)** | DONE (this run), QA-verified |
 | **10 new instant tools: archive, file-tools, encrypt, meta-scrub, jwt, hash-file-batch, cron, diff, uuid, convert-units** | DONE (this run), QA-verified per tool |
+| **Batch 5 tail + QR scanner: lorem, fake-data, css-tools, meta-tags, barcode, /qr Scan tab** | DONE (this run), QA-verified per tool |
+| **Relay session GC on wake (expired sessions + stale rooms swept at boot)** | DONE (this run), verified with a seeded store harness |
+| **PWA offline instant shells (sw.js v5 precaches 35 tool pages + assets)** | DONE (this run), production-only, mirror-checked |
 
 ## 4. THE CHECKLIST (extracted from the owner's list + ChatGPT plan)
 
@@ -120,36 +123,36 @@ browser-verified through :81. Work top-down; one batch per run is realistic.
 - [x] `/epub-view` — EPUB3 reader with TOC jump, pagination, arrow keys, 12–28 px text size, real progress % (background locations.generate), metadata readout, DRM honesty (epub.js)
 - Infrastructure: vendored `public/pdf.worker.min.mjs` synced on postinstall (`scripts/sync-pdf-worker.mjs`), shared `src/lib/pdf-loader.ts` (lazy ~400 KB import), `src/types/mammoth-browser.d.ts` shim
 
-### Batch 3 — Media (client-side) — NEXT
-- [ ] `/audio` — trim, merge, speed, volume normalize (Web Audio + lamejs)
-- [ ] `/video-trim` — trim/mute/speed (ffmpeg.wasm, lazy-loaded)
-- [ ] `/gif` — video→GIF, GIF resize/compress
-- [ ] `/frame-grab` — video frame extractor → PNG
-- [ ] `/recorder` — screen recorder (getDisplayMedia + MediaRecorder), audio recorder
-- [ ] `/upscaler` — real super-resolution via WASM/WebGPU model; interim: high-quality resample + sharpen
+### Batch 3 — Media (client-side) — DONE 5 of 6 (see §9); /video-trim stays deferred
+- [x] `/audio` — trim, merge, speed, volume normalize (Web Audio + lamejs)
+- [ ] `/video-trim` — trim/mute/speed (ffmpeg.wasm, lazy-loaded) — DEFERRED (25 MB core; owner has not accepted the size)
+- [x] `/gif` — video→GIF, GIF resize/compress
+- [x] `/frame-grab` — video frame extractor → PNG
+- [x] `/recorder` — screen recorder (getDisplayMedia + MediaRecorder), audio recorder
+- [x] `/upscaler` — high-quality resample + unsharp mask (real model super-resolution still deferred)
 
-### Batch 4 — File tools deep + privacy
-- [ ] `/archive` extensions — TAR/tar.gz view+extract, GZip single files
-- [ ] `/file-tools` — splitter, merger, bulk renamer, extension changer, duplicate finder
-- [ ] `/encrypt` — AES-GCM file/text encryption via WebCrypto (password → key)
-- [ ] `/meta-scrub` — EXIF viewer + scrubber for photos
-- [ ] `/jwt` — JWT decode/inspect (local only)
-- [ ] `/hash-file-batch` — checksum list for many files, export .sha256
+### Batch 4 — File tools deep + privacy (DONE in the Kontivo round, commit 97d3acc)
+- [x] `/archive` extensions — TAR/tar.gz view+extract, GZip single files
+- [x] `/file-tools` — splitter, merger, bulk renamer, extension changer, duplicate finder
+- [x] `/encrypt` — AES-GCM file/text encryption via WebCrypto (password → key)
+- [x] `/meta-scrub` — EXIF viewer + scrubber for photos
+- [x] `/jwt` — JWT decode/inspect (local only)
+- [x] `/hash-file-batch` — checksum list for many files, export .sha256
 
-### Batch 5 — Dev & generators
-- [ ] `/cron` — cron expression parser with human schedule + next runs
-- [ ] `/convert-units` — units, number bases, Roman numerals
-- [ ] `/diff` — text diff checker (LCS, side-by-side)
-- [ ] `/lorem`, `/uuid`, `/fake-data` — generators
-- [ ] `/css-tools` — gradient, shadow, radius generators + previews
-- [ ] `/meta-tags` — OG/meta tag generator + preview
-- [ ] `/barcode` — Code128/EAN generation
-- [ ] `/wifi-qr` is already inside `/qr`; add QR **scanner** (camera) here
+### Batch 5 — Dev & generators (DONE: cron/diff/uuid/convert-units in the Kontivo round; the tail this round)
+- [x] `/cron` — cron expression parser with human schedule + next runs
+- [x] `/convert-units` — units, number bases, Roman numerals
+- [x] `/diff` — text diff checker (patience, side-by-side)
+- [x] `/lorem`, `/uuid`, `/fake-data` — generators (this round: lorem + fake-data)
+- [x] `/css-tools` — gradient, shadow, radius generators + previews (this round)
+- [x] `/meta-tags` — OG/meta tag generator + preview (this round)
+- [x] `/barcode` — Code128/EAN generation (this round)
+- [x] `/wifi-qr` is already inside `/qr`; QR **scanner** added as the Scan tab (camera + image decode, this round)
 
 ### Batch 6 — Session-tool polish (per owner feedback)
-- [ ] >15 min reconnect: DONE client-side (honest dead-end); consider relay-side session GC on wake
+- [x] >15 min reconnect: DONE client-side (honest dead-end); **relay-side session GC on wake DONE this round** (expired sessions + stale rooms swept right after boot restore, verified with a seeded store harness)
 - [ ] Session titles polish; folder share improvements; audio call quality
-- [ ] PWA: cache instant tool shells for offline use in sw.js
+- [x] PWA: cache instant tool shells for offline use in sw.js — DONE this round (v5 precaches 35 tool pages + their build assets at install; production-only, mirror-checked by QA)
 
 ### Deliberately deferred (heavy infra)
 - AI background removal, ffmpeg video conversion (model/codec download size)
@@ -431,3 +434,109 @@ reviewed, wired, fixed where needed, and verified from this session.
 Remaining checklist: Batch 5 tail (`/lorem`, `/fake-data`, `/css-tools`,
 `/meta-tags`, `/barcode`, QR scanner), Batch 6 polish (relay-side session GC
 on wake, PWA offline shells, /video-trim pending owner's 25 MB-core call).
+
+## 11. Batch 5 tail + Batch 6 polish (this run, 2026-11-24)
+
+**QA: 105/105 PASS, zero failures** (scripts/final-qa.sh via :81, run as
+PHASE=1 → PHASE=2 → PHASE=3 against the persistent boot server; the full
+single-shot run hit the 570 s command timeout mid-suite, which is a sandbox
+limit, not a product failure). Also verified: relay GC-on-wake end-to-end
+with a seeded disk store (scripts/relay-gc-verify.sh).
+
+What shipped (the whole remaining checklist except /video-trim):
+
+1. **/lorem — Placeholder Text Studio** (`instant/lorem-tool.tsx`): two
+   corpora (classic Latin Lorem Ipsum vocabulary + plain-English wireframe
+   bank), four shapes (paragraphs 3–7 sentences, sentences grouped 5/para,
+   bare words, bullet lists), the classic opening as a toggle, HTML mode
+   emitting one <p> per paragraph, and a seeded generator (xmur3 →
+   mulberry32) so the same seed always rebuilds identical text. QA: opens on
+   classic filler; different seeds rebuild different text.
+2. **/fake-data — Fake Data Studio** (`instant/fake-data-tool.tsx`): 12
+   toggleable fields × 6 name locales (EN/DE/FR/ES/IN/JP-romaji), locale-
+   shaped postcodes and legal suffixes, up to 500 records, CSV (quoted) +
+   JSON export, seeded. Reserved-space honesty by construction: e-mails only
+   @example.* (IANA), NANP phones only 555-01XX, other locales' numbers
+   undialable (leading 0 in international form), IPv4s only RFC 5737 blocks.
+   QA: example-domain records + 555-01 phones + export buttons verified.
+3. **/css-tools — CSS Style Studio** (`instant/css-tools-tool.tsx`): three
+   tabs — gradient (linear/radial/conic, up to 8 stops with position
+   sliders + native color pickers, angle + center point, 5 presets), box
+   shadow (up to 6 layers with inset/alpha, 5 presets), border radius (4
+   corners, link-all, 6 shape presets). Preview is styled by the same state
+   that emits the copied CSS (radius preview clamps to 100 px honestly).
+   QA: gradient emits 135deg CSS; shadow tab renders layered output.
+4. **/meta-tags — Meta Tag Studio** (`instant/meta-tags-tool.tsx`): title/
+   description/canonical/site/image + og:type, X card flavor, 7 locales,
+   robots, theme color; emits an ordered HTML-escaped <head> snippet; live
+   search-result, X-card and Open-Graph previews from the same fields;
+   ideal-length guidance (50–60 / 120–158) with exact distances. QA:
+   og:title + canonical land in the snippet; both previews render.
+5. **/barcode — Barcode Studio** (`instant/barcode-tool.tsx`, new dep
+   `jsbarcode` + `@types/jsbarcode`): Code 128 (ASCII 0–127, violations
+   reported by position) and EAN-13 rendered to SVG by JsBarcode; EAN-13
+   mod-10 check digit computed for 12 digits and verified for 13 with the
+   expected digit named on failure; bar width/height controls; SVG export
+   and 3× PNG export with white underlay. QA: check digit …1 appended for
+   400638133393; wrong digit refused by name. (The 107-pattern Code 128
+   table was deliberately NOT hand-typed from memory — a single wrong width
+   would produce unscannable bars.)
+6. **QR scanner — Scan tab inside /qr** (`instant/qr-scan-panel.tsx`):
+   camera mode (facing-mode back camera, device picker when several exist,
+   torch when the track supports it, 6 fps decode loop, honest permission/
+   no-camera errors) and image mode (drop/pick → decode); decoding prefers
+   the native BarcodeDetector and lazily falls back to jsQR (already in
+   deps); payloads parsed with real actions — URLs open, WIFI: reveals
+   SSID/password with a reveal toggle, VCARD unpacks fields, and a Kontivo
+   session link (/CODE) gets a one-tap Join session button; session-only
+   history (last 6). QA: **a real QR fixture (make-fixtures.mjs now builds
+   qr-sample.png encoding kontivo-scan-check-2026) decodes end-to-end in
+   the image tab**; camera idle state verified honestly (headless cannot
+   grant a camera).
+   **Product bug this QA caught**: useFilePick's hidden input had no
+   onChange — files picked through it never reached the decoder. Fixed in
+   instant-kit.tsx (the hook now takes onFiles and wires the change event
+   itself).
+7. **Relay session GC on wake** (`relay-service/index.ts`): the 10-minute
+   sweep only runs while the process is alive, so after a deploy/crash/
+   free-tier spin-down the boot restore could resurrect expired sessions
+   and stale rooms. The boot IIFE now GCs right after restoring: expired
+   sessions are deleted (memory + store), and rooms whose session is gone,
+   expired or closed are dropped (memory + store) instead of waiting out
+   the 2-hour empty-room TTL. Verified with scripts/relay-gc-verify.sh:
+   seeded disk store with an expired + a closed + a live session and three
+   rooms → boot logs "wake GC: dropped 0 expired session(s) and 2 stale
+   room(s)" (the disk loader filters expired session rows itself, the GC is
+   the second line of defense and the only one for stale rooms), /healthz
+   shows rooms:1 sessions:1, expired code 404s, live code 200s, and after
+   the 4 s debounce + SIGTERM flush the store file holds only the live
+   session's row/room plus the closed marker (kept by design so closed
+   codes answer "closed" until they expire).
+8. **PWA offline instant shells** (`public/sw.js`, VERSION bumped to
+   sow-shell-v5): install now precaches all 35 instant-tool pages (server
+   HTML + every /_next/static asset referenced by that HTML) one page at a
+   time — a flaky network degrades to fewer cached tools instead of failing
+   the install. Live-tool pages are deliberately NOT precached: a session
+   tool offline is a false promise. Navigations stay network-first, so the
+   cache only serves when the network is down. The INSTANT_TOOLS list is a
+   documented mirror of the registry and scripts/final-qa.sh asserts every
+   listed path answers 200 through the gateway (drift guard). Honest note:
+   the service worker registers in production builds only (sw-register.tsx
+   gates on NODE_ENV), so this path is verified by code review + syntax
+   check + the mirror assertion, not by a headless offline browser run.
+9. **Per-tool OG cards** regenerated (bun brand/build-og.mjs → 46 live
+   tools, including the 5 new ones); SEO titles/descriptions/FAQs + long
+   articles (~3.3k words) written for all five; icons (TextQuote,
+   TableProperties, Paintbrush, Tags, Barcode) added to the icon map.
+10. **QA suite repairs + growth**: fixed two pre-existing corrupted lines
+    (snap_hit missing space → /pdf-view search and /gif polls misfired as
+    command-not-found), added blocks 11q–11v (lorem, fake-data, css-tools,
+    meta-tags, barcode, /qr Scan) + the sw.js mirror check; warm-up list and
+    ALL_LIVE extended; fixtures gained qr-sample.png. Also fixed the phase-3
+    QR assertions to use ref-based tab clicks (find text "Scan" matched an
+    invisible node and never reached the pill).
+
+Ops: ~/.git-credentials was wiped by the recycle again; restored from the
+owner's PAT and pushes succeeded. Remaining checklist: session titles
+polish / folder share / audio call quality, /video-trim (owner's 25 MB call),
+AI background removal (deferred).

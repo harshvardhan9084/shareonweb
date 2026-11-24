@@ -9,7 +9,24 @@
 //
 // Bump VERSION whenever the precache list or a strategy changes; activation
 // deletes every older cache.
-const VERSION = 'sow-shell-v4'
+const VERSION = 'sow-shell-v5'
+
+// Instant tools open and run entirely in the browser, so their page shells
+// (the server HTML plus every /_next/static asset the HTML references) are
+// precached at install — after that, opening /zip, /qr or /json on a plane
+// actually works. Live-tool pages are deliberately NOT precached: a session
+// tool without a connection is a false promise, and those stay on the
+// network-first path with the honest offline fallback.
+// MIRROR RULE: this list must mirror the instant ids in src/lib/registry.ts;
+// scripts/final-qa.sh asserts every entry answers 200 through the gateway.
+const INSTANT_TOOLS = [
+  '/zip', '/image', '/hash', '/encode', '/json', '/text', '/password', '/qr',
+  '/pdf', '/pdf-view', '/pdf-text', '/images-to-pdf', '/office-view', '/epub-view',
+  '/audio', '/gif', '/frame-grab', '/recorder', '/upscaler',
+  '/archive', '/file-tools', '/encrypt', '/meta-scrub', '/jwt', '/hash-file-batch',
+  '/cron', '/diff', '/uuid', '/convert-units',
+  '/lorem', '/fake-data', '/css-tools', '/meta-tags', '/barcode',
+]
 
 const SHELL_ASSETS = [
   '/',
@@ -21,6 +38,25 @@ const SHELL_ASSETS = [
   '/icons/icon-maskable-512.png',
   '/icons/apple-touch-icon.png',
 ]
+
+/** Fetch a page, cache it, and cache every build asset its HTML references. */
+async function cacheToolShell(cache, path) {
+  const res = await fetch(new Request(path, { cache: 'reload' }))
+  if (!res.ok) return
+  await cache.put(path, res.clone())
+  const html = await res.text()
+  const assets = [...html.matchAll(/\/_next\/static\/[^"'\s\\]+/g)].map((m) => m[0])
+  for (const asset of new Set(assets)) {
+    try {
+      const hit = await cache.match(asset)
+      if (hit) continue
+      const fresh = await fetch(new Request(asset, { cache: 'reload' }))
+      if (fresh.ok) await cache.put(asset, fresh)
+    } catch {
+      /* a missing asset is a degraded shell, not a failed install */
+    }
+  }
+}
 
 const IMMUTABLE_PREFIXES = ['/_next/static/', '/icons/']
 const IMMUTABLE_EXACT = ['/favicon.svg', '/manifest.webmanifest']
@@ -34,6 +70,15 @@ self.addEventListener('install', (event) => {
       await Promise.allSettled(
         SHELL_ASSETS.map((asset) => cache.add(new Request(asset, { cache: 'reload' }))),
       )
+      // Instant-tool shells, one page at a time: a flaky network degrades to
+      // fewer cached tools instead of failing the whole install.
+      for (const path of INSTANT_TOOLS) {
+        try {
+          await cacheToolShell(cache, path)
+        } catch {
+          /* keep installing the rest */
+        }
+      }
       await self.skipWaiting()
     })(),
   )

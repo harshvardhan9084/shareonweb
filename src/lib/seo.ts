@@ -57,6 +57,11 @@ const SEO_TITLES: Record<string, string> = {
   diff: 'Text Diff — compare two texts line by line and export a patch that applies',
   uuid: 'ID Generator — UUID v4, UUID v7 and ULID in bulk, with an inspector',
   'convert-units': 'Unit Converter — 73 units, number bases and Roman numerals, exact and local',
+  lorem: 'Placeholder Text Studio — seeded Lorem ipsum and wireframe filler text, generated locally',
+  'fake-data': 'Fake Data Studio — realistic fake test records as CSV or JSON, reproducible from a seed',
+  'css-tools': 'CSS Style Studio — gradient, box-shadow and border-radius generators with live previews',
+  'meta-tags': 'Meta Tag Studio — Open Graph and X card tags with live search and social previews',
+  barcode: 'Barcode Studio — Code 128 and EAN-13 barcodes as SVG or PNG, checksum included',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -143,6 +148,16 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Generate UUID v4, UUID v7 and ULID in bulk from your browser’s crypto engine, with a monotonic ULID mode and an inspector that decodes versions, variants and embedded timestamps.',
   'convert-units':
     'Convert 73 units across 10 categories through exact published factors, switch numbers between bases 2–36 with two’s-complement views and read strict Roman numerals. All computed in your browser.',
+  lorem:
+    'Generate Lorem ipsum or plain-English wireframe filler as paragraphs, sentences, words or lists — seeded, so the same seed rebuilds the same text. HTML mode included, nothing uploaded.',
+  'fake-data':
+    'Generate up to 500 guaranteed-fake test records — names, e-mails, phones, addresses, companies across six locales — as CSV or JSON. Reserved-range honest, seeded, entirely in your browser.',
+  'css-tools':
+    'Build CSS gradients (linear, radial, conic), layered box shadows and per-corner border radius with live previews — copy the exact CSS you are looking at. Everything runs in your browser.',
+  'meta-tags':
+    'Build your page’s Open Graph, X card and search meta tags with live previews of the Google snippet, X card and Facebook card — escaped HTML output, length guidance, nothing uploaded.',
+  barcode:
+    'Generate scannable Code 128 and EAN-13 barcodes as vector SVG or 3× PNG, with real EAN-13 check-digit validation and adjustable bar width and height. Rendered locally, no watermark.',
 }
 
 /**
@@ -408,6 +423,10 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What can I put in a QR code here?',
       a: 'A link, plain text, a Wi-Fi network, or a contact card (vCard) that a phone camera saves straight into contacts.',
+    },
+    {
+      q: 'Can this page read a QR code too, not just draw one?',
+      a: 'Yes — the Scan tab reads codes from your camera or from an image you drop in. It decodes inside this tab (native BarcodeDetector when your browser has one, a bundled engine otherwise), and parsed payloads get real actions: links open, Wi-Fi payloads reveal their password, vCards unpack their fields, and a Kontivo session QR offers a one-tap join. Frames never leave the device.',
     },
   ],
   pdf: [
@@ -712,6 +731,106 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Does this tool run my job when the time comes?',
       a: 'No. It only computes when a schedule would fire — nothing executes here, no process starts and no notification is scheduled. It is a reading lamp for crontab lines: paste an expression from your server, check the next runs against your calendar, then fix or keep it. The per day/week/month load numbers are simulations over one representative window, and nothing is uploaded while you do any of it.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ lorem
+  lorem: [
+    {
+      q: 'Why does my text rebuild exactly the same every time?',
+      a: 'That is the seed working, not a bug. The generator hashes the seed string and drives every pick from it, so the same seed with the same settings always produces the identical text — which means a wireframe’s filler survives refreshes and a teammate who re-enters your seed sees exactly what you saw. Press the dice button (or type a new seed) for different text.',
+    },
+    {
+      q: 'What is the plain-English corpus for?',
+      a: 'Some prototypes go straight to stakeholders who find Latin distracting or fake-looking. The plain-English corpus is neutral interface vocabulary — sections, headers, controls, samples — so filler reads like wireframe copy instead of Lorem ipsum. Both corpora are hand-written word banks, not scraped text, and both are generated on this device.',
+    },
+    {
+      q: 'How do I get paragraphs wrapped in <p> tags?',
+      a: 'Flip on the “Wrap in <p> tags” switch — every paragraph is emitted as its own <p> element, one per line, ready to paste into HTML or a CMS block. The word and character counters strip the tags before counting, so the numbers reflect the visible text.',
+    },
+    {
+      q: 'Is the text real Latin?',
+      a: 'It is the classic Lorem Ipsum vocabulary — real Latin words, scrambled by centuries of typesetters into nonsense that reads like prose. That is the point: filler that looks like language but carries no meaning nobody has to fact-check. It is generated here, not fetched, so nothing is uploaded anywhere.',
+    },
+  ],
+
+  // -------------------------------------------------------------- fake-data
+  'fake-data': [
+    {
+      q: 'Can any of this data reach a real person?',
+      a: 'No, and that is by construction. E-mails use only the IANA-reserved example.com / example.net / example.org domains that cannot receive mail. North-American phones use the 555-01XX exchange that is officially reserved for fiction. Other locales’ numbers start with a digit that makes them invalid for international dialing, and IPv4s come from the RFC 5737 documentation blocks that are never routed on the public internet.',
+    },
+    {
+      q: 'What is the seed for?',
+      a: 'Reproducibility. The generator is deterministic: the same seed with the same locale and fields always rebuilds the identical dataset, so a bug report can say “row 14 of seed ktv29x breaks the form” and anyone can reproduce that exact row. Roll the dice for a fresh seed when you want new data instead.',
+    },
+    {
+      q: 'How many records can I generate?',
+      a: 'Up to 500 per run. The table shows the first 25 so the page stays fast; the CSV and JSON exports always contain the full set. Change the count field and the dataset rebuilds immediately — everything is generated in this tab at the speed of your device.',
+    },
+    {
+      q: 'Which fields can I export?',
+      a: 'Exactly the ones you toggled on. Every field switch (name, username, e-mail, phone, street, city, company, job, birthday, IP, user agent, color) shapes both the table and the CSV/JSON columns, so the export matches what your form or spreadsheet actually needs.',
+    },
+  ],
+
+  // -------------------------------------------------------------- css-tools
+  'css-tools': [
+    {
+      q: 'Does the preview show exactly the CSS I copy?',
+      a: 'Yes — that is the core rule of the page. The preview element is styled from the same state that generates the output block, so there is no rendering gap: what you see is byte-for-byte what lands in your stylesheet. The only deliberate difference is the radius preview clamping corners to 100 px so extreme values stay visible, while the copied CSS keeps the true numbers.',
+    },
+    {
+      q: 'How do multiple box-shadow layers work?',
+      a: 'Comma-separated shadows composite front to back — the first layer in the list paints on top. The layer list here writes in the same order, so adding a layer in the UI adds it to the front of the CSS list, and the preset “Ring + shadow” shows the technique: a zero-blur spread layer for the ring behind a soft blur layer for depth.',
+    },
+    {
+      q: 'What is the difference between radial and conic gradients?',
+      a: 'A radial gradient sweeps outward from a center point — good for glows and vignettes. A conic gradient sweeps around the center like a clock hand — good for color wheels, pie-chart washes and hard-edged angular stops. The controls adapt: radial and conic get a center point, conic additionally gets a start angle.',
+    },
+    {
+      q: 'Is there a color picker?',
+      a: 'Yes — every gradient stop and every shadow layer carries the browser’s native color picker plus an editable value field, so you can either pick visually or paste a hex (including #RRGGBBAA alpha values for shadows).',
+    },
+  ],
+
+  // -------------------------------------------------------------- meta-tags
+  'meta-tags': [
+    {
+      q: 'What lengths should the title and description be?',
+      a: 'Titles land best between 50 and 60 characters (results pages clamp near 70), descriptions between 120 and 158 (the clamp sits near 165). The counters under each field show your exact distance from those sweet spots as you type, and the search preview clamps the same way a results page does so you can see the cut before Google makes it.',
+    },
+    {
+      q: 'Why does the emitted HTML escape my quotes?',
+      a: 'Attribute values sit inside double quotes, so a title like 5" speakers would break out of the attribute and corrupt the tag. Every value is HTML-escaped — & becomes &amp;, " becomes &quot;, < and > become entities — which is exactly what browsers expect to read back. Your text displays correctly everywhere.',
+    },
+    {
+      q: 'What is the difference between the X card and the Open-Graph card?',
+      a: 'Facebook, LinkedIn and Slack read the og:* tags; X reads its own twitter:* tags and falls back to the Open-Graph values when they are missing. This page emits both sets so the same link unfurls properly everywhere, and the two previews show exactly what each platform will draw from your fields.',
+    },
+    {
+      q: 'Does this submit my URL to any service?',
+      a: 'No. The previews are drawn from your own fields inside this tab — nothing is fetched from a crawler, no validator is called, no URL is submitted anywhere. What you type never leaves the device.',
+    },
+  ],
+
+  // ---------------------------------------------------------------- barcode
+  barcode: [
+    {
+      q: 'Which format should I use?',
+      a: 'Code 128 when you get to choose: it takes any ASCII text — SKUs, serials, asset tags, short URLs — and stays compact. EAN-13 when the barcode is a retail product: it is the worldwide standard for consumer packages, encodes exactly 13 digits, and scanners expect its strict structure.',
+    },
+    {
+      q: 'What is the check digit, and what if mine is wrong?',
+      a: 'EAN-13 ends with a mod-10 check digit computed from the first twelve. Type 12 digits and the page computes and appends it for you; type all 13 and it verifies, naming the expected digit on mismatch. A wrong check digit means a scanner would reject the code at the till — the page refuses to draw it rather than handing you a broken barcode.',
+    },
+    {
+      q: 'Why does my text with an emoji or accent fail?',
+      a: 'Code 128 encodes ASCII 0–127 only. Characters outside that range — emoji, curly quotes, accented letters — are reported with their exact position instead of being silently mangled into a barcode that would not scan. Replace them with plain ASCII and the code renders.',
+    },
+    {
+      q: 'Should I download SVG or PNG?',
+      a: 'SVG for anything printed or sized after download: it is vector, so it stays sharp at any dimension. The PNG export renders at three times the display size with a white underlay — safe for slides, documents and screens where SVG support is awkward. Both are generated in this tab from the same rendering.',
     },
   ],
 
