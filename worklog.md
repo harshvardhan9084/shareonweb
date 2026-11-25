@@ -641,17 +641,17 @@ work through them 10 per run. Selection rules used for this list:
 - [x] `/grade` — GPA calculator, weighted grade, final-exam grade needed
 - [x] `/todo` — local checklist with localStorage persistence, filter + reorder
 
-### Batch R4 — image & format utilities
-- [ ] Image Toolkit modes: **crop, rotate, flip** added to the existing /image workbench (4-in-1)
-- [ ] `/meme` — top/bottom caption meme maker on your own images (canvas)
-- [ ] `/svg-convert` — SVG → PNG/JPG at chosen size and background
-- [ ] `/cipher` — ROT13/Caesar/Atbash/Vigenère with Caesar brute-force view
-- [ ] `/due-date` — pregnancy due date + weeks-progress (clear "not medical advice" framing)
-- [ ] `/word-frequency` — keyword density table + Flesch reading ease
-- [ ] `/vcard` — contact card builder → .vcf download + QR (reuses QR engine)
-- [ ] `/calendar-link` — event → Google/Outlook/Yahoo links + .ics download
-- [ ] `/px-rem` — px ↔ rem/em/% converter with configurable root size + clamp() builder
-- [ ] `/binary` — text ↔ binary/hex/octal/decimal (ASCII/UTF-8, live both ways)
+### Batch R4 — image & format utilities — DONE this run, 2026-11-25, QA-verified per tool (see §17)
+- [x] Image Toolkit modes: **crop, rotate, flip** added to the existing /image workbench (4-in-1)
+- [x] `/meme` — top/bottom caption meme maker on your own images (canvas)
+- [x] `/svg-convert` — SVG → PNG/JPG at chosen size and background
+- [x] `/cipher` — ROT13/Caesar/Atbash/Vigenère with Caesar brute-force view
+- [x] `/due-date` — pregnancy due date + weeks-progress (clear "not medical advice" framing)
+- [x] `/word-frequency` — keyword density table + Flesch reading ease
+- [x] `/vcard` — contact card builder → .vcf download + QR (reuses QR engine)
+- [x] `/calendar-link` — event → Google/Outlook/Yahoo links + .ics download
+- [x] `/px-rem` — px ↔ rem/em/% converter with configurable root size + clamp() builder
+- [x] `/binary` — text ↔ binary/hex/octal/decimal (ASCII/UTF-8, live both ways)
 
 ### Batch R5 — sound, body & misc calculators
 - [ ] `/sound-tools` — dB meter (mic), tone generator, guitar tuner (pitch detect), metronome (4-in-1)
@@ -916,3 +916,101 @@ both times restored from the owner's earlier fine-grained PAT (URL-style
 line, chmod 600) and both pushes used it. Next run: **Batch R4** per §13
 (image toolkit modes, meme, svg-convert, cipher, due-date, word-frequency,
 vcard, calendar-link, px-rem, binary).
+
+## 17. Batch R4 — §13 expansion continues (this run, 2026-11-25)
+
+This run shipped **Batch R4 — image & format utilities**: nine new tools
+(/meme, /svg-convert, /cipher, /due-date, /word-frequency, /vcard,
+/calendar-link, /px-rem, /binary) plus the Image Toolkit workbench extended
+from 3 to 6 modes (crop, rotate, flip added to compress/convert/resize) per
+the 4-in-1 rule. /video-trim, AI background removal and the R5 /heic
+size-acceptance flag stay untouched. Full pipeline per tool: registry entry
+with 8 SEO intents → component → instant-surface mount → long-form article →
+title/description/FAQs → app-icon mapping → sw precache (v9).
+
+**QA: 567 PASS / 0 FAIL** in the final tally, assembled across phase runs
+through the :81 gateway: PHASE=1 (22/0), PHASE=2 (34/0), PHASE=3 (103/0 after
+one cold-cache flake re-ran clean), PHASE=4 (146/0 own checks — middle region
++ R3 + the new **Batch R4 block, 21 browser checks, one real interaction per
+tool**), PHASE=5 (152/0 before its invocation timeout — all green where it
+reached), PHASE=8 (new sweeps-only phase: session flow re-run + ALL_LIVE
+74-page JSON-LD sweep + instant-body + sw mirror + landing + console sweep,
+110 checks, 0 fail). The R4 browser checks drive the real input path and
+assert computed facts: /cipher hello→uryyb (ROT13) and→svool (Atbash) with
+the 25-row Caesar brute panel, /binary Hi→01001000 01101001 and bytes→AB
+back, /px-rem 24px→1.5 rem and clamp(1rem, 2rem, 3rem), /due-date
+LMP 2026-01-01→2026-10-08 (conception 2026-01-01→2026-09-24 verified in the
+algorithm), the visible not-medical-advice line, /word-frequency the=3 at
+37.5% + numeric Flesch card, /calendar-link's Google TEMPLATE link + real
+ICS body with 20260301 + enabled download, /vcard FN:Ada Lovelace + QR data
+URL, /meme photo.png on an 800px canvas with download enabled, /svg-convert
+240×240→256×256 under aspect lock, and /image rotate-90 (480×360→360×480)
+plus crop 200×100 exactly. Every R4 page is in the warm list, ALL_LIVE sweep
+and the sw mirror (74 shells now).
+
+Shipped (all instant, 100% client-side):
+
+1. `/meme` — Impact-stack captions with stroke scaled to font size, two-line
+   midpoint wrap, auto-uppercase switch, a canvas-generated watermarked
+   sample so the tool works before any upload, watermark-free PNG download.
+2. `/svg-convert` — DOMParser sanitize (script/on*/external hrefs stripped,
+   Sanitized badge when it changed something), viewBox-derived defaults,
+   aspect-locked resize, transparent/white/black/custom backgrounds with
+   honest JPG-forces-white, 0.5–4× quick scales, live re-render.
+3. `/cipher` — ROT13/Caesar/Atbash/Vigenère, case and punctuation preserved,
+   key positions survive non-alpha, 25-row Caesar brute-force table with the
+   active shift highlighted (empty-key no-op named, ATTACKATDAWN/LEMON
+   vector verified by the builder).
+4. `/due-date` — Naegele 280d + (cycle−28) shift with an amber clamp note,
+   conception +266d with the notional-LMP gestational-age anchor, weeks/days
+   today, trimester, progress bar, five milestone dates, future/overdue/
+   past-42w states, "not medical advice" framing on the page.
+5. `/word-frequency` — Unicode-aware contraction-keeping tokenizer, top-20
+   density table with a default-off stopword switch, totals row, Flesch
+   reading ease + Flesch-Kincaid grade from a real syllable heuristic,
+   raw out-of-range scores kept with an honest note.
+6. `/vcard` — vCard 3.0 live preview, filled-fields-only emission, RFC
+   escaping, UTF-8 end to end, .vcf download named from the card, QR of the
+   full card regenerated on a 250 ms debounce, honest 3 cm scan tip.
+7. `/calendar-link` — Google/Outlook/Yahoo deep links each in that
+   provider's documented format (all-day semantics per provider, exclusive
+   end day), RFC 5545 .ics with real escaping + 75-octet UTF-8 folding,
+   deterministic UID so re-downloads replace instead of duplicating.
+8. `/px-rem` — px/rem/em/% answered together against configurable root and
+   em context, quick-reference grid live with the root, clamp() builder with
+   the inverted-bounds warning, 4-decimal zero-trimmed formatting.
+9. `/binary` — two-pane live-both-ways converter (binary/hex/octal/decimal),
+   UTF-8 with byte counts, strict ASCII that names the offending character
+   and position, forgiving grouping (spaces/newlines/commas/0x), invalid
+   sequences reported at the first bad byte with a hand-written WHATWG-
+   equivalent validator (E0→A0/F0→90/F4→8F bounds fixed during build).
+10. Image Toolkit — crop boxes are absolute pixels clamped per image so one
+    batch setting always lands; rotate is quarter-turns-only (no resample,
+    90/270 swap dims); flip is H/V/both with the "both = 180°" honesty note.
+
+**Real issues the QA caught and this run fixed (verified by re-run):**
+- Radix TabsTrigger ignores synthetic `.click()` — the /cipher Atbash and
+  Caesar tab switches never activated and the QA got "uryyb"/no-panel. The
+  checks now use focus + Enter keydown (the accessible activation path);
+  grade-tool's plain buttons were why its clicks always worked.
+- The /calendar-link Google-link assertion used an unquoted CSS attribute
+  selector with dots (`a[href*=calendar.google.com]`) — invalid CSS, the
+  same pitfall §16 already documented once; replaced with an `[href]` filter
+  + includes().
+- app-icon.tsx grew a duplicate `baby:` key (R4's due-date icon collided
+  with an existing one) — caught by tsc, deduped.
+- JSX degree-sign escapes (`{deg}\u00b0`) rendered literal `\u00b0` text in
+  the image workbench rotate control; fixed to real characters.
+- Ops: the box OOM-killed next-server during a full-route warm sweep
+  (4 GB box, ~2.5 GB RSS) and the :81 gateway itself was down once mid-run —
+  restarts handled; PHASE=8 was added to the QA script so the final sweeps
+  fit one invocation without re-running the verified browser middle.
+
+lint clean. sw.js bumped to sow-shell-v9 — **74 instant shells** precached,
+mirror sweep asserts all answer 200 through the gateway. No new
+dependencies (meme/svg use canvas 2D; vcard reuses the existing `qrcode`
+package).
+
+Next run: **Batch R5** per §13 (sound-tools 4-in-1, heic — owner-flagged,
+annotation, invoice-status, receipt, split-bill, aspect-ratio, dpi, ssl,
+invoice-number — minus anything the owner still has flagged).
