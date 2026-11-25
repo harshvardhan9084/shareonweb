@@ -18,7 +18,7 @@ export interface Faq {
 const SEO_TITLES: Record<string, string> = {
   share: 'Share — send text, files and folders between devices instantly',
   zip: 'Zip & Unzip — pack and unpack archives right in your browser',
-  image: 'Image Toolkit — compress, convert and resize images online free',
+  image: 'Image Toolkit — compress, convert, resize, crop, rotate and flip images online free',
   hash: 'Hash & Verify — MD5 and SHA-256 checksums for any file',
   encode: 'Base64 Encode & Decode — text and files, data URLs included',
   json: 'JSON Formatter — format, validate and minify with error positions',
@@ -92,6 +92,15 @@ const SEO_TITLES: Record<string, string> = {
   'time-card': 'Time Card Calculator — a week of punches into hours, overtime and gross pay, overnight-safe',
   grade: 'Grade Calculator — weighted grade, the final-exam solver and GPA on the 4.0 scale',
   todo: 'Local Checklist — a to-do list persisted in your browser only, filters, reorder, Markdown export',
+  meme: 'Meme Maker — top and bottom text memes on your own images, no watermark, no upload',
+  'svg-convert': 'SVG to PNG/JPG Converter — rasterize at any size and background, transparent supported',
+  cipher: 'Cipher Studio — ROT13, Caesar, Atbash and Vigenère with a Caesar brute-force view',
+  'due-date': 'Due Date Calculator — from LMP or conception, weeks pregnant, trimester, milestones',
+  'word-frequency': 'Word Frequency Counter — keyword density table plus Flesch reading ease',
+  vcard: 'vCard & QR Generator — contact card to .vcf download and a scannable QR code',
+  'calendar-link': 'Add to Calendar Links — Google, Outlook and Yahoo links plus a real .ics download',
+  'px-rem': 'px ⇄ rem Converter — px, rem, em and % at once, with a clamp() builder',
+  binary: 'Binary to Text Converter — text ↔ binary, hex, octal and decimal, live both ways',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -101,7 +110,7 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
   zip:
     'Pack files or a whole folder into a ZIP, or extract any archive with its structure intact. Runs entirely in your browser — nothing is ever uploaded.',
   image:
-    'Compress photos to a target size, convert between PNG, JPEG and WebP, resize whole batches. Processed locally by your browser — no uploads, no sign-up.',
+    'Compress photos to a target size, convert between PNG, JPEG and WebP, resize, crop, rotate and mirror whole batches. Processed locally by your browser — no uploads, no sign-up.',
   hash:
     'Get MD5, SHA-1, SHA-256 and SHA-512 checksums for any file or text, then verify against the published hash. Computed on your device, instantly.',
   encode:
@@ -248,6 +257,24 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Three grade calculators: weighted grade over your coursework, the score you need on the final (algebra printed, unreachable targets named), and GPA on the standard unweighted 4.0 scale from letters or percents.',
   todo:
     'A to-do list that lives in your browser only: Enter to add, click to tick, drag to reorder, filters and a Markdown export — persisted in localStorage, synced with nobody, deleted when you say so.',
+  meme:
+    'Turn your own picture into a classic top-and-bottom text meme: Impact-style captions, two-line wrapping, font-size control, watermark-free PNG download — rendered in your browser, nothing uploaded.',
+  'svg-convert':
+    'Rasterize SVG markup to PNG or JPG at any size and background: native, 2×, 4× or custom with aspect lock, transparent PNG supported, scripts stripped before render — all client-side.',
+  cipher:
+    'Encode and decode ROT13, Caesar, Atbash and Vigenère in one box — case and punctuation preserved, with a Caesar brute-force table showing all 25 shifts for unknown keys.',
+  'due-date':
+    'Estimate a pregnancy due date by Naegele’s rule from the last period (cycle-adjusted) or 266 days from conception — weeks pregnant today, trimester, progress and milestone dates. An estimate, not medical advice.',
+  'word-frequency':
+    'Paste text and get a live keyword density table with a stopword switch, totals and reading time, plus Flesch reading ease and Flesch-Kincaid grade level computed from your actual words.',
+  vcard:
+    'Build a contact card and export it as a real vCard 3.0 .vcf file plus a QR code of the same card — only filled fields, RFC-correct escaping, UTF-8 names, generated entirely on your device.',
+  'calendar-link':
+    'One event, every calendar: Google, Outlook and Yahoo deep links plus an RFC 5545 .ics with proper escaping and line folding. All-day events and exclusive end days handled exactly right.',
+  'px-rem':
+    'Convert px to rem, em and % at once against a configurable root and em context, with a quick-reference grid and a clamp() builder for fluid type — including the honest inverted-bounds warning.',
+  binary:
+    'Convert text to binary, hex, octal or decimal and back, live in both directions — UTF-8 with real byte counts or strict ASCII that names the first bad character, forgiving grouping.',
 }
 
 /**
@@ -429,6 +456,14 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'Which formats can I convert between?',
       a: 'PNG, JPEG and WebP in any direction, for one image or a whole batch, with a preview showing the real before/after size before you download.',
+    },
+    {
+      q: 'How does crop work for a batch of different-sized images?',
+      a: 'The box is absolute pixels — left, top, width, height — applied to every image and clamped to each image\u2019s own bounds, so one setting always produces a valid rectangle per file instead of erroring the batch.',
+    },
+    {
+      q: 'Does rotating blur the image?',
+      a: 'No — rotation is quarter turns only (90\u00b0, 180\u00b0, 270\u00b0), which move pixels without resampling them. Free-angle rotation would require interpolation and soften the image; this tool does not pretend otherwise. 90\u00b0 and 270\u00b0 swap the width and height.',
     },
   ],
   hash: [
@@ -1521,6 +1556,186 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What happens if the stored list is corrupted?',
       a: 'The page discards it and starts empty rather than crashing: the storage read validates every entry\'s shape and silently drops anything malformed. A checklist should survive a bad reload — that is why the read is defensive instead of trusting the blob.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- meme
+  meme: [
+    {
+      q: 'Is there a watermark?',
+      a: 'No. The download is exactly what the preview shows — your image and the captions, as a PNG at the image’s own resolution. No logo burned in, no paid tier that removes one, because there is no server charging rent on your picture.',
+    },
+    {
+      q: 'What if my caption is too long for the image?',
+      a: 'It wraps: a caption wider than the picture splits at the space that balances the two halves best, up to two lines per caption. A single word too wide to fit is drawn as-is rather than mangled — shrink the font and try again.',
+    },
+    {
+      q: 'Can I use a photo of a real person?',
+      a: 'That is your call, not a filter: the tool processes images and does not know or store what they contain. Follow the law and common decency for the pictures you caption — the tool has no server to implicate you, which is exactly why the responsibility stays with you.',
+    },
+    {
+      q: 'Why is there a sample image?',
+      a: 'So the tool works before you upload anything: the sample is drawn by the page itself on the canvas — a generated scene clearly marked as a sample — letting you try the captions and download path without dropping in a real photo.',
+    },
+  ],
+
+  // ------------------------------------------------------------ svg-convert
+  'svg-convert': [
+    {
+      q: 'Why does my SVG render smaller or larger than expected?',
+      a: 'The rasterizer uses the SVG’s own dimensions — its width/height attributes or its viewBox — as the starting size. If the markup has neither, the render falls back to a sane default and the size fields show it, so you can set the output box explicitly before downloading.',
+    },
+    {
+      q: 'Is rendering a foreign SVG safe?',
+      a: 'Script elements, on* attributes and external references are stripped from the markup before anything renders, and a badge appears when the stripping changed something. This is defense in depth on top of the browser’s own rule that an SVG drawn through an img element never executes scripts.',
+    },
+    {
+      q: 'Why is my JPG white where the design should be transparent?',
+      a: 'JPG has no transparency channel. A transparent background chosen with a JPG target is forced to white, and the page says so — PNG is the format that keeps transparency, and the selector keeps both honest.',
+    },
+    {
+      q: 'What does “2×” actually do?',
+      a: 'It multiplies the current output width and height, re-rendering from the vector source at the new size — so a 2× render is crisp curves redrawn, not a bitmap upscaled. 4× is the same deal; the pixels are computed fresh each time.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- cipher
+  cipher: [
+    {
+      q: 'Which cipher should I use?',
+      a: 'For fun and puzzles: any of them. ROT13 for the classic spoiler convention, Caesar when a shift is specified (or the brute-force table when it is not), Atbash for mirror-alphabet puzzles, Vigenère when someone says “use my keyword”. None of them are encryption — that is a feature of the genre, not a flaw of this page.',
+    },
+    {
+      q: 'How do I decode a Caesar message when I do not know the shift?',
+      a: 'Switch to Caesar and look at the brute-force panel: it lists all 25 shifts at once, and you read down the rows until English appears. No guessing, no math — the panel exists precisely for the “unknown shift” case.',
+    },
+    {
+      q: 'Does it handle punctuation, numbers and accents?',
+      a: 'Punctuation, digits and spaces pass through untouched — only A-Z and a-z transform. Accented characters (é, ü) are not in the cipher alphabets and pass through as-is too, so a French word stays legible rather than becoming garbage.',
+    },
+    {
+      q: 'Is ROT13 the same as Caesar?',
+      a: 'ROT13 is Caesar with the shift fixed at 13 — exactly half the 26-letter alphabet, making it self-inverse: applying it twice returns the original text. That is why the page gives it its own mode with no encode/decode toggle.',
+    },
+  ],
+
+  // --------------------------------------------------------------- due-date
+  'due-date': [
+    {
+      q: 'How accurate is this estimate?',
+      a: 'It is arithmetic, not foresight: the estimate is the midpoint of a window — roughly 80% of births happen between week 37 and 42. First-trimester ultrasound dating is more accurate than LMP math, and individual cycles vary. Treat the date as a conversation starter with your clinician.',
+    },
+    {
+      q: 'My cycle is not 28 days — does that matter?',
+      a: 'The rule assumes 28; the tool shifts the estimate by your cycle length minus 28 days, so a 32-day cycle moves it four days later. That adjustment is the standard convention, and the page tells you how many days it moved.',
+    },
+    {
+      q: 'Which mode should I use — LMP or conception?',
+      a: 'Last period if that is the date you know (it usually is); conception if you know it precisely, for example from fertility tracking. The two modes agree by construction: 280 days from LMP equals 266 from conception, two weeks apart.',
+    },
+    {
+      q: 'Is anything I enter stored or sent?',
+      a: 'No. The dates are picked, the arithmetic runs in this tab, and nothing is transmitted or remembered — a pregnancy date is exactly the kind of thing that should never need an upload to be calculated.',
+    },
+  ],
+
+  // ---------------------------------------------------------- word-frequency
+  'word-frequency': [
+    {
+      q: 'What counts as a “word”?',
+      a: 'A run of letters, digits, apostrophes or hyphens — so “don’t” is one word and “mother-in-law” is one word, not four. The tokenization is Unicode-aware, which keeps accented text and non-Latin scripts counted properly.',
+    },
+    {
+      q: 'What does the Flesch score actually measure?',
+      a: 'Two ratios: words per sentence and syllables per word. Short sentences and short words push the score up (easier); the label bins are the standard ones used by plain-language laws and readability research — 60–70 is roughly the range of ordinary newspaper prose.',
+    },
+    {
+      q: 'Why is my score above 100 or below 0?',
+      a: 'The formula is not clamped — a one-syllable word list scores over 100, dense legal prose can score under 0. The page shows the raw number with an honest label rather than faking a tidy range; the extremes carry information too.',
+    },
+    {
+      q: 'Is keyword density an SEO ranking factor?',
+      a: 'Not directly, and it has not been for many years — but density is still the fastest way to notice that a draft repeats one phrase into absurdity, or that the words you thought you were using are not actually on the page. Read it as a mirror, not a target.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ vcard
+  vcard: [
+    {
+      q: 'What is the difference between the .vcf and the QR?',
+      a: 'Same card, two carriers. The .vcf is a file any address book imports — attach it to an email or host it. The QR is the same vCard text encoded as an image: the other phone scans it with its camera and saves the contact. Neither needs an app on either side.',
+    },
+    {
+      q: 'Will non-English characters survive?',
+      a: 'Yes — the card is UTF-8 end to end, which vCard 3.0 supports properly. Accented names, CJK names and emoji in the note field all survive the export and the QR; the tool does not transliterate or mangle them.',
+    },
+    {
+      q: 'How big should I print the QR?',
+      a: 'A card with several fields is a dense QR — at business-card size, print it at least 3 cm across, more if it sits on glossy paper. The page would rather tell you the honest number than let a 1 cm QR fail in the field.',
+    },
+    {
+      q: 'Can I include my photo or logo?',
+      a: 'Not in this builder — vCard photo fields bloat the QR past the point where phone cameras scan it reliably. The card here keeps to the fields that scan well: name, org, title, phone, email, web, note.',
+    },
+  ],
+
+  // ----------------------------------------------------------- calendar-link
+  'calendar-link': [
+    {
+      q: 'Which link should I share?',
+      a: 'Whatever your audience uses: Google Calendar’s link for Gmail and Android users, Outlook.com’s for Microsoft accounts, Yahoo’s for Yahoo Calendar. For everyone else — Apple Calendar, Thunderbird, anything standards-based — the .ics file is the universal answer, which is why the page provides both.',
+    },
+    {
+      q: 'What is an “all-day” event, technically?',
+      a: 'A date-bounded event with no time component, whose end day is exclusive: a one-day event on the 5th runs from the 5th to the 6th. That exclusive end is where hand-built calendar files go wrong, and it is handled per provider here because each provider spells it differently.',
+    },
+    {
+      q: 'Why does the .ics preview show times without a Z?',
+      a: 'The file uses floating local time — RFC 5545’s form-one datetime — so the event lands at the wall-clock time you typed regardless of the recipient’s time zone. The deep links carry the absolute UTC instant instead; each format does the job it is best at.',
+    },
+    {
+      q: 'Does re-downloading a corrected event duplicate it?',
+      a: 'No — the UID is derived deterministically from the event’s title and start, so re-importing an edited version updates the existing calendar entry instead of adding a second one. It is a small detail that saves real annoyance.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- px-rem
+  'px-rem': [
+    {
+      q: 'Why does my rem value look wrong in the browser?',
+      a: 'Check the root size: 1 rem is whatever the html element’s font-size is, and user stylesheets, accessibility settings or a CSS reset may have moved it off 16. Set the root field here to your actual root and the numbers will match what the browser computes.',
+    },
+    {
+      q: 'What is the difference between rem and em here?',
+      a: 'rem resolves against the root font-size always; em resolves against the element’s own context — which in this tool is the separate context field. Same number, different base: that is why the converter asks for both instead of guessing one.',
+    },
+    {
+      q: 'When should I use the clamp() builder?',
+      a: 'When a size should flex between two bounds as the viewport changes — most commonly type. The builder emits clamp(min, ideal, max) with your units; keep min below max or the browser will not interpolate, which the page warns about rather than letting you ship a frozen value.',
+    },
+    {
+      q: 'How precise are the conversions?',
+      a: 'Exact to four decimals with trailing zeros trimmed — 24px at root 16 is 1.5rem, not 1.5000. Sub-pixel values like 4px are 0.25rem exactly; there is no hidden rounding to make output look tidy.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- binary
+  binary: [
+    {
+      q: 'Why does one character turn into several byte groups?',
+      a: 'UTF-8 encodes characters beyond ASCII as multi-byte sequences: an emoji is four bytes, most CJK characters three, accented Latin two. The byte count under the panes says exactly how many — the tool shows the real encoding rather than pretending one character is always one byte.',
+    },
+    {
+      q: 'Why does my binary paste fail to decode?',
+      a: 'Most likely the byte sequence is not valid UTF-8 — every 8-bit group is a byte, but not every sequence decodes to a character. The tool validates the sequence and reports the first bad byte instead of printing replacement characters; check for a truncated copy or a wrong base.',
+    },
+    {
+      q: 'What separators does the byte input accept?',
+      a: 'Spaces, newlines and commas, freely mixed; hex groups may carry a leading 0x. Real-world bytes arrive messy, so the parser is forgiving about grouping and strict about the digits themselves — a stray letter in a binary group is named with its position.',
+    },
+    {
+      q: 'What is ASCII mode for?',
+      a: 'Strictness: it refuses any character above 127, naming the exact character and its position — the right mode when the target system genuinely only speaks ASCII (many protocols, labels and legacy formats), where a silent é would produce bytes the other end cannot read.',
     },
   ],
 

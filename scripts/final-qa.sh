@@ -53,6 +53,8 @@ case "$PHASE" in
              "/beautify" "/favicon" "/watermark" "/typing-test" "/markdown" \
              "/stats" "/number-to-words" "/morse" "/font-changer" "/emoji" \
              "/json-to-ts" "/compress-pdf" "/time-card" "/grade" "/todo" \
+             "/meme" "/svg-convert" "/cipher" "/due-date" "/word-frequency" \
+             "/vcard" "/calendar-link" "/px-rem" "/binary" \
              "/beam" "/call"; do
       printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
     done
@@ -60,7 +62,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -359,6 +361,11 @@ fi
 # the final section 20 + console sweep + tally, so the last checks never
 # blow the invocation timeout on a slow box.
 if [ "$PHASE" != "7" ]; then
+
+# PHASE=8 skips the (already verified in this run) 11g→R4 browser region and
+# runs only the ALL_LIVE JSON-LD sweep, the instant-body check, the sw mirror
+# and the final landing + console sweep, so the sweeps fit one invocation.
+if [ "$PHASE" != "8" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -878,7 +885,7 @@ agent-browser close > /dev/null 2>&1
 
 if [ "$PHASE" = "3" ]; then
   echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
-  echo "== RESULT (phase 3): $pass passed, $fail failed — run PHASE=4 for Batch R3 + the final sweeps =="
+  echo "== RESULT (phase 3): $pass passed, $fail failed — run PHASE=4 for Batches R3+R4 + the final sweeps =="
   exit 0
 fi
 
@@ -999,11 +1006,150 @@ tdPersist=$(agent-browser eval "(() => { const raw = window.localStorage.getItem
 echo "$tdPersist" | rg -q 'yes' && ok "/todo persists the item to localStorage" || bad "/todo persist: $tdPersist"
 agent-browser close > /dev/null 2>&1
 
+# 11u6. Batch R4 — image & format utilities (one real interaction per tool)
+
+# /cipher: ROT13 default encodes hello → uryyb; Atbash flips to svool; brute panel has 25 rows
+open_page "http://localhost:81/cipher"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ciRes=$(agent-browser eval "(() => { const el = document.getElementById('cipher-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, 'hello'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+ciOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=cipher-out]'); return el && el.textContent.trim() === 'uryyb' ? 'yes' : (el ? el.textContent.trim().slice(0, 40) : 'no-out') })()" 2>/dev/null)
+echo "$ciOut" | rg -q 'yes' && ok "/cipher ROT13 encodes hello as uryyb" || bad "/cipher rot13: $ciOut"
+ciAb=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Atbash'); if (!b) return 'no-tab'; b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'keyed' })()" 2>/dev/null)
+sleep 1
+ciAt=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=cipher-out]'); return el && el.textContent.trim() === 'svool' ? 'yes' : (el ? el.textContent.trim().slice(0, 40) : 'no-out') })()" 2>/dev/null)
+echo "$ciAt" | rg -q 'yes' && ok "/cipher Atbash encodes hello as svool" || bad "/cipher atbash: $ciAt"
+ciBr=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Caesar'); if (!b) return 'no-tab'; b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'keyed' })()" 2>/dev/null)
+sleep 1
+ciRows=$(agent-browser eval "(() => { const p = document.querySelector('[data-testid=caesar-brute]'); return p ? String(p.textContent.split('Shift').length - 1) : 'no-panel' })()" 2>/dev/null)
+echo "$ciRows" | rg -q '25' && ok "/cipher Caesar brute-force shows 25 shifts" || bad "/cipher brute: $ciRows"
+agent-browser close > /dev/null 2>&1
+
+# /binary: Hi → binary bytes; binary bytes typed back → text
+open_page "http://localhost:81/binary"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+biSet=$(agent-browser eval "(() => { const el = document.getElementById('binary-text'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, 'Hi'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+biOut=$(agent-browser eval "(() => { const el = document.getElementById('binary-base'); return el && el.value.trim() === '01001000 01101001' ? 'yes' : (el ? el.value.trim().slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$biOut" | rg -q 'yes' && ok "/binary encodes Hi as UTF-8 byte groups" || bad "/binary encode: $biOut"
+biBack=$(agent-browser eval "(() => { const el = document.getElementById('binary-base'); if (!el) return 'no-el'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, '01000001 01000010'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+biTxt=$(agent-browser eval "(() => { const el = document.getElementById('binary-text'); return el && el.value === 'AB' ? 'yes' : (el ? 'got:' + el.value.slice(0, 20) : 'no-el') })()" 2>/dev/null)
+echo "$biTxt" | rg -q 'yes' && ok "/binary decodes bytes back to AB live" || bad "/binary decode: $biTxt"
+agent-browser close > /dev/null 2>&1
+
+# /px-rem: 24px at root 16 shows 1.5 rem; clamp builder emits exact CSS
+open_page "http://localhost:81/px-rem"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+prSet=$(agent-browser eval "(() => { const el = document.getElementById('pxrem-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '24'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+prOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=pxrem-result]'); return el && el.textContent.includes('1.5 rem') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$prOut" | rg -q 'yes' && ok "/px-rem converts 24px to 1.5 rem at root 16" || bad "/px-rem conv: $prOut"
+prClamp=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=clamp-out]'); return el && el.textContent.trim() === 'clamp(1rem, 2rem, 3rem)' ? 'yes' : (el ? el.textContent.trim().slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$prClamp" | rg -q 'yes' && ok "/px-rem clamp builder emits clamp(1rem, 2rem, 3rem)" || bad "/px-rem clamp: $prClamp"
+agent-browser close > /dev/null 2>&1
+
+# /due-date: LMP 2026-01-01 → 2026-10-08, honest not-medical-advice framing
+open_page "http://localhost:81/due-date"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ddSet=$(agent-browser eval "(() => { const el = document.getElementById('dd-lmp'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '2026-01-01'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+ddOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=dd-due]'); return el && el.textContent.includes('2026-10-08') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$ddOut" | rg -q 'yes' && ok "/due-date computes LMP 2026-01-01 as due 2026-10-08" || bad "/due-date naegele: $ddOut"
+ddNote=$(agent-browser eval "(() => { const t = document.body.textContent.toLowerCase(); return t.includes('not medical advice') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$ddNote" | rg -q 'yes' && ok "/due-date carries the not-medical-advice framing" || bad "/due-date framing: $ddNote"
+agent-browser close > /dev/null 2>&1
+
+# /word-frequency: the cat sat on the mat the end → the=3 at 37.5% density
+open_page "http://localhost:81/word-frequency"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+wfSet=$(agent-browser eval "(() => { const el = document.getElementById('wf-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, 'the cat sat on the mat the end.'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+wfRow=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=wf-table]'); if (!el) return 'no-table'; const t = el.textContent; return (t.includes('the') && t.includes('37.5')) ? 'yes' : 'row:' + t.slice(0, 80) })()" 2>/dev/null)
+echo "$wfRow" | rg -q 'yes' && ok "/word-frequency counts the=3 at 37.5% density" || bad "/word-frequency density: $wfRow"
+wfFl=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=flesch-score]'); return el && /[0-9]/.test(el.textContent) ? 'yes' : (el ? 'nonum' : 'no-el') })()" 2>/dev/null)
+echo "$wfFl" | rg -q 'yes' && ok "/word-frequency Flesch card renders a numeric score" || bad "/word-frequency flesch: $wfFl"
+agent-browser close > /dev/null 2>&1
+
+# /calendar-link: Test Event 2026-03-01 10:00-11:00 → Google link + real ICS preview
+open_page "http://localhost:81/calendar-link"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+clSet=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('cl-title', 'Test Event'); const b = set('cl-start', '2026-03-01T10:00'); const c = set('cl-end', '2026-03-01T11:00'); return a && b && c ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+clG=$(agent-browser eval "(() => { const a = [...document.querySelectorAll('a[href]')].find(x => x.href.includes('calendar.google.com') && x.href.includes('action=TEMPLATE')); return a ? 'yes' : 'no-link' })()" 2>/dev/null)
+echo "$clG" | rg -q 'yes' && ok "/calendar-link builds a Google TEMPLATE link" || bad "/calendar-link google: $clG"
+clIcs=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=ics-preview]'); return el && el.textContent.includes('BEGIN:VCALENDAR') && el.textContent.includes('DTSTART') && el.textContent.includes('20260301') ? 'yes' : (el ? 'ics:' + el.textContent.slice(0, 80) : 'no-el') })()" 2>/dev/null)
+echo "$clIcs" | rg -q 'yes' && ok "/calendar-link renders a real ICS body for the event" || bad "/calendar-link ics: $clIcs"
+clBtn=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Download .ics')); return b && !b.disabled ? 'enabled' : (b ? 'disabled' : 'missing') })()" 2>/dev/null)
+echo "$clBtn" | rg -q 'enabled' && ok "/calendar-link download button enabled once valid" || bad "/calendar-link btn: $clBtn"
+agent-browser close > /dev/null 2>&1
+
+# /vcard: Ada Lovelace → vCard preview + live QR image
+open_page "http://localhost:81/vcard"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+vcSet=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('vc-first', 'Ada'); const b = set('vc-last', 'Lovelace'); return a && b ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+vcPrev=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=vc-preview]'); return el && el.textContent.includes('BEGIN:VCARD') && el.textContent.includes('FN:Ada Lovelace') ? 'yes' : (el ? 'prev:' + el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$vcPrev" | rg -q 'yes' && ok "/vcard renders the FN:Ada Lovelace vCard body" || bad "/vcard preview: $vcPrev"
+vcQr=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=vc-qr]'); return el && (el.getAttribute('src') || '').startsWith('data:image/png') ? 'yes' : (el ? 'src:' + (el.getAttribute('src') || '').slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$vcQr" | rg -q 'yes' && ok "/vcard generates the QR image of the card" || bad "/vcard qr: $vcQr"
+agent-browser close > /dev/null 2>&1
+
+# /meme: photo.png uploaded through the real input path, canvas sized, download present
+open_page "http://localhost:81/meme"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/photo.png" > /dev/null 2>&1
+sleep 2
+mmTop=$(agent-browser eval "(() => { const el = document.getElementById('meme-top'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, 'QA TOP TEXT'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+mmCanvas=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=meme-canvas]'); return c && c.width >= 400 ? 'yes:' + c.width : (c ? 'w:' + c.width : 'no-canvas') })()" 2>/dev/null)
+echo "$mmCanvas" | rg -q 'yes' && ok "/meme renders the uploaded photo on the caption canvas" || bad "/meme canvas: $mmCanvas"
+mmBtn=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Download')); return b && !b.disabled ? 'enabled' : (b ? 'disabled' : 'missing') })()" 2>/dev/null)
+echo "$mmBtn" | rg -q 'enabled' && ok "/meme download button enabled after load" || bad "/meme btn: $mmBtn"
+agent-browser close > /dev/null 2>&1
+
+# /svg-convert: sample renders 240×240; width 256 with aspect lock rescales height
+open_page "http://localhost:81/svg-convert"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "px" --timeout 40000 > /dev/null 2>&1
+sleep 2
+svDims=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=svg-dims]'); return el && el.textContent.includes('240 × 240 px') ? 'yes' : (el ? 'dims:' + el.textContent.trim().slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$svDims" | rg -q 'yes' && ok "/svg-convert renders the sample at 240 × 240 px" || bad "/svg-convert dims: $svDims"
+svSet=$(agent-browser eval "(() => { const el = document.getElementById('svg-w'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '256'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 2
+sv256=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=svg-dims]'); return el && el.textContent.includes('256 × 256 px') ? 'yes' : (el ? 'dims:' + el.textContent.trim().slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$sv256" | rg -q 'yes' && ok "/svg-convert aspect-locked resize lands on 256 × 256 px" || bad "/svg-convert resize: $sv256"
+svBtn=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Download')); return b && !b.disabled ? 'enabled' : (b ? 'disabled' : 'missing') })()" 2>/dev/null)
+echo "$svBtn" | rg -q 'enabled' && ok "/svg-convert download enabled after render" || bad "/svg-convert btn: $svBtn"
+agent-browser close > /dev/null 2>&1
+
+# /image: rotate 90° swaps 480×360 to 360×480; crop 200×100 lands exactly
+open_page "http://localhost:81/image"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/photo.png" > /dev/null 2>&1
+sleep 2
+imRot=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Rotate'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+imRun=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Process now')); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 3
+imDims=$(agent-browser eval "(() => { const t = document.body.textContent; return t.includes('360×480') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$imDims" | rg -q 'yes' && ok "/image rotate 90 swaps 480×360 to 360×480" || bad "/image rotate: $imDims"
+imCrop=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Crop'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+imBox=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('img-crop-w', '200'); const b = set('img-crop-h', '100'); return a && b ? 'set' : 'missing' })()" 2>/dev/null)
+imRun2=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Process now')); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 3
+imCropOut=$(agent-browser eval "(() => { const t = document.body.textContent; return t.includes('200×100') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$imCropOut" | rg -q 'yes' && ok "/image crop 200×100 lands exactly" || bad "/image crop: $imCropOut"
+agent-browser close > /dev/null 2>&1
+
 if [ "$PHASE" = "4" ]; then
   echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
   echo "== RESULT (phase 4): $pass passed, $fail failed — run PHASE=5 for the final sweeps =="
   exit 0
 fi
+
+fi  # end the PHASE!=8 skip wrapper around the 11g→R4 region
 
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
@@ -1059,7 +1205,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

@@ -53,7 +53,7 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
   // ------------------------------------------------------------------ image
   image: {
     lede: [
-      'Image Toolkit is one workbench for the three things photos always need: compress to a target size or quality, convert between PNG, JPEG and WebP, and resize by pixels or percentage, in batches.',
+      'Image Toolkit is one workbench for the six things images always need: compress to a target size or quality, convert between PNG, JPEG and WebP, resize by pixels or percentage, crop to an absolute pixel box, rotate in quarter turns, and mirror horizontally or vertically — in batches.',
       'Every pixel is processed on this device with the browser\u2019s own encoder. Your photos are never uploaded to anyone: there is no upload step, so there is no upload risk, just the work, done in seconds, where the files already are.',
     ],
     sections: [
@@ -66,6 +66,14 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
         ],
       },
       {
+        heading: 'Crop, rotate and flip — the framing jobs',
+        paragraphs: [
+          'Crop takes an absolute pixel box — left, top, width, height — and applies it to every image in the batch, clamped to each image\u2019s own bounds so one setting always yields a valid rectangle per file. The clamping is stated, not silent: a box wider than the image crops to the image, it does not error the batch.',
+          'Rotate is quarter turns only — 90°, 180°, 270° — because quarter turns move pixels without resampling them: no blur, no interpolation softening, exactly the pixels you dropped in, rearranged. 90° and 270° swap the width and height, and the output preview reports the new dimensions.',
+          'Flip mirrors horizontally, vertically or both (both at once is a 180° rotation, and the page says so rather than pretending they differ). Together with crop, the framing jobs cover the pre-processing every screenshot, scan and marketplace photo needs before it is useful.',
+        ],
+      },
+      {
         heading: 'When it is the right workbench',
         paragraphs: [
           'Photo sites want accounts and watermark the free tier. This page fits the jobs that are yours alone.',
@@ -74,6 +82,8 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
           'Shrink photos to an exact size a form demands',
           'Convert a batch of PNGs to WebP to make a site faster',
           'Resize images for a marketplace listing or a visa application',
+          'Crop a screenshot to the region that matters before pasting it into docs',
+          'Straighten a scanned page a quarter turn and mirror it the way it needs',
           'Reduce a camera roll before sending it over a metered connection',
         ],
       },
@@ -2338,6 +2348,338 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
         heading: 'The export that matters',
         paragraphs: [
           'Copy as Markdown emits a GitHub-flavored task list — `- [x] done item` — ready to paste into an issue, a pull request description, or any note app that renders checklists. The one export a developer to-do list actually needs is one click away, and the copy includes the done-state, because the point of the export is to carry the list, not just the words.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- meme
+  meme: {
+    lede: [
+      'Meme Maker does the one layout the internet actually agreed on: your picture, a caption on top, a caption on the bottom, white letters with a black outline. It renders on a canvas in this tab and downloads a clean PNG with no watermark, no account, and no upload.',
+      'The details that make a meme look right are handled: the Impact-style type, the outline thickness scaled to the font size, uppercasing you can switch off, and long captions that wrap to two lines instead of running off the edge of the picture.',
+    ],
+    sections: [
+      {
+        heading: 'How the canvas works',
+        paragraphs: [
+          'Drop in a picture (PNG, JPEG or WebP) or load the built-in sample to try the controls. The image is drawn at its own resolution up to a sensible maximum, captions render live as you type, and the download is exactly what the preview shows — a PNG at the image\u2019s own size.',
+          'Long captions wrap: if a line would overflow the image, it splits at the space that balances the two halves best, with up to two lines per caption. A single word too wide to fit is drawn as-is rather than mangled — the honest failure for a word you clearly want at that size.',
+          'The font-size slider changes the type, not the image, so a small caption on a big photo and a big caption on a small photo both stay readable.',
+        ],
+      },
+      {
+        heading: 'Where memes are usually ruined',
+        paragraphs: [
+          'The classic failure modes are all site-shaped: watermarks on the free tier, forced signups, images uploaded to someone else\u2019s server, and captions that re-encode the photo into a smaller, blurrier version of itself. Each one is a reason people keep screenshotting instead of using a meme site.',
+        ],
+        list: [
+          'A caption a friend asked for, on a photo that never leaves your machine',
+          'An inside-joke image for a group chat, made between meetings',
+          'A labeled screenshot — top text for the setup, bottom for the punchline',
+          'Quick annotated pictures for a team channel, no design tool opened',
+        ],
+      },
+      {
+        heading: 'What happens to your image',
+        paragraphs: [
+          'The picture is decoded, drawn and re-encoded inside this tab by the browser\u2019s own canvas engine. No request carries your pixels; there is no server in the loop, so nothing can log, retain or use the image. Close the tab and the memory goes back.',
+          'The built-in sample image is drawn by the page itself — a generated scene clearly watermarked as a sample — so the tool can be tried without dropping in a real photo first.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------ svg-convert
+  'svg-convert': {
+    lede: [
+      'SVG to PNG/JPG rasterizes vector markup into a bitmap at exactly the size you need: the native size, 2×, 4×, or a custom box with the aspect ratio locked, onto a transparent, white, black or custom background.',
+      'Paste the markup or drop an .svg file — the render updates live as you edit, and the download is the canvas you previewed, nothing more.',
+    ],
+    sections: [
+      {
+        heading: 'Why rasterize an SVG at all',
+        paragraphs: [
+          'SVG is the right format for icons and logos, but the world runs on bitmaps: marketplaces want PNGs, forms want JPGs, avatars want square 512-pixel files, and some tool from 2013 accepts nothing else. Converting is the bridge — done at the exact target size, where upscaling a small PNG would have blurred, rendering the vector fresh at 4× stays crisp.',
+          'That is the whole advantage of rasterizing from the vector source: every scale is a fresh render, not a resample of an old bitmap. An icon rendered at 16 and at 512 come from the same crisp curves.',
+        ],
+      },
+      {
+        heading: 'The security bit, handled',
+        paragraphs: [
+          'SVG is XML, and XML can carry more than shapes: script elements, event-handler attributes, external references. Before anything renders, the markup is parsed and stripped of script nodes, on* attributes and hrefs that point anywhere but inside the document — and when that stripping changed anything, the page shows a badge saying so.',
+          'This is defense in depth on top of what browsers already do (an SVG drawn into a canvas via an img element never executes scripts), but defense in depth is the only kind worth having when the input is markup you found somewhere.',
+        ],
+      },
+      {
+        heading: 'Formats and backgrounds',
+        paragraphs: [
+          'PNG keeps transparency; JPG does not, so a transparent background chosen with a JPG target is honestly forced to white, with a note saying so rather than a black surprise. The JPG quality slider runs from 30 to 95, and the readout always names the exact output dimensions — what you set is what downloads.',
+        ],
+        list: [
+          'Icons rendered fresh at 512×512 for an app store listing',
+          'A logo exported onto white for a print shop that cannot take SVG',
+          'A diagram scaled 4× for a slide deck without blur',
+          'An avatar square-cropped by aspect-locked resizing',
+        ],
+      },
+      {
+        heading: 'What happens to your file',
+        paragraphs: [
+          'Parsing, sanitizing, rendering and encoding all happen in this tab. The markup and the output bitmap never leave the device — there is no upload step to trust, because there is no upload.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- cipher
+  cipher: {
+    lede: [
+      'Cipher Studio puts the four classical letter ciphers — ROT13, Caesar, Atbash and Vigenère — in one box, with the one feature that makes Caesar actually useful: a brute-force view that shows all 25 shifts at once, so an unknown shift is read, not guessed.',
+      'Case and punctuation survive every transform. Letters transform, everything else passes through, and the output reads like the input — which is exactly what makes a decoded message readable instead of a chore.',
+    ],
+    sections: [
+      {
+        heading: 'The four ciphers, precisely',
+        paragraphs: [
+          'ROT13 shifts letters by thirteen — the forum-spoiler classic, self-inverse, so the same button encodes and decodes. Caesar takes any shift 1–25 with an encode/decode toggle. Atbash mirrors the alphabet, A to Z and Z to A, also self-inverse. Vigenère uses a repeating key with the full tabula recta — the A=0 convention — encoding and decoding with key positions that survive punctuation, the way the cipher is actually specified.',
+          'The brute-force panel is the part most Caesar pages skip: all 25 shifts of your input, listed as rows, with the row matching your current shift highlighted. If you paste a message of unknown shift, you do not need to know the shift — you read down the rows until English appears.',
+          'These ciphers are math on letters, not security. They are for spoilers, puzzles, games and teaching — the page does not pretend otherwise, and that honesty is the point.',
+        ],
+      },
+      {
+        heading: 'Where this is actually used',
+        paragraphs: [
+          'Classical ciphers refuse to die because they are the right tool for tiny jobs: hiding a punchline below the fold, running a puzzle for a classroom, exchanging not-really-secret notes for fun, or teaching a child how a shift cipher works with sliders they can move.',
+        ],
+        list: [
+          'Decode the ROT13 spoiler without a browser extension or a search',
+          'Solve a puzzle-hunt clue that says "Caesar, unknown shift" in one paste',
+          'Teach what Vigenère does by typing the same message with different keys',
+          'Encode a message atbash-style for a game or a kid\u2019s treasure hunt',
+        ],
+      },
+      {
+        heading: 'What happens to your text',
+        paragraphs: [
+          'The transforms are arithmetic on character codes, done in this tab as you type. Nothing is sent anywhere — there is not even an interesting reason to send it. The output copies in one click.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- due-date
+  'due-date': {
+    lede: [
+      'Due Date Estimator does the arithmetic a clinic does: from the first day of the last period it adds 280 days — Naegele\u2019s rule — adjusted for your actual cycle length; from a known conception date it adds 266 days. Then it fills in the rest of the picture: weeks pregnant today, trimester, days remaining, and the standard milestones as real dates.',
+      'The framing is the feature: this is an estimate, not a prediction, and not medical advice. The page says so where you can see it, because a due date is a midpoint of a range, not a deadline.',
+    ],
+    sections: [
+      {
+        heading: 'How the estimate is computed',
+        paragraphs: [
+          'The last-period mode adds 280 days to the LMP date and shifts by your cycle length minus 28 — a 32-day cycle moves the estimate four days later, and the page says by how much. The conception mode adds 266 days, and keeps gestational age consistent by anchoring to a notional LMP two weeks earlier, so the weeks-and-days figure matches the obstetric convention instead of contradicting it.',
+          'Pure date arithmetic drives everything — no month-length hand-waving — so a date picked today and the same date picked next month produce the same estimate, and the milestones land where the math says they do: end of the first trimester at week 12, halfway at 20, viability at 24, early term at 37, due at 40.',
+        ],
+      },
+      {
+        heading: 'What the progress view tells you',
+        paragraphs: [
+          'The card computes gestational age today — weeks and days — the current trimester, days remaining, and a progress bar across the 280 days. Edge states are handled honestly: a future LMP is flagged rather than producing negative weeks, the due date itself gets its own state, and past-42-weeks is called what it is instead of looping the counter.',
+          'The honest context line matters: roughly 80% of births happen between week 37 and week 42. A due date is the center of a five-week window, and treating it as a deadline is how unnecessary anxiety gets manufactured.',
+        ],
+      },
+      {
+        heading: 'What this page is not',
+        paragraphs: [
+          'It is not a medical device and not medical advice. Ultrasound dating in the first trimester is more accurate than LMP arithmetic; individual cycles vary; and decisions belong to you and your clinician. Use the estimate to frame a conversation, not to replace one — that sentence is on the tool page on purpose.',
+          'Nothing about a pregnancy date is sensitive enough to deserve an upload, and nothing about it is uploaded here: the dates are picked, the arithmetic runs in this tab, and the page remembers nothing when it closes.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------- word-frequency
+  'word-frequency': {
+    lede: [
+      'Word Frequency & Readability shows a piece of writing the way a search engine and a reading teacher see it: which words dominate, how concentrated they are, and how hard the text is to read — with the numbers computed from your actual words, not vibes.',
+      'The keyword table sorts live by count with a stopword switch; the totals row frames it with words, unique words, sentences, average sentence length and reading time; and two real formulas — Flesch reading ease and Flesch-Kincaid grade level — turn syllable counts into scores.',
+    ],
+    sections: [
+      {
+        heading: 'Keyword density, honestly',
+        paragraphs: [
+          'Density is count divided by total words — no mysticism. The table shows the top 20 words with their count and their share of the text, and the common-words switch filters the the-and-of layer to expose the content words that carry meaning. It defaults to off: you see everything first, then narrow.',
+          'Tokenization is Unicode-aware and contraction-respecting — "don\u2019t" is one word, not "don" and a stray "t" — which keeps the counts honest for real prose instead of clean test sentences.',
+        ],
+      },
+      {
+        heading: 'Readability, the real formulas',
+        paragraphs: [
+          'Flesch reading ease combines two ratios — words per sentence and syllables per word — into the 0–100-ish score teachers and plain-language laws actually cite: 206.835 minus 1.015 times words-per-sentence minus 84.6 times syllables-per-word. The label bins are the standard ones, from Very easy down to Very difficult, and a score that escapes the range is shown raw with an honest note.',
+          'Flesch-Kincaid grade level uses the same ingredients in school terms: 0.39 times words-per-sentence plus 11.8 times syllables-per-word minus 15.59, read as "a grade-N student can follow this". Together the two scores tell you whether your writing matches its audience — and which lever (shorter sentences, shorter words) moves it.',
+          'The syllable heuristic is a real one: vowel groups per word, a silent trailing e removed, a minimum of one. English pronunciation will beat any heuristic eventually — the page would rather do the honest 95% than fake 100%.',
+        ],
+      },
+      {
+        heading: 'Who this is for',
+        paragraphs: [
+          'Anyone whose writing has a reader with expectations: a blog post aimed at actual humans, a privacy policy that legally must be plain-language, an essay being edited down, an SEO pass checking that a page does not repeat one phrase into absurdity, or a teacher showing students what their own writing scores.',
+        ],
+        list: [
+          'Check a blog draft before publishing — sentence length is the usual offender',
+          'Audit keyword density after a round of SEO edits',
+          'Bring a policy or manual down to plain-language reading ease',
+          'Show a class how word choice moves a readability score',
+        ],
+      },
+      {
+        heading: 'What happens to your text',
+        paragraphs: [
+          'The analysis is counting and arithmetic, run in this tab on every keystroke. Drafts, unpublished posts and confidential prose stay exactly where they were pasted — there is no upload step to trust, because there is no upload.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------ vcard
+  vcard: {
+    lede: [
+      'vCard & QR turns a typed contact into the two artifacts phones actually accept: a real vCard 3.0 file downloaded as .vcf that any address book imports with a double-click, and a QR code of the same card that another phone scans to save the contact without anyone typing on a glass keyboard.',
+      'The preview shows the exact vCard text as you type, fields emit only when filled, values escape per the spec, and UTF-8 names survive intact — the details that separate a card that works from one that imports as garbage.',
+    ],
+    sections: [
+      {
+        heading: 'Why vCard still matters',
+        paragraphs: [
+          'Every contact exchange eventually meets the same wall: reading twenty fields aloud across a table, emailing yourself a half-typed card, or a photo of a business card nobody will ever transcribe. The vCard format solves it — it is the one interchange format every phone, mail client and address book has spoken for decades.',
+          'The QR is the modern delivery: the card itself, encoded as an image the other phone scans with its camera app. No app install, no network at the moment of exchange, no account on either side — just a picture that means a contact.',
+        ],
+      },
+      {
+        heading: 'The details done right',
+        paragraphs: [
+          'Only filled fields are emitted — a card with a name and a phone does not carry empty TITLE and URL lines that some clients render as garbage. Commas, semicolons and backslashes in values escape per RFC so a company named "A, B & C" does not break the parser. The name field splits into the structured N and formatted FN correctly, which is where naive generators produce contacts that sort wrong forever.',
+          'The QR regenerates with a short debounce as you edit, sized for phone cameras, with the honest tip on the page: a card this dense scans reliably at about 3 cm printed — smaller and camera shake starts winning.',
+        ],
+      },
+      {
+        heading: 'Where it earns its keep',
+        paragraphs: [
+          'The card is built and encoded entirely in this tab: your contact details are never sent anywhere, which matters exactly because contact details are the thing everyone is careful about pasting into websites.',
+        ],
+        list: [
+          'A conference badge or email-signature QR that carries your real card',
+          'A printed .vcf on the back of a small business card run',
+          'A team onboarding page where new hires scan one QR for the team lead',
+          'A personal card you keep at a known URL, reprinted when the phone changes',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------- calendar-link
+  'calendar-link': {
+    lede: [
+      'Calendar Links & .ics takes one event and produces the three deep links everyone actually clicks — Google Calendar, Outlook.com and Yahoo — plus an RFC 5545 .ics file with real escaping and line folding that works in Apple Calendar, Thunderbird and everything else that speaks the standard.',
+      'The failure this page exists to prevent is subtle: most hand-rolled calendar links work for the author\u2019s provider and time zone and quietly break for everyone else — off by an hour, or an all-day event that spans two days.',
+    ],
+    sections: [
+      {
+        heading: 'What each format gets right here',
+        paragraphs: [
+          'Google receives the TEMPLATE action with UTC timestamps; Outlook.com receives ISO start and end instants; Yahoo receives its own st/et parameter format. All-day events switch semantics per provider: Google takes plain dates with an exclusive end day, Outlook takes allday=true with date strings, Yahoo takes date bounds — three different conventions, each implemented the way that provider actually documents, not guessed.',
+          'The .ics preview is the real file, not a mock: PRODID and VERSION, a deterministic UID built from the event (so re-downloading a corrected event replaces the old one instead of duplicating it), DTSTART and DTEND, and the text fields escaped per RFC 5545 — commas, semicolons and newlines — with 75-octet line folding implemented for real, because a long description that unfolds wrong in Apple Calendar is the classic silent failure.',
+        ],
+      },
+      {
+        heading: 'Where this earns its keep',
+        paragraphs: [
+          'Any "add to calendar" moment on a page you control: an event announcement, a webinar confirmation, a community meetup, a payment-due reminder, a launch stream. You type the event once; every audience member gets their own provider\u2019s flow, which is the only kind of calendar button people actually click.',
+        ],
+        list: [
+          'A webinar confirmation email with all three links plus the .ics attachment',
+          'A community event page where Google, Outlook and Apple users coexist',
+          'A personal reminder file for a calendar app that speaks iCal',
+          'A recurring manual need: generate the same event with new dates each month',
+        ],
+      },
+      {
+        heading: 'What happens to your event',
+        paragraphs: [
+          'The links are built and the file is generated in this tab — the event details go into a URL you copy or a file you download, and into nothing else. No analytics page sees the title of your meeting, because no request is made with it.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- px-rem
+  'px-rem': {
+    lede: [
+      'px ⇄ rem Converter shows all four CSS units at once — px, rem, em and % — against a configurable root size and a separate em context, because rem depends on the root and em depends on the element\u2019s context and pretending otherwise is how layouts drift.',
+      'The clamp() builder rounds it out: minimum, ideal and maximum become a copyable fluid-type declaration, with the honest warning about what the browser does (or rather does not do) when the bounds are inverted.',
+    ],
+    sections: [
+      {
+        heading: 'Why one number is not enough',
+        paragraphs: [
+          '16px is 1rem only when the root is 16px — and accessibility tooling changes the root, which is the entire point of rem. em compounds on context, which makes it powerful for spacing and treacherous for sizes. A converter that silently assumes root 16 tells the truth for a project you are not working on.',
+          'So the root size is an input (default 16, one click away), the em context is a second input, and every answer recomputes live: type 24 and read 1.5 rem, 1.5 em at context 16, and 150% — the four numbers a real stylesheet needs, not just the one the converter prefers.',
+          'The quick-reference grid — 4, 8, 12, 16, 24, 32, 48, 64, 96 pixels — re-derives with the root, because the grid exists to be glanced at while styling, not calculated once.',
+        ],
+      },
+      {
+        heading: 'The clamp() builder',
+        paragraphs: [
+          'Fluid type is clamp(min, ideal, max): the declaration every design system now ships. The builder takes the three bounds in any unit, emits the CSS string, and copies it in one click. When the bounds are inverted — min above max — the page warns plainly that the browser will not interpolate, instead of emitting a declaration that silently freezes.',
+        ],
+        list: [
+          'Convert a designer\u2019s pixel spec into rem for a component library',
+          'Check what an em-based spacing value becomes at a nested context',
+          'Build the h1 clamp() once and reuse it across a whole site',
+          'Sanity-check that a 1.25rem line-height matches the px your reviewer expects',
+        ],
+      },
+      {
+        heading: 'What happens to your numbers',
+        paragraphs: [
+          'The conversion is division, in this tab, per keystroke. There is nothing to upload, nothing to remember, and no account — a calculator that respects the CSS spec and your attention.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- binary
+  binary: {
+    lede: [
+      'Binary & Hex Text Converter is a two-pane translator that goes both ways live: type text and read its bytes, or paste bytes and read the text. Binary, hexadecimal, octal and decimal bases; UTF-8 with honest multi-byte counts, or strict ASCII that names the first out-of-range character and its position.',
+      'There is no mode toggle to get wrong: whichever pane you type in is the input, and the other pane updates. That is the whole interface — the way a converter should have always worked.',
+    ],
+    sections: [
+      {
+        heading: 'The encoding story, told straight',
+        paragraphs: [
+          'UTF-8 mode encodes the full Unicode range — an emoji is four bytes and the byte count says so; a CJK character is three. ASCII mode is strict on purpose: a character above 127 is rejected with the exact character and its 1-based position, because the useful answer to "why did this fail" is "position 3 is é, switch to UTF-8", not a dead pane.',
+          'The reverse direction is where most converters quietly lie: not every byte sequence is valid UTF-8, and decoding garbage into mojibake helps nobody. This one validates the sequence and reports the first bad byte instead of printing replacement characters and calling it a day.',
+          'Grouping is forgiving because real-world bytes arrive messy: spaces, newlines, commas and 0x prefixes all parse. Hex accepts mixed case; binary rejects anything that is not 0 or 1, naming where.',
+        ],
+      },
+      {
+        heading: 'Who uses this and why',
+        paragraphs: [
+          'The audience is everyone who meets bytes at the boundary: developers reading protocol dumps, students learning that "Hi" is 01001000 01101001 and why, embedded folks pasting hex from a datasheet, a writer decoding a puzzle, or anyone inspecting what a "plain text" file really contains.',
+        ],
+        list: [
+          'Decode a binary string from a puzzle or a game without a character table',
+          'Check what bytes a special character actually produces in UTF-8',
+          'Turn a hex dump fragment back into the text it was',
+          'Teach or learn ASCII by typing words and watching the bits',
+        ],
+      },
+      {
+        heading: 'What happens to your bytes',
+        paragraphs: [
+          'The conversion is TextEncoder and TextDecoder — the browser\u2019s own, spec-exact — running in this tab on every keystroke. Secrets pasted as hex stay in the tab; nothing is transmitted, stored or logged.',
         ],
       },
     ],

@@ -1,7 +1,8 @@
 'use client'
 
-// Image Toolkit — compress, convert and resize images entirely on this device
-// using the Canvas API and the browser's own encoders. Nothing is uploaded.
+// Image Toolkit — compress, convert, resize, crop, rotate and flip images
+// entirely on this device using the Canvas API and the browser's own encoders.
+// Nothing is uploaded.
 
 import { useCallback, useMemo, useState } from 'react'
 import { Image as ImageIcon, Loader2, SlidersHorizontal } from 'lucide-react'
@@ -18,8 +19,9 @@ import {
   PrivacyStrip,
 } from '@/components/instant/instant-kit'
 
-type Mode = 'compress' | 'convert' | 'resize'
+type Mode = 'compress' | 'convert' | 'resize' | 'crop' | 'rotate' | 'flip'
 type Target = 'image/png' | 'image/jpeg' | 'image/webp'
+type Rotation = 90 | 180 | 270
 
 interface InputImage {
   file: File
@@ -63,6 +65,15 @@ export function ImageTool() {
   const [widthPx, setWidthPx] = useState<number | ''>('')
   const [lockAspect, setLockAspect] = useState(true)
   const [heightPx, setHeightPx] = useState<number | ''>('')
+  // crop (absolute pixels, clamped to each image's bounds at run time)
+  const [cropX, setCropX] = useState<number | ''>(0)
+  const [cropY, setCropY] = useState<number | ''>(0)
+  const [cropW, setCropW] = useState<number | ''>('')
+  const [cropH, setCropH] = useState<number | ''>('')
+  // rotate / flip
+  const [rotation, setRotation] = useState<Rotation>(90)
+  const [flipH, setFlipH] = useState(true)
+  const [flipV, setFlipV] = useState(false)
 
   const originalSize = useMemo(() => images.reduce((s, i) => s + i.file.size, 0), [images])
   const outputSize = useMemo(() => outputs.reduce((s, o) => s + o.blob.size, 0), [outputs])
@@ -99,7 +110,19 @@ export function ImageTool() {
     const h0 = img.bitmap.height
     let w = w0
     let h = h0
-    if (mode === 'resize') {
+    // crop geometry is resolved per image: absolute box clamped to bounds,
+    // so one batch setting produces a valid rect for every image
+    let sx = 0
+    let sy = 0
+    if (mode === 'crop') {
+      const reqW = cropW === '' ? 0 : Math.round(cropW)
+      const reqH = cropH === '' ? 0 : Math.round(cropH)
+      if (reqW < 1 || reqH < 1) throw new Error('crop-size')
+      sx = Math.min(Math.max(0, Math.round(cropX === '' ? 0 : cropX)), w0 - 1)
+      sy = Math.min(Math.max(0, Math.round(cropY === '' ? 0 : cropY)), h0 - 1)
+      w = Math.min(reqW, w0 - sx)
+      h = Math.min(reqH, h0 - sy)
+    } else if (mode === 'resize') {
       if (widthPx !== '' && widthPx > 0) {
         w = Math.round(widthPx)
         h = lockAspect ? Math.round((h0 * w) / w0) : heightPx !== '' && heightPx > 0 ? Math.round(heightPx) : h0
@@ -110,7 +133,13 @@ export function ImageTool() {
         h = Math.max(1, Math.round((h0 * scale) / 100))
       }
     }
-    const mime: Target = mode === 'convert' ? target : mode === 'compress' ? 'image/webp' : img.file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+    // rotate/flip keep the pixel grid or swap it, they never resample
+    if (mode === 'rotate' && (rotation === 90 || rotation === 270)) {
+      w = h0
+      h = w0
+    }
+    const passthrough: Target = img.file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+    const mime: Target = mode === 'convert' ? target : mode === 'compress' ? 'image/webp' : passthrough
     const q = mode === 'compress' ? quality / 100 : mode === 'convert' && mime === 'image/png' ? undefined : 0.9
 
     // Target-size mode: binary-search the quality (WebP/JPEG only).
@@ -145,7 +174,26 @@ export function ImageTool() {
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(0, 0, w, h)
       }
-      ctx.drawImage(img.bitmap, 0, 0, w, h)
+      if (mode === 'crop') {
+        ctx.drawImage(img.bitmap, sx, sy, w, h, 0, 0, w, h)
+      } else if (mode === 'rotate') {
+        const rad = (rotation * Math.PI) / 180
+        ctx.translate(w / 2, h / 2)
+        ctx.rotate(rad)
+        ctx.drawImage(img.bitmap, -w0 / 2, -h0 / 2)
+      } else if (mode === 'flip') {
+        if (flipH) {
+          ctx.translate(w, 0)
+          ctx.scale(-1, 1)
+        }
+        if (flipV) {
+          ctx.translate(0, h)
+          ctx.scale(1, -1)
+        }
+        ctx.drawImage(img.bitmap, 0, 0)
+      } else {
+        ctx.drawImage(img.bitmap, 0, 0, w, h)
+      }
       blob = await canvas.convertToBlob({ type: mime, quality: q })
     }
 
@@ -166,8 +214,12 @@ export function ImageTool() {
       const out: OutputImage[] = []
       for (const img of images) out.push(await encode(img))
       setOutputs(out)
-    } catch {
-      setError('Processing failed — the images may be too large for this device\u2019s memory.')
+    } catch (e) {
+      setError(
+        e instanceof Error && e.message === 'crop-size'
+          ? 'Crop needs a width and a height of at least 1 pixel each.'
+          : 'Processing failed — the images may be too large for this device\u2019s memory.',
+      )
     } finally {
       setBusy(false)
     }
@@ -204,7 +256,7 @@ export function ImageTool() {
 
           {/* mode switch */}
           <div className="mt-4 flex flex-wrap gap-1.5 rounded-full border bg-muted/40 p-1" role="tablist" aria-label="Image operations">
-            {(['compress', 'convert', 'resize'] as Mode[]).map((m) => (
+            {(['compress', 'convert', 'resize', 'crop', 'rotate', 'flip'] as Mode[]).map((m) => (
               <button
                 key={m}
                 role="tab"
@@ -216,7 +268,7 @@ export function ImageTool() {
                     : 'rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:text-foreground'
                 }
               >
-                {m === 'compress' ? 'Compress' : m === 'convert' ? 'Convert' : 'Resize'}
+                {m === 'compress' ? 'Compress' : m === 'convert' ? 'Convert' : m === 'resize' ? 'Resize' : m === 'crop' ? 'Crop' : m === 'rotate' ? 'Rotate' : 'Flip'}
               </button>
             ))}
           </div>
@@ -263,6 +315,72 @@ export function ImageTool() {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+            {mode === 'crop' && (
+              <>
+                <p className="text-xs text-muted-foreground sm:col-span-2">
+                  Crop boxes are absolute pixels, applied to every image in the batch and clamped to each
+                  image&rsquo;s own bounds, so one setting always yields a valid rectangle per file.
+                </p>
+                <div>
+                  <Label htmlFor="img-crop-x">Left X (px)</Label>
+                  <Input id="img-crop-x" type="number" min={0} value={cropX} onChange={(e) => setCropX(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2" />
+                </div>
+                <div>
+                  <Label htmlFor="img-crop-y">Top Y (px)</Label>
+                  <Input id="img-crop-y" type="number" min={0} value={cropY} onChange={(e) => setCropY(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2" />
+                </div>
+                <div>
+                  <Label htmlFor="img-crop-w">Width (px)</Label>
+                  <Input id="img-crop-w" type="number" min={1} placeholder="e.g. 300" value={cropW} onChange={(e) => setCropW(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2" />
+                </div>
+                <div>
+                  <Label htmlFor="img-crop-h">Height (px)</Label>
+                  <Input id="img-crop-h" type="number" min={1} placeholder="e.g. 200" value={cropH} onChange={(e) => setCropH(e.target.value === '' ? '' : Number(e.target.value))} className="mt-2" />
+                </div>
+              </>
+            )}
+            {mode === 'rotate' && (
+              <div className="sm:col-span-2">
+                <Label>Rotate clockwise by</Label>
+                <div className="mt-2 flex gap-1.5 rounded-full border bg-muted/40 p-1" role="tablist" aria-label="Rotation angle">
+                  {([90, 180, 270] as Rotation[]).map((deg) => (
+                    <button
+                      key={deg}
+                      role="tab"
+                      aria-selected={rotation === deg}
+                      onClick={() => setRotation(deg)}
+                      className={
+                        rotation === deg
+                          ? 'rounded-full bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground'
+                          : 'rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:text-foreground'
+                      }
+                    >
+                      {String(deg)}°
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Quarter turns only, so no pixels are resampled or blurred. 90° and 270° swap the
+                  width and height.
+                </p>
+              </div>
+            )}
+            {mode === 'flip' && (
+              <div className="flex flex-wrap gap-6 sm:col-span-2">
+                <div className="flex items-center gap-2">
+                  <Switch id="img-flip-h" checked={flipH} onCheckedChange={setFlipH} />
+                  <Label htmlFor="img-flip-h">Mirror horizontally</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="img-flip-v" checked={flipV} onCheckedChange={setFlipV} />
+                  <Label htmlFor="img-flip-v">Mirror vertically</Label>
+                </div>
+                <p className="w-full text-xs text-muted-foreground">
+                  Both on at once is the same as a 180° rotation, which is fine — pick whichever
+                  reads better for the job at hand.
+                </p>
               </div>
             )}
             {mode === 'resize' && (
@@ -334,7 +452,7 @@ export function ImageTool() {
         </div>
       )}
 
-      <PrivacyStrip detail="Every pixel is processed by this browser's own Canvas engine. Your images are never uploaded to anyone." />
+      <PrivacyStrip detail="Every pixel is processed by this browser's own Canvas engine — compression, conversion, resizing, cropping, rotation and mirroring alike. Your images are never uploaded to anyone." />
     </div>
   )
 }

@@ -76,6 +76,15 @@ import { PdfCompressTool } from '@/components/instant/compress-pdf-tool'
 import { TimeCardTool } from '@/components/instant/time-card-tool'
 import { GradeTool } from '@/components/instant/grade-tool'
 import { TodoTool } from '@/components/instant/todo-tool'
+import { MemeTool } from '@/components/instant/meme-tool'
+import { SvgConvertTool } from '@/components/instant/svg-convert-tool'
+import { CipherTool } from '@/components/instant/cipher-tool'
+import { DueDateTool } from '@/components/instant/due-date-tool'
+import { WordFrequencyTool } from '@/components/instant/word-frequency-tool'
+import { VCardTool } from '@/components/instant/vcard-tool'
+import { CalendarLinkTool } from '@/components/instant/calendar-link-tool'
+import { PxRemTool } from '@/components/instant/px-rem-tool'
+import { BinaryTool } from '@/components/instant/binary-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -143,6 +152,15 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'time-card': TimeCardTool,
   grade: GradeTool,
   todo: TodoTool,
+  meme: MemeTool,
+  'svg-convert': SvgConvertTool,
+  cipher: CipherTool,
+  'due-date': DueDateTool,
+  'word-frequency': WordFrequencyTool,
+  vcard: VCardTool,
+  'calendar-link': CalendarLinkTool,
+  'px-rem': PxRemTool,
+  binary: BinaryTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {
