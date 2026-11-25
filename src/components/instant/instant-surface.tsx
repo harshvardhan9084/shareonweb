@@ -66,6 +66,16 @@ import { FaviconTool } from '@/components/instant/favicon-tool'
 import { WatermarkTool } from '@/components/instant/watermark-tool'
 import { TypingTestTool } from '@/components/instant/typing-test-tool'
 import { MarkdownTool } from '@/components/instant/markdown-tool'
+import { StatsTool } from '@/components/instant/stats-tool'
+import { NumberToWordsTool } from '@/components/instant/number-to-words-tool'
+import { MorseTool } from '@/components/instant/morse-tool'
+import { FontChangerTool } from '@/components/instant/font-changer-tool'
+import { EmojiTool } from '@/components/instant/emoji-tool'
+import { JsonToTsTool } from '@/components/instant/json-to-ts-tool'
+import { PdfCompressTool } from '@/components/instant/compress-pdf-tool'
+import { TimeCardTool } from '@/components/instant/time-card-tool'
+import { GradeTool } from '@/components/instant/grade-tool'
+import { TodoTool } from '@/components/instant/todo-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -123,6 +133,16 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   watermark: WatermarkTool,
   'typing-test': TypingTestTool,
   markdown: MarkdownTool,
+  stats: StatsTool,
+  'number-to-words': NumberToWordsTool,
+  morse: MorseTool,
+  'font-changer': FontChangerTool,
+  emoji: EmojiTool,
+  'json-to-ts': JsonToTsTool,
+  'compress-pdf': PdfCompressTool,
+  'time-card': TimeCardTool,
+  grade: GradeTool,
+  todo: TodoTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

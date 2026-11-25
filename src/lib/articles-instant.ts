@@ -2106,4 +2106,240 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ------------------------------------------------------------------- stats
+  stats: {
+    lede: [
+      'Statistics Calculator reads a pasted list the way a stats course does: mean, median and mode for the center, range, quartiles, IQR, variance and standard deviation for the spread, and the 1.5×IQR fences that name outliers — with sample (n−1) and population (n) flavors on a switch, because the divisor is not a footnote, it is the question.',
+      'Parsing is deliberately tolerant: commas, spaces, tabs and newlines all work, and stray non-numeric tokens are skipped and counted on the page rather than dropped in silence — you can paste straight out of a spreadsheet or a messy note and see exactly what the tool made of it.',
+    ],
+    sections: [
+      {
+        heading: 'The quartiles are the interpolated ones',
+        paragraphs: [
+          'Medians and quartiles are computed by linear interpolation — the same method as Excel\'s PERCENTILE.INC and numpy\'s default — so a list of ten numbers gives Q1 as the 25th point between the second and third values, not someone\'s textbook-only convention. There are several legitimate definitions of quartiles and they disagree by small amounts; this page picks the one your spreadsheet already agrees with and says so, which matters most when you are checking homework against software.',
+          'The mode is equally honest: when every value occurs exactly once it prints "none" — the correct answer — instead of the "0" many tools emit. Multi-modal distributions list every value tied for the top frequency.',
+        ],
+      },
+      {
+        heading: 'Sample or population — the switch that changes the number',
+        paragraphs: [
+          'Variance and standard deviation divide the squared deviations by n−1 for a sample and by n for a population. The switch applies everywhere at once and the label on each card changes with it (s²/σ², s/σ), so the number you copy is the number your assignment wants. Below two values, a sample variance genuinely cannot be computed — the card shows that rather than a made-up placeholder.',
+        ],
+      },
+      {
+        heading: 'Outliers and the picture of the distribution',
+        paragraphs: [
+          'Outliers are flagged by the 1.5×IQR rule with both fences printed, so a value\'s outlier status is checkable, not asserted. The histogram draws ten equal bins across the observed range from the same data, which is the fastest way to see skew, a lone far point, or two clusters that the mean was quietly averaging away.',
+          'The sorted list sits below everything for the by-eye check — statistics tools earn trust when the inputs and the math are both visible.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------- number-to-words
+  'number-to-words': {
+    lede: [
+      'Number to Words converts figures into the words a bank cheque or contract needs: 1234567.89 becomes "one million two hundred thirty-four thousand five hundred sixty-seven dollars and eighty-nine cents only" — or the lakh/crore version a rupee cheque expects. Five framings (plain, USD, EUR, GBP, INR), two numbering systems, one trailing "only".',
+      'The conversion rules are printed on the page: decimals beyond two places are cut — never rounded — because a cheque amount must not silently change value, negatives are spoken as "minus", and numbers beyond the JavaScript safe-integer maximum are refused with an explanation instead of hallucinated.',
+    ],
+    sections: [
+      {
+        heading: 'Two systems, because money is not written the same everywhere',
+        paragraphs: [
+          'The international short scale groups by thousands (thousand, million, billion, trillion); the Indian system groups two-after-three (thousand, lakh, crore, arab). The same figure 12,34,567 reads as "twelve lakh thirty-four thousand five hundred sixty-seven" in one and "one million two hundred thirty-four thousand…" in the other — a real difference on a cheque, not a styling choice.',
+          'Currency framing changes the decimals\' names (cents, pence, paise) and adds the closing "only" the cheque format expects. The plain-number framing keeps the words bare for contracts that spell amounts without naming a currency.',
+        ],
+      },
+      {
+        heading: 'The rounding policy is "none", and why',
+        paragraphs: [
+          'A cheque written for 100.005 is 100 rupees and 0 paise in words only if the extra digits are dropped with a note; rounding them up would make the written amount disagree with the figures in the amount box — the exact mismatch banks reject. This tool truncates past two decimals and says so on the page, which is the only behavior that keeps the two representations equal.',
+          'The upper bound is honest for the same reason: JavaScript numbers stop being exact past 9,007,199,254,740,991, and a words-converter that silently mangles its inputs there is worse than useless. The limit is stated when you hit it.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- morse
+  morse: {
+    lede: [
+      'Morse Code Translator runs both directions in one box — type text and get ITU-standard Morse, type dots and dashes and get text — and sounds the message on a WebAudio oscillator with the timing done the standard way: dot 1 unit, dash 3, gaps of 1 / 3 / 7 units, the unit set by your WPM through the PARIS convention.',
+      'The direction is detected from what you typed (predominantly dots, dashes and slashes reads as Morse), so there is no mode toggle to forget. Unencodable characters are named on the page instead of vanishing, which is the difference between a translation you can trust and one you cannot.',
+    ],
+    sections: [
+      {
+        heading: 'The audio clock is the whole point',
+        paragraphs: [
+          'Playback is scheduled entirely on the WebAudio clock: every element\'s start and end is computed once and handed to the browser, so a throttled tab cannot bend the rhythm the way timer-based players do. The envelope uses 5 ms ramps so each dot and dash is click-free at both ends, and the tone runs 300–1200 Hz so the pitch sits where your ear wants it.',
+          'Speed follows the PARIS convention — the word PARIS is 50 units, so unit length = 1.2 ÷ WPM seconds — across 5 to 35 WPM. That is the standard every practice recording and every exam uses, and the page prints the computed unit length so you can check it.',
+        ],
+      },
+      {
+        heading: 'What the table covers, and what it refuses',
+        paragraphs: [
+          'The mapping is the full ITU set: A–Z, 0–9, and the punctuation block every guide lists (., ,, ?, /, =, +, @ and friends). A character outside the table — an emoji, a letter with a diacritic — is skipped and named, because guessing a code that does not exist is worse than admitting the gap.',
+          'A flashing element readout follows the audio beat for silent practice — watch the dot/dash rhythm when a speaker would disturb the room, or slow to 5 WPM and learn the shapes by eye before your ear is trained.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------ font-changer
+  'font-changer': {
+    lede: [
+      'Font Changer applies the thirteen Unicode "styled alphabets" bios and usernames use — bold, italic, script, fraktur, small caps, circled, fullwidth, upside-down and friends — to whatever you type, one copyable line per style, updated as you type.',
+      'These are not fonts. They are Unicode code points — Mathematical Alphanumeric Symbols and friends — which is why they paste into Instagram or Discord anywhere plain text is accepted, and also why the tool says honestly which characters each style cannot render instead of quietly mangling your text.',
+    ],
+    sections: [
+      {
+        heading: 'The honest limits are the feature',
+        paragraphs: [
+          'Each style maps only what its Unicode block actually provides. Digits exist for the bold, serif bold, double-struck, monospace and circled blocks; the italic, script and fraktur blocks carry letters only. Script and fraktur have reserved holes (ℬ ℰ ℋ ℭ ℜ ℨ are honorific letters), filled the standard way the mathematics references do. Small caps has no true capital X — the table uses the closest glyph and lists what is unmapped on the card.',
+          'Every card carries its "no mapping for" note when a character falls through, so what you paste is exactly what was rendered — no silent substitutions to discover later.',
+        ],
+      },
+      {
+        heading: 'The screen-reader caveat, stated plainly',
+        paragraphs: [
+          'A screen reader announced 𝐛𝐨𝐥𝐝 reads it as "mathematical bold small b, mathematical bold small o…" — the trick that styles a bio also makes it a slog for assistive tech. That is not a reason to avoid the styles in a display name; it is a reason not to write a paragraph in them. The page says this where the styles are chosen, because a tool that hides the trade-off is styling itself.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------ emoji
+  emoji: {
+    lede: [
+      'Emoji Finder is a searchable grid over a built-in dataset: every emoji carries its common name and the keywords people actually type — "heart", "fire", "dog", "pizza", "sad" — organized into nine categories, click to copy, recently-copied row for the ones you keep reusing.',
+      'The set ships with the page: search is a local filter, the grid renders offline, and nothing you search for is sent or recorded. The honest scope is stated on the page too — this is the everyday set with real search terms, not the full Unicode 16 catalog, because the useful question is "which one is the sad face", not "list all 3,700".',
+    ],
+    sections: [
+      {
+        heading: 'Why keywords, not just names',
+        paragraphs: [
+          'The official name of 😭 is "loudly crying face", but you type "sob" or "sad". The dataset therefore carries the search terms people actually use per entry — emotions ("happy", "angry", "tired"), objects ("pizza", "rocket"), states ("fire", "star") — so one query finds the row you meant. Keyword hints under each tile make the vocabulary visible, so the next search can use it too.',
+        ],
+      },
+      {
+        heading: 'Click to copy, and the tab-local memory',
+        paragraphs: [
+          'A click copies the character to your clipboard with a visible "copied" state and pins it to a Recently-copied row (the last twelve). That row lives in this tab\'s memory only — close the page and it is gone, which is exactly right for a tool whose clipboard is its output and whose memory is nobody\'s business.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- json-to-ts
+  'json-to-ts': {
+    lede: [
+      'JSON to TypeScript types the document the way you would by hand: one export-ed interface per distinct object shape, nested objects lifted out, array items singularized (orders → Order), and fields that are missing or null in some array members marked optional everywhere in the tree — because "the API omits this sometimes" is exactly what `?` encodes.',
+      'Identical shapes are deduplicated structurally — two objects with the same keys and types share one interface. Switch interfaces/type aliases, add readonly, rename the root; parse errors carry line and column; and the generation is deterministic and local, so the JSON never leaves the tab.',
+    ],
+    sections: [
+      {
+        heading: 'Optionals where they mean something',
+        paragraphs: [
+          'The common API shape — a list where most items carry a field and some omit it (or carry null) — is precisely the case naive generators get wrong: they emit the first item\'s shape and invent a type for the rest, or merge everything into `any`. Here the array members are inspected together: a key absent from some members (or null in all) comes out optional on the single merged item interface, with the field\'s real type taken from a member that carries it.',
+          'Genuinely mixed arrays produce honest unions — `(string | number)[]` — and empty arrays become `unknown[]` rather than a guessed type, because an empty list carries no evidence and pretending otherwise writes a wrong type into your codebase.',
+        ],
+      },
+      {
+        heading: 'Names a human would pick',
+        paragraphs: [
+          'Property keys stay as they are (quoted only when illegal), type names are Pascal-cased and made legal (reserved words get a suffix), and array items inherit a singularized hint — `orders` yields `Order`, `items` yields `Item` — so the generated module reads like something a colleague wrote, not like a machine dump.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------ compress-pdf
+  'compress-pdf': {
+    lede: [
+      'PDF Compressor takes the rasterization route and says so up front: each page is rendered by pdf.js at your chosen scale, encoded as JPEG at your chosen quality, and rebuilt into a fresh PDF at the original page size with pdf-lib. Scan-heavy and photo-heavy files shrink, often a lot.',
+      'The honesty runs both directions: a vector-heavy file (text, line art) can come out LARGER, and the result card reports the real delta and recommends keeping the original when the math lost — because a compressor that always claims victory is not a tool, it is marketing.',
+    ],
+    sections: [
+      {
+        heading: 'The two knobs that move the size',
+        paragraphs: [
+          'Render scale (0.75× to 2×) sets the pixel density of the rasterized page; JPEG quality (30–95%) sets how aggressively each one is compressed. For a scanned document, 1× at 60% typically lands well below the original; for a text-heavy export, no setting beats the original\'s vector compression, and the before/after panel will say so with the numbers.',
+          'Page dimensions are preserved regardless: the new page carries the scale-1 point size, so print layout never changes — only the pixel density inside it does.',
+        ],
+      },
+      {
+        heading: 'The cost, named before you run it',
+        paragraphs: [
+          'Rasterized pages are images: text stops being selectable and searchable, and screenshots of the file lose nothing but gain blur past the rendered resolution. That is the correct trade for a scanned contract you are emailing at 8 MB, and the wrong one for a form someone needs to fill digitally. The page states the trade on the result, every time.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- time-card
+  'time-card': {
+    lede: [
+      'Time Card Calculator does the punched-card math for a week: two in/out pairs per day (for the lunch split), a break in minutes, worked time per day and the week in both h:mm and decimal hours, overtime after your threshold at your multiplier, and gross pay at your rate with the formula printed underneath.',
+      'Overnight shifts are handled the way the schedule means them: an out earlier than its in counts across midnight, never as negative time. And the pay line is gross before taxes — the page says that instead of guessing your deductions.',
+    ],
+    sections: [
+      {
+        heading: 'Two pairs, one break, no second table',
+        paragraphs: [
+          'The lunch-split case fits in the same row as a continuous shift: in/out, optional second in/out, and a break column in minutes that comes off the day\'s total. One pair is all you need otherwise. The daily column updates as you type, and the weekly total carries the same arithmetic into a h:mm figure plus its decimal equivalent (what payroll systems usually want).',
+        ],
+      },
+      {
+        heading: 'Overtime is a setting, not an assumption',
+        paragraphs: [
+          'The threshold defaults to 40 hours and the multiplier to 1.5× because those are the common conventions — but they are editable, because plenty of schedules (and several jurisdictions) differ. Pay computes as regular hours × rate + overtime hours × rate × multiplier, with the exact numbers printed in the formula line so a paycheck can be checked digit by digit.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------ grade
+  grade: {
+    lede: [
+      'Grade Calculator answers the three questions the term actually asks: what is my weighted grade so far, what do I need on the final, and what is my GPA — each with its formula printed under the result and the honest caveats printed with it.',
+      'The honesty rules are deliberate: a weighted grade is computed over the graded portion and labeled standing-not-prediction; the final solver says "not reachable on this final alone" when the required score exceeds 100% instead of printing a fantasy number; GPA uses the standard unweighted 4.0 mapping and names the school-varies caveat.',
+    ],
+    sections: [
+      {
+        heading: 'The final-exam algebra, in the open',
+        paragraphs: [
+          'The solver rearranges the course-weighting equation — target = current × (1 − w) + final score × w — and prints x = (target − current × (1 − w)) ÷ w with your numbers substituted, so the answer is checkable rather than oracular. The verdict line translates the number: comfortably reachable, demanding, or mathematically out of reach on this exam.',
+        ],
+      },
+      {
+        heading: 'Weights that do not sum to 100, and percents in the GPA box',
+        paragraphs: [
+          'Real terms are graded in stages: the tool computes the weighted average over the graded weights and states the covered share, which is the number you actually know. The GPA tab accepts letters (A=4.0 through F=0 with the standard ± steps) or percents converted on the 90/80/70/60 band, weighted by credit hours — with the caveat that some schools use weighted scales or A+ above 4.0, which is a mapping choice, not a math error.',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- todo
+  todo: {
+    lede: [
+      'Local Checklist is a to-do list with the storage story on its sleeve: items persist in this browser\'s localStorage, reload after reload, and exist nowhere else — no account, no sync, no server. Enter to add, click to tick, double-click to edit, drag to reorder, copy out as Markdown when the list needs to travel.',
+      'The verbs are where your hands already are: Enter adds, the checkbox ticks, the pencil (or a double-click) edits inline, arrows and drag reorder — with button fallbacks that work on touch screens and for keyboard users alike.',
+    ],
+    sections: [
+      {
+        heading: 'What persistence means here, precisely',
+        paragraphs: [
+          'The list is saved to localStorage on every change and loaded on the next visit to the same browser. Clearing the browser\'s site data — or pressing Delete everything — removes it permanently; there is no cloud copy and no undo beyond that. That is not a limitation hidden in a FAQ; it is the page\'s privacy model stated on the page.',
+          'The storage read is defensive: a corrupted or foreign JSON blob is discarded and the page starts empty rather than crashing on its own history. A checklist that dies because of one bad reload is not a checklist.',
+        ],
+      },
+      {
+        heading: 'The export that matters',
+        paragraphs: [
+          'Copy as Markdown emits a GitHub-flavored task list — `- [x] done item` — ready to paste into an issue, a pull request description, or any note app that renders checklists. The one export a developer to-do list actually needs is one click away, and the copy includes the done-state, because the point of the export is to carry the list, not just the words.',
+        ],
+      },
+    ],
+  },
 }

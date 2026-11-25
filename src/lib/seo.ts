@@ -82,6 +82,16 @@ const SEO_TITLES: Record<string, string> = {
   watermark: 'Watermark Studio — text or logo watermarks on a batch of photos, position, tile, opacity',
   'typing-test': 'Typing Test Studio — WPM, CPM and accuracy over 15s to 3min, the clock starts on typing',
   markdown: 'Markdown Studio — live preview, GFM tables and clean HTML export from a built-in engine',
+  stats: 'Statistics Calculator — mean, median, mode, quartiles and std dev from pasted numbers, live',
+  'number-to-words': 'Number to Words — cheque-style amounts in words, USD/EUR/GBP/INR and lakh/crore',
+  morse: 'Morse Code Translator — text ↔ Morse both ways, live audio at 5–35 WPM on PARIS timing',
+  'font-changer': 'Font Changer — thirteen Unicode styles for bios and usernames, honest coverage per style',
+  emoji: 'Emoji Finder — search by name or keyword, click to copy, a built-in set with zero tracking',
+  'json-to-ts': 'JSON to TypeScript — interfaces from any JSON, optionals done right, structural dedup',
+  'compress-pdf': 'PDF Compressor — shrink PDFs locally by rasterizing at your scale and JPEG quality',
+  'time-card': 'Time Card Calculator — a week of punches into hours, overtime and gross pay, overnight-safe',
+  grade: 'Grade Calculator — weighted grade, the final-exam solver and GPA on the 4.0 scale',
+  todo: 'Local Checklist — a to-do list persisted in your browser only, filters, reorder, Markdown export',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -218,6 +228,26 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Measure real typing speed: WPM, CPM, accuracy and consistency over 15 seconds to 3 minutes on a locally generated word stream. The clock starts on your first keystroke, not on load.',
   markdown:
     'Write Markdown with a live preview, a table generator and HTML exports from a built-in engine that escapes raw HTML by default. READMEs, drafts and docs, rendered on your device.',
+  stats:
+    'Paste any list of numbers for mean, median, mode, range, quartiles, IQR, variance and standard deviation — sample or population — with outliers named by the 1.5×IQR rule and a live histogram. Runs on this device.',
+  'number-to-words':
+    'Write amounts in words the way a cheque needs: dollars and cents, euros, pounds, rupees and paise, with Indian lakh/crore or international million/billion. Truncates, never rounds, and states the limit.',
+  morse:
+    'Translate text to Morse code and back in one box, with live audio playback at 5–35 WPM on the standard PARIS timing and an adjustable tone. The full ITU table, unencodable characters named.',
+  'font-changer':
+    'Turn text into the Unicode styles bios use — bold, italic, script, fraktur, small caps, circled, fullwidth, upside-down — thirteen styles live at once, each copied in one click, with coverage limits written on the page.',
+  emoji:
+    'Find the emoji you mean by name or keyword — “heart”, “fire”, “sad” — across nine categories, click to copy. A built-in set that works offline and tracks nothing; the scope is stated honestly.',
+  'json-to-ts':
+    'Generate clean TypeScript interfaces from any JSON: one per distinct object shape, array items singularized, fields missing from some members marked optional, unions for mixed arrays. Local and deterministic.',
+  'compress-pdf':
+    'Shrink PDFs in your browser: pages rasterized at your chosen scale and JPEG quality, rebuilt at the original page size, with an honest before/after verdict — including “keep the original” when rasterization loses.',
+  'time-card':
+    'Turn a week of in/out punches into hours and pay: two pairs per day, break deductions, overnight shifts across midnight, overtime after your threshold at your multiplier, gross pay with the formula printed.',
+  grade:
+    'Three grade calculators: weighted grade over your coursework, the score you need on the final (algebra printed, unreachable targets named), and GPA on the standard unweighted 4.0 scale from letters or percents.',
+  todo:
+    'A to-do list that lives in your browser only: Enter to add, click to tick, drag to reorder, filters and a Markdown export — persisted in localStorage, synced with nobody, deleted when you say so.',
 }
 
 /**
@@ -1291,6 +1321,206 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'How does the table generator work?',
       a: 'Set rows and columns, and it emits a properly aligned GFM table with placeholder cells — the pipe-and-dash syntax nobody remembers, generated once. Insert it into the editor (it renders in the preview immediately) or copy it for another tool. Alignment defaults to left; edit the dashes to :—: or —: for center or right.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- stats
+  stats: [
+    {
+      q: 'Which quartile method does this use?',
+      a: 'Linear interpolation — the same convention as Excel PERCENTILE.INC and numpy\'s default — for the median, Q1 and Q3. Several textbook definitions exist and disagree by small amounts; this one matches what your spreadsheet already produces, which matters most when you are checking homework against software.',
+    },
+    {
+      q: 'Sample or population variance — which should I pick?',
+      a: 'Sample (divide by n−1) when your numbers are a sample of a bigger group and you want to estimate that group\'s spread; population (divide by n) when your numbers ARE the whole group. The switch changes variance and standard deviation together, and each card\'s label and formula update with it.',
+    },
+    {
+      q: 'How are outliers decided?',
+      a: 'The 1.5×IQR rule: values below Q1 − 1.5×IQR or above Q3 + 1.5×IQR are outliers, and both fences are printed so the classification is checkable rather than asserted. The outliers themselves are listed with the count.',
+    },
+    {
+      q: 'What happens to words mixed into my numbers?',
+      a: 'They are skipped and counted: the page reports "N numbers parsed · M non-numeric tokens skipped", so pasting straight from a messy spreadsheet works, and you can see exactly how much of your paste was ignored instead of wondering.',
+    },
+  ],
+
+  // ---------------------------------------------------------- number-to-words
+  'number-to-words': [
+    {
+      q: 'How do I write a cheque amount in words?',
+      a: 'Type the figure, pick the currency framing (USD, EUR, GBP or INR), and read the cheque line: "Dollars one million two hundred thirty-four thousand five hundred sixty-seven and eighty-nine cents only". Every money line ends in "only", the convention that makes the written amount hard to alter.',
+    },
+    {
+      q: 'What is the difference between the international and Indian systems?',
+      a: 'Grouping. International groups by thousands (thousand, million, billion); the Indian system groups two-after-three (thousand, lakh, crore, arab). The same digits 12,34,567 read as "twelve lakh thirty-four thousand five hundred sixty-seven" in one and "one million two hundred…" in the other — pick the one your bank or document expects.',
+    },
+    {
+      q: 'What happens to amounts with more than two decimals?',
+      a: 'They are truncated, not rounded, and the page says so. A cheque whose words say "one hundred and 1/100" while the figures say 100.005 is the mismatch banks reject — keeping the written amount equal to the figures is the only correct behavior, even when rounding would look nicer.',
+    },
+    {
+      q: 'How large a number can this convert?',
+      a: 'Up to 9,007,199,254,740,991 — the JavaScript safe-integer maximum, about nine quadrillion — in either system. Beyond that, floating-point numbers stop being exact and the tool refuses with an explanation rather than inventing words for a number it cannot represent faithfully.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- morse
+  morse: [
+    {
+      q: 'How fast should the WPM setting be?',
+      a: 'Beginners start at 5–10 WPM to learn the shapes; the amateur radio exam pace is around 5–15; experienced operators run 20–35. The unit length follows the PARIS convention (1.2 ÷ WPM seconds), which is the standard every practice recording and every test uses, and the page prints the computed unit so you can verify it.',
+    },
+    {
+      q: 'Why does my Morse input decode automatically without a toggle?',
+      a: 'The tool detects direction from the characters: predominantly dots, dashes, slashes and spaces reads as Morse, anything else as plain text. One box, both directions — there is no mode to forget to switch, and the badge above the input always states how the current input was read.',
+    },
+    {
+      q: 'Which characters have Morse code?',
+      a: 'The full ITU set: letters A–Z, digits 0–9, and the punctuation block every guide lists — period, comma, question mark, slash, apostrophe, parentheses, equals, plus, hyphen, @ and friends. Anything outside the table (emoji, accented letters) is skipped and named on the page rather than silently dropped.',
+    },
+    {
+      q: 'Can I practice without the sound?',
+      a: 'Yes — the flashing dot/dash readout follows the audio beat, so you can watch the rhythm of a message at any speed. It also helps when learning to copy by eye before your ear is trained, or in a place where a beeping speaker would not be welcome.',
+    },
+  ],
+
+  // ------------------------------------------------------------ font-changer
+  'font-changer': [
+    {
+      q: 'Are these real fonts?',
+      a: 'No — they are Unicode characters from the Mathematical Alphanumeric Symbols block and friends. That is why they paste anywhere plain text is accepted with no font file needed, and why they render even in apps that know nothing about typography.',
+    },
+    {
+      q: 'Why do some styles miss digits or certain letters?',
+      a: 'Because the Unicode blocks genuinely do not provide them: italic, script and fraktur carry letters only; small caps has no true capital X. The tool maps only what exists, keeps unmapped characters as-is, and lists them on the card — no silent substitutions to discover after you paste.',
+    },
+    {
+      q: 'Do these styles cause any accessibility problems?',
+      a: 'Yes, worth knowing: screen readers announce 𝐛𝐨𝐥𝐝 as "mathematical bold small b…" character by character, so styled text is a slog for assistive tech. Fine for a display name or a short heading-flavored line; write paragraphs in plain text.',
+    },
+    {
+      q: 'Where do these styles paste correctly?',
+      a: 'Anywhere that accepts plain text: Instagram and X bios, Discord, Telegram, WhatsApp status, notes apps. They are characters, not formatting — so they survive copy-paste, but they do not "turn off" like real bold, and search engines match them poorly.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ emoji
+  emoji: [
+    {
+      q: 'How many emojis are in the set, and which ones?',
+      a: 'Several hundred everyday emojis organized into nine categories — smileys and hearts, people and gestures, animals and nature, food and drink, activity and music, travel and places, objects, symbols, flags. The page states the count in the search bar. It is the everyday set, not the full Unicode catalog.',
+    },
+    {
+      q: 'How does the search work?',
+      a: 'Every entry carries its common name plus the keywords people actually type — "heart", "fire", "sad", "pizza" — and search matches both live as you type. Typing "sob" finds 😭 even though its official name is "loudly crying face", because the keywords model how you think, not the registry.',
+    },
+    {
+      q: 'Is anything sent to a server when I search or copy?',
+      a: 'No. The emoji table ships with the page; search is a local filter and copies go straight to your clipboard. The Recently-copied row lives in this tab\'s memory only and vanishes when you close the page.',
+    },
+    {
+      q: 'Does it work offline?',
+      a: 'Yes — the dataset is embedded on the page, so search and copy run with no connection at all. It is also part of the app\'s offline shell, so the page opens on a plane the same way it does at home.',
+    },
+  ],
+
+  // -------------------------------------------------------------- json-to-ts
+  'json-to-ts': [
+    {
+      q: 'Why are some fields marked optional with a question mark?',
+      a: 'Because they are genuinely optional: the field is missing (or null) in some members of an array but present in others. The generator inspects array members together, marks the field `?`, and gives it the real type from a member that carries it — which is exactly how a hand-written type for "the API sometimes omits this" would look.',
+    },
+    {
+      q: 'What happens when two object shapes are identical?',
+      a: 'Structural dedup: the second occurrence re-uses the first\'s interface instead of emitting a duplicate. The signature compares keys, member types and optional flags, so only truly identical shapes merge — two similar-but-different shapes stay separate interfaces.',
+    },
+    {
+      q: 'What do empty arrays and mixed arrays become?',
+      a: 'An empty array becomes `unknown[]` — an empty list carries no evidence, and guessing would write a wrong type into your code. A mixed array produces an honest union like `(string | number)[]`, and an array of objects produces one merged item interface with the optionals marked.',
+    },
+    {
+      q: 'Should I choose interfaces or type aliases?',
+      a: 'Either compiles the same for object shapes. Interfaces read more conventionally in most codebases and can be augmented by declaration merging; type aliases are the pragmatic choice when a root is a primitive or a union. The switch exists because both are common house styles, not because one is correct.',
+    },
+  ],
+
+  // ------------------------------------------------------------ compress-pdf
+  'compress-pdf': [
+    {
+      q: 'Why did my PDF come out larger after compression?',
+      a: 'Because it is vector-heavy. Text and line art compress extremely well as vectors; rasterizing them into JPEG pages can only lose that. The result card reports the real delta and recommends keeping the original when the math lost — the honest answer, not a fake win.',
+    },
+    {
+      q: 'What settings should I use for a scanned document?',
+      a: 'Start at 1× scale and 60% JPEG quality — for typical scans that lands well below the original with readable text. Push quality down toward 30% for reference-only copies, up toward 95% for documents people will read closely; the file re-compresses each time you change a setting.',
+    },
+    {
+      q: 'Does compression change the page dimensions?',
+      a: 'No. The rebuilt pages carry the original point size — the scale-1 viewport — whatever render scale you chose. Print layout never changes; only the pixel density inside each page does.',
+    },
+    {
+      q: 'What is the cost of the rasterization route?',
+      a: 'The pages become images: text stops being selectable and searchable. For a scanned contract you are emailing, that is the right trade; for a form someone must fill digitally, it is not — and the page states the trade on the result every time.',
+    },
+  ],
+
+  // --------------------------------------------------------------- time-card
+  'time-card': [
+    {
+      q: 'How do I enter a shift that ends after midnight?',
+      a: 'Just type it: an out time earlier than its in is read as crossing midnight and counted forward — 22:00 in, 06:00 out is eight hours, never negative. The overnight handling applies per pair, so a split shift can span midnight in either half.',
+    },
+    {
+      q: 'Why two in/out pairs per day?',
+      a: 'The lunch split: clock out, clock back in, and both spans add to the day. One pair covers a continuous shift; leave the second pair empty and it contributes nothing. The break column (in minutes) comes off the day\'s total after both pairs.',
+    },
+    {
+      q: 'How is overtime calculated?',
+      a: 'Hours beyond your weekly threshold (default 40) multiply by your multiplier (default 1.5×) at the same hourly rate. Both numbers are editable because schedules and jurisdictions differ. The formula — regular × rate + overtime × rate × multiplier — is printed under the pay card with your numbers substituted.',
+    },
+    {
+      q: 'Is the pay figure my take-home?',
+      a: 'No — it is gross pay before taxes and deductions, and the page says so rather than guessing your tax situation. Payroll systems vary in withholding; the calculator\'s job is the hours-and-rate math you can check against it.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ grade
+  grade: [
+    {
+      q: 'What do I need on my final to get a certain grade?',
+      a: 'Open the "Grade on my final" tab: enter your current grade, the final\'s weight, and the target. The solver rearranges target = current × (1 − w) + final × w and prints the required score with the algebra shown — plus a plain-language verdict, including "not reachable" when the needed score exceeds 100%.',
+    },
+    {
+      q: 'My weights do not add up to 100% — what happens?',
+      a: 'The weighted grade is computed over the graded weights only, and the result says exactly that: "over the graded weights so far". That is your standing on what is done — the ungraded remainder is not predicted, because guessing it would make the number up.',
+    },
+    {
+      q: 'How is GPA computed here?',
+      a: 'Unweighted 4.0 scale: A=4.0, A−=3.7, B+=3.3, B=3.0 … F=0, multiplied by each course\'s credit hours and divided by total credits. Percents are accepted too and convert through the 90/80/70/60 letter band. Schools with weighted scales or A+ above 4.0 differ — that is a policy choice, not a math error, and the page says so.',
+    },
+    {
+      q: 'Are my grades saved anywhere?',
+      a: 'No. Every tab runs in page memory: nothing persists between visits, nothing syncs, nothing is submitted. Close the tab and the inputs are gone — which is the correct privacy model for something as personal as a transcript.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- todo
+  todo: [
+    {
+      q: 'Where is my checklist stored?',
+      a: 'In this browser\'s localStorage — that is the entire storage system. It survives reloads and browser restarts on the same device and browser, and it exists nowhere else: no account, no sync, no server. Clearing site data or pressing Delete everything removes it permanently.',
+    },
+    {
+      q: 'Can I move the list to another device?',
+      a: 'Not automatically — that is what "no sync" means. Use Copy as Markdown for a one-way export: a GitHub-flavored task list (`- [x] done item`) that pastes into issues, PR descriptions and note apps. The copy carries the done-state, so the list arrives complete.',
+    },
+    {
+      q: 'How do I edit or reorder items?',
+      a: 'Double-click an item (or the pencil) to edit inline; Enter saves, Escape cancels. Drag items to reorder, or use the up/down arrows that appear on hover — the buttons are there for touch screens and keyboards, where HTML drag-and-drop alone is hostile.',
+    },
+    {
+      q: 'What happens if the stored list is corrupted?',
+      a: 'The page discards it and starts empty rather than crashing: the storage read validates every entry\'s shape and silently drops anything malformed. A checklist should survive a bad reload — that is why the read is defensive instead of trusting the blob.',
     },
   ],
 

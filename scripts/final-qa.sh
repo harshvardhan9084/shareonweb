@@ -36,22 +36,31 @@ fi
 echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
-for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" "/qr" \
-         "/pdf" "/pdf-view" "/pdf-text" "/images-to-pdf" "/office-view" "/epub-view" \
-         "/audio" "/gif" "/frame-grab" "/recorder" "/upscaler" \
-         "/archive" "/file-tools" "/encrypt" "/meta-scrub" "/jwt" "/hash-file-batch" \
-         "/cron" "/diff" "/uuid" "/convert-units" \
-         "/lorem" "/fake-data" "/css-tools" "/meta-tags" "/barcode" \
-         "/calculator" "/percentage" "/date-calculator" "/bmi" "/loan" \
-         "/timer" "/picker" "/regex" "/csv" "/color" \
-         "/signature" "/invoice" "/timezone" "/pdf-to-image" "/device-test" \
-         "/beautify" "/favicon" "/watermark" "/typing-test" "/markdown" \
-         "/beam" "/call"; do
-  printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
-done
+case "$PHASE" in
+  4|5|6)
+    echo "  (skipped — the warm list was printed by the earlier phase of this run)"
+    ;;
+  *)
+    for p in "/share" "/zip" "/image" "/hash" "/encode" "/json" "/text" "/password" "/qr" \
+             "/pdf" "/pdf-view" "/pdf-text" "/images-to-pdf" "/office-view" "/epub-view" \
+             "/audio" "/gif" "/frame-grab" "/recorder" "/upscaler" \
+             "/archive" "/file-tools" "/encrypt" "/meta-scrub" "/jwt" "/hash-file-batch" \
+             "/cron" "/diff" "/uuid" "/convert-units" \
+             "/lorem" "/fake-data" "/css-tools" "/meta-tags" "/barcode" \
+             "/calculator" "/percentage" "/date-calculator" "/bmi" "/loan" \
+             "/timer" "/picker" "/regex" "/csv" "/color" \
+             "/signature" "/invoice" "/timezone" "/pdf-to-image" "/device-test" \
+             "/beautify" "/favicon" "/watermark" "/typing-test" "/markdown" \
+             "/stats" "/number-to-words" "/morse" "/font-changer" "/emoji" \
+             "/json-to-ts" "/compress-pdf" "/time-card" "/grade" "/todo" \
+             "/beam" "/call"; do
+      printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
+    done
+    ;;
+esac
 
 pass=0; fail=0
-if [ "$PHASE" = "2" ] && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -345,6 +354,11 @@ if [ "$PHASE" = "2" ]; then
   echo "== RESULT (phase 2): $pass passed, $fail failed — run PHASE=3 for the new tools =="
   exit 0
 fi
+
+# PHASE=7 skips the (already verified) 11g→19b middle region and runs only
+# the final section 20 + console sweep + tally, so the last checks never
+# blow the invocation timeout on a slow box.
+if [ "$PHASE" != "7" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -760,16 +774,31 @@ if snap_hit 'Secure context'; then ok "/device-test names the secure-context sta
 agent-browser close > /dev/null 2>&1
 
 # /beautify: CSS beautified on load; compact preserves calc() spaces
+# The formatter engine is a lazy import — on a cold server the chunk may
+# still be loading when the first eval fires, so the check retries like
+# snap_hit does for transient misses.
 open_page "http://localhost:81/beautify"
 agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
 agent-browser wait --text "Formatted output" --timeout 40000 > /dev/null 2>&1
 sleep 2
 bfOut=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; return pre.textContent.includes('box-shadow: 0 1px 3px') ? 'yes' : pre.textContent.slice(0, 100) })()" 2>/dev/null)
+bfi=0
+while ! echo "$bfOut" | rg -q 'yes' && [ "$bfi" -lt 4 ]; do
+  sleep 4
+  bfOut=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; return pre.textContent.includes('box-shadow: 0 1px 3px') ? 'yes' : pre.textContent.slice(0, 100) })()" 2>/dev/null)
+  bfi=$((bfi+1))
+done
 echo "$bfOut" | rg -q 'yes' && ok "/beautify expands the default CSS" || bad "/beautify css: $bfOut"
 cbtn=$(agent-browser snapshot -c 2>/dev/null | rg -o 'button "Compact" \[.*ref=(e[0-9]+)\]' -r '$1' | head -1)
 agent-browser click @$cbtn > /dev/null 2>&1
 sleep 1
 bfC=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; const t = pre.textContent; return (t.includes('calc(100% - 24px)') && !t.includes('/*')) ? 'yes' : (t.includes('calc(') ? 'calc-mangled:' + t.match(/calc.{0,20}/)?.[0] : 'no-calc') })()" 2>/dev/null)
+bfci=0
+while ! echo "$bfC" | rg -q 'yes' && [ "$bfci" -lt 4 ]; do
+  sleep 4
+  bfC=$(agent-browser eval "(() => { const pre = document.querySelector('pre'); if (!pre) return 'no-pre'; const t = pre.textContent; return (t.includes('calc(100% - 24px)') && !t.includes('/*')) ? 'yes' : (t.includes('calc(') ? 'calc-mangled:' + t.match(/calc.{0,20}/)?.[0] : 'no-calc') })()" 2>/dev/null)
+  bfci=$((bfci+1))
+done
 echo "$bfC" | rg -q 'yes' && ok "/beautify compact keeps calc() spaces, drops comments" || bad "/beautify compact: $bfC"
 agent-browser close > /dev/null 2>&1
 
@@ -847,6 +876,135 @@ if snap_hit 'kontivo-scan-check-2026'; then ok "/qr Scan tab decodes an image QR
 if snap_hit 'decoded inside this tab'; then ok "/qr scan privacy line present"; else bad "/qr scan privacy"; fi
 agent-browser close > /dev/null 2>&1
 
+if [ "$PHASE" = "3" ]; then
+  echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+  echo "== RESULT (phase 3): $pass passed, $fail failed — run PHASE=4 for Batch R3 + the final sweeps =="
+  exit 0
+fi
+
+# 11u5. Batch R3 — data & text utilities (one real interaction per tool)
+
+# /stats: numbers typed via the input path compute a verifiable mean
+open_page "http://localhost:81/stats"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+stRes=$(agent-browser eval "(() => { const el = document.getElementById('stats-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, '78 84 91 77 85'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+stMean=$(agent-browser eval "(() => { const t = document.body.textContent; const mean83 = t.includes('83'); const parsed = t.includes('5 numbers parsed'); return mean83 && parsed ? 'yes' : 'mean83:' + mean83 + ',parsed:' + parsed })()" 2>/dev/null)
+echo "$stMean" | rg -q 'yes' && ok "/stats computes mean 83 from 78/84/91/77/85" || bad "/stats mean: $stMean"
+stQ=$(agent-browser eval "(() => { const t = document.body.textContent; return (t.includes('Q1 (25th') && t.includes('IQR') && t.includes('Std deviation')) ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$stQ" | rg -q 'yes' && ok "/stats quartiles, IQR and std dev cards render" || bad "/stats cards: $stQ"
+agent-browser close > /dev/null 2>&1
+
+# /number-to-words: 1234.56 in USD wording (default currency is USD)
+open_page "http://localhost:81/number-to-words"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ntwRes=$(agent-browser eval "(() => { const el = document.getElementById('ntw-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '1234.56'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+ntwOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=money-line]'); if (!el) return 'no-line'; const t = el.textContent.toLowerCase(); return (t.includes('one thousand two hundred thirty-four') && t.includes('fifty-six cents') && t.endsWith('only')) ? 'yes' : t.slice(0, 120) })()" 2>/dev/null)
+echo "$ntwOut" | rg -q 'yes' && ok "/number-to-words writes 1234.56 as the USD cheque line ending in only" || bad "/number-to-words: $ntwOut"
+ntwIn=$(agent-browser eval "(() => { const el = document.getElementById('ntw-input'); const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '123456'); el.dispatchEvent(new Event('input', { bubbles: true })); const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Indian')); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+ntwLakh=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=money-line]'); return el && el.textContent.includes('lakh') ? 'yes' : (el ? el.textContent.slice(0, 80) : 'no-line') })()" 2>/dev/null)
+echo "$ntwLakh" | rg -q 'yes' && ok "/number-to-words Indian system says one lakh twenty-three thousand" || bad "/number-to-words lakh: $ntwLakh"
+agent-browser close > /dev/null 2>&1
+
+# /morse: sos encodes both ways; a morse string decodes to text
+open_page "http://localhost:81/morse"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+moRes=$(agent-browser eval "(() => { const el = document.getElementById('morse-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, 'sos'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+moOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=morse-out]'); return el && el.textContent.trim() === '... --- ...' ? 'yes' : (el ? el.textContent.trim().slice(0, 40) : 'no-out') })()" 2>/dev/null)
+echo "$moOut" | rg -q 'yes' && ok "/morse encodes sos as ... --- ..." || bad "/morse encode: $moOut"
+moDec=$(agent-browser eval "(() => { const el = document.getElementById('morse-input'); const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, '.- -.. -.-'); el.dispatchEvent(new Event('input', { bubbles: true })); const out = document.querySelector('[data-testid=morse-out]'); return out && out.textContent.trim() === 'adk' ? 'yes' : (out ? out.textContent.trim() : 'no-out') })()" 2>/dev/null)
+echo "$moDec" | rg -q 'yes' && ok "/morse decodes .- -.. -.- to adk" || bad "/morse decode: $moDec"
+moPlay=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Play aloud')); return b && !b.disabled ? 'present' : 'missing' })()" 2>/dev/null)
+echo "$moPlay" | rg -q 'present' && ok "/morse playback control ready" || bad "/morse play: $moPlay"
+agent-browser close > /dev/null 2>&1
+
+# /font-changer: typing produces astral-plane styled output
+open_page "http://localhost:81/font-changer"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+fcRes=$(agent-browser eval "(() => { const el = document.getElementById('fc-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, 'Ab'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+fcOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-style=bold-sans]'); if (!el) return 'no-el'; const cps = [...el.textContent].map(c => c.codePointAt(0) ?? 0); return (cps.length === 2 && cps.every(c => c > 0xFFFF)) ? 'yes:' + cps.map(c => c.toString(16)).join(',') : 'plain:' + cps.map(c => c.toString(16)).join(',') })()" 2>/dev/null)
+echo "$fcOut" | rg -q 'yes:1d5d4,1d5ef' && ok "/font-changer renders astral bold-sans characters" || bad "/font-changer: $fcOut"
+fcCards=$(agent-browser eval "(() => [...document.querySelectorAll('[data-style]')].length)()" 2>/dev/null)
+echo "$fcCards" | rg -q '^13$' && ok "/font-changer lists all thirteen styles" || bad "/font-changer styles: $fcCards"
+agent-browser close > /dev/null 2>&1
+
+# /emoji: keyword search filters the built-in grid, category chips present
+open_page "http://localhost:81/emoji"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+emAll=$(agent-browser eval "(() => [...document.querySelectorAll('button[title]')].filter(b => (b.getAttribute('title') || '').includes('click to copy')).length)()" 2>/dev/null)
+if [ "$emAll" -gt 200 ] 2>/dev/null; then ok "/emoji renders the built-in grid ($emAll tiles)"; else bad "/emoji grid: $emAll"; fi
+emSearch=$(agent-browser eval "(() => { const el = document.getElementById('emoji-search'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, 'heart'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+emFiltered=$(agent-browser eval "(() => { const tiles = [...document.querySelectorAll('button[title]')].filter(b => (b.getAttribute('title') || '').includes('click to copy')); return tiles.length > 0 && tiles.length < 200 && tiles.every(t => (t.getAttribute('title') || '').includes('heart')) ? 'yes' : 'count:' + tiles.length })()" 2>/dev/null)
+echo "$emFiltered" | rg -q 'yes' && ok "/emoji search heart filters to heart entries" || bad "/emoji filter: $emFiltered"
+agent-browser close > /dev/null 2>&1
+
+# /json-to-ts: default sample generates interfaces with the optional note field
+open_page "http://localhost:81/json-to-ts"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser wait --text "TypeScript" --timeout 40000 > /dev/null 2>&1
+sleep 2
+jtsOut=$(agent-browser eval "(() => { const pre = document.querySelector('[data-testid=jts-out]'); if (!pre) return 'no-pre'; const t = pre.textContent; return (t.includes('export interface OrderPayload') && t.includes('Order') && t.includes('note?: string')) ? 'yes' : 'op:' + t.includes('OrderPayload') + ',item:' + t.includes('Order') + ',opt:' + t.includes('note?: string') })()" 2>/dev/null)
+echo "$jtsOut" | rg -q 'yes' && ok "/json-to-ts generates OrderPayload with optional note field" || bad "/json-to-ts: $jtsOut"
+agent-browser close > /dev/null 2>&1
+
+# /compress-pdf: the real 3-page fixture rasterizes and rebuilds with a verdict
+open_page "http://localhost:81/compress-pdf"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+agent-browser upload "input[type=file]" "$FX/test-3pages.pdf" > /dev/null 2>&1
+agent-browser wait --text "Result" --timeout 90000 > /dev/null 2>&1
+sleep 1
+cpVerdict=$(agent-browser eval "(() => { const t = document.body.textContent; const hasCards = t.includes('Before') && t.includes('After') && t.includes('Pages'); const honest = t.includes('Smaller by') || t.includes('LARGER'); return hasCards && honest ? 'yes' : 'cards:' + hasCards + ',honest:' + honest })()" 2>/dev/null)
+echo "$cpVerdict" | rg -q 'yes' && ok "/compress-pdf reports an honest before/after verdict" || bad "/compress-pdf verdict: $cpVerdict"
+cpBtn=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('Download compressed PDF')); return b ? 'present' : 'no-btn' })()" 2>/dev/null)
+echo "$cpBtn" | rg -q 'present' && ok "/compress-pdf download action reachable" || bad "/compress-pdf btn: $cpBtn"
+agent-browser close > /dev/null 2>&1
+
+# /time-card: punches via the input path compute 7:30 after a 30-min break
+open_page "http://localhost:81/time-card"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+tcRes=$(agent-browser eval "(() => { const set = (el, v) => { const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }; const ins = document.querySelectorAll('input[type=time]'); if (ins.length < 4) return 'few-inputs:' + ins.length; set(ins[0], '09:00'); set(ins[1], '17:00'); const num = document.querySelector('input[type=number][aria-label*=break]'); if (!num) return 'no-break'; set(num, '30'); return 'set' })()" 2>/dev/null)
+sleep 1
+tcTotal=$(agent-browser eval "(() => { const t = document.body.textContent; return t.includes('7:30') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$tcTotal" | rg -q 'yes' && ok "/time-card computes 8:00 - 30 min break = 7:30" || bad "/time-card: $tcTotal"
+tcVerdict=$(agent-browser eval "(() => { const t = document.body.textContent; return (t.includes('Regular') && t.includes('Overtime') && t.includes('enter a rate')) ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$tcVerdict" | rg -q 'yes' && ok "/time-card overtime split and honest pay row render" || bad "/time-card cards: $tcVerdict"
+agent-browser close > /dev/null 2>&1
+
+# /grade: the final-exam solver — 84% current, 40% final, target 90% needs 99%
+open_page "http://localhost:81/grade"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+grRes=$(agent-browser eval "(() => { const btn = [...document.querySelectorAll('button[role=tab]')].find(x => x.textContent.includes('Grade on my final')); if (!btn) return 'no-tab'; btn.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+grSet=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('gr-cur', '84'); const b = set('gr-w', '40'); const c = set('gr-t', '90'); return a && b && c ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+grOut=$(agent-browser eval "(() => { const t = document.body.textContent; return t.includes('99.0%') ? 'yes' : 'missing-99' })()" 2>/dev/null)
+echo "$grOut" | rg -q 'yes' && ok "/grade final solver: 84/40/target-90 needs 99.0%" || bad "/grade solver: $grOut"
+agent-browser close > /dev/null 2>&1
+
+# /todo: Enter adds an item through the real input path, counter updates
+open_page "http://localhost:81/todo"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+tdRes=$(agent-browser eval "(() => { const el = document.getElementById('todo-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, 'Ship the QA report'); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'added' })()" 2>/dev/null)
+sleep 1
+tdItem=$(agent-browser eval "(() => { const items = [...document.querySelectorAll('[data-testid=todo-item]')]; return items.length === 1 && items[0].textContent.includes('Ship the QA report') ? 'yes' : 'count:' + items.length })()" 2>/dev/null)
+echo "$tdItem" | rg -q 'yes' && ok "/todo Enter adds the item through the input path" || bad "/todo add: $tdItem"
+tdOpen=$(agent-browser eval "(() => { const t = document.body.textContent; return t.includes('1 of 1 open') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$tdOpen" | rg -q 'yes' && ok "/todo open counter updates" || bad "/todo counter: $tdOpen"
+tdPersist=$(agent-browser eval "(() => { const raw = window.localStorage.getItem('kontivo-checklist-v1'); return raw && raw.includes('Ship the QA report') ? 'yes' : (raw ? 'wrong:' + raw.slice(0, 60) : 'empty') })()" 2>/dev/null)
+echo "$tdPersist" | rg -q 'yes' && ok "/todo persists the item to localStorage" || bad "/todo persist: $tdPersist"
+agent-browser close > /dev/null 2>&1
+
+if [ "$PHASE" = "4" ]; then
+  echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+  echo "== RESULT (phase 4): $pass passed, $fail failed — run PHASE=5 for the final sweeps =="
+  exit 0
+fi
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -901,7 +1059,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)
@@ -945,6 +1103,14 @@ for p in $(rg -o "'(/[a-z0-9-]+)'" public/sw.js | tr -d "'" ); do
   [ "$c" = "200" ] || { bad "sw shell $p: $c"; swmiss=1; }
 done
 [ "$swmiss" = "0" ] && ok "sw.js INSTANT_TOOLS mirror: all paths live"
+
+if [ "$PHASE" = "5" ]; then
+  echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+  echo "== RESULT (phase 5): $pass passed, $fail failed — run PHASE=6 for the last checks =="
+  exit 0
+fi
+
+fi  # end the PHASE!=7 skip wrapper around the 11g→19b region
 
 # 20. session landing: action first (button before any mode explanation)
 open_page "http://localhost:81/share"
