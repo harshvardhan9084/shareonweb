@@ -1011,6 +1011,7 @@ mirror sweep asserts all answer 200 through the gateway. No new
 dependencies (meme/svg use canvas 2D; vcard reuses the existing `qrcode`
 package).
 
-Next run: **Batch R5** per §13 (sound-tools 4-in-1, heic — owner-flagged,
-annotation, invoice-status, receipt, split-bill, aspect-ratio, dpi, ssl,
-invoice-number — minus anything the owner still has flagged).
+Next run: **Batch R5** per §13 (sound-tools 4-in-1 — dB meter/tone/tuner/
+metronome, tts via speechSynthesis, fuel-cost, salary, sleep, pace,
+one-rep-max, fraction, quadratic; /heic stays owner-flagged pending the
+size-acceptance call, like /video-trim).
