@@ -629,17 +629,17 @@ work through them 10 per run. Selection rules used for this list:
 - [x] `/typing-test` — WPM/CPM + accuracy, 15s/30s/1m/3m modes, real word stream
 - [x] `/markdown` — markdown editor with live preview, HTML export, table generator
 
-### Batch R3 — data & text utilities
-- [ ] `/stats` — mean/median/mode/range/variance/std-dev/quartiles from pasted numbers
-- [ ] `/number-to-words` — amounts in words (cheque style), multiple currency formats
-- [ ] `/morse` — text ↔ morse with live audio playback and speed control
-- [ ] `/font-changer` — unicode text styles (bold/italic/script/small-caps/strike/upside-down) for bios
-- [ ] `/emoji` — emoji finder by keyword with copy, grouped categories
-- [ ] `/json-to-ts` — JSON → TypeScript interfaces/types generator
-- [ ] `/compress-pdf` — PDF recompressor (rasterize pages at chosen JPEG quality, rebuild with pdf-lib)
-- [ ] `/time-card` — weekly time card: in/out rows, break deductions, wage math
-- [ ] `/grade` — GPA calculator, weighted grade, final-exam grade needed
-- [ ] `/todo` — local checklist with localStorage persistence, filter + reorder
+### Batch R3 — data & text utilities — DONE this run, 2026-11-25, QA-verified per tool (see §16)
+- [x] `/stats` — mean/median/mode/range/variance/std-dev/quartiles from pasted numbers
+- [x] `/number-to-words` — amounts in words (cheque style), multiple currency formats
+- [x] `/morse` — text ↔ morse with live audio playback and speed control
+- [x] `/font-changer` — unicode text styles (bold/italic/script/small-caps/strike/upside-down) for bios
+- [x] `/emoji` — emoji finder by keyword with copy, grouped categories
+- [x] `/json-to-ts` — JSON → TypeScript interfaces/types generator
+- [x] `/compress-pdf` — PDF recompressor (rasterize pages at chosen JPEG quality, rebuild with pdf-lib)
+- [x] `/time-card` — weekly time card: in/out rows, break deductions, wage math
+- [x] `/grade` — GPA calculator, weighted grade, final-exam grade needed
+- [x] `/todo` — local checklist with localStorage persistence, filter + reorder
 
 ### Batch R4 — image & format utilities
 - [ ] Image Toolkit modes: **crop, rotate, flip** added to the existing /image workbench (4-in-1)
@@ -800,3 +800,119 @@ Ops: ~/.git-credentials was empty again this run (sandbox recycle); restored
 from the owner's earlier fine-grained PAT (URL-style line, chmod 600). Push
 below uses it. Next run: **Batch R3** per §13 (stats, number-to-words, morse,
 font-changer, emoji, json-to-ts, compress-pdf, time-card, grade, todo).
+
+## 16. Batch R3 — §13 expansion continues (this run, 2026-11-25)
+
+This run shipped **Batch R3 — data & text utilities**, all ten tools with the
+full pipeline per tool (registry entry with SEO intents → component in
+`src/components/instant/` → instant-surface mount → long-form article →
+titles/descriptions/FAQs → app-icon → sw precache). /video-trim and AI
+background removal stay parked permanently; nothing touched them.
+
+**QA: 22 + 34 + 103 + 123 + 221 + 3 = 506 PASS, 0 FAIL** across six
+final-qa.sh phase invocations through the :81 gateway (PHASE=1 → 2 → 3 → 4 →
+5 → 7). The suite outgrew single-invocation timeouts on this box, so the
+phase mechanism was extended: PHASE=3 now covers archive→R1→R2→QR, PHASE=4
+re-warms that region and adds the **Batch R3 block (20 browser checks, one
+real interaction per tool)**, PHASE=5 adds the session flow + legacy
+rewrites + ALL_LIVE JSON-LD sweep + sw mirror, PHASE=7 runs only the final
+/share checks + console sweep (the late phases deliberately re-verify the
+overlapping middle region, so the printed sum double-counts it; the unique
+check count is ~280). lint clean. The R3 browser checks all drive the real
+input path (native value setters + input events) and assert computed facts:
+/stats mean 83 from 78/84/91/77/85 with quartile cards, /number-to-words
+"one thousand two hundred thirty-four dollars and fifty-six cents only" plus
+the lakh/crore switch, /morse "sos"→"... --- ..." and ".- -.. -.-"→"adk",
+/font-changer's bold-sans output verified by code point (U+1D5D4/U+1D5EF),
+/emoji's 891-tile built-in grid filtering to heart entries, /json-to-ts
+emitting OrderPayload/Order with the optional `note?` field, /compress-pdf
+rasterizing the real 3-page fixture into an honest Before/After verdict,
+/time-card 09:00–17:00 − 30 min break = 7:30, /grade's final solver printing
+99.0% for 84/40/target-90, /todo adding through Enter + persisting to
+localStorage. Every R3 page is in the warm list, ALL_LIVE sweep and the sw
+mirror sweep.
+
+Shipped (all instant, 100% client-side):
+
+1. `/stats` — tolerant parser (skipped tokens counted, not dropped), median
+   and quartiles by linear interpolation (PERCENTILE.INC / numpy default),
+   sample/population variance switch with formulas on the cards, honest mode
+   ("none" when all values unique), 1.5×IQR fences + named outliers, ten-bin
+   histogram from the same data, sorted list.
+2. `/number-to-words` — international short scale and Indian lakh/crore
+   systems, five currency framings ending in "only", truncate-not-round past
+   two decimals with a visible note, auto-stripping of commas/symbols,
+   minus-sign handling, safe-integer ceiling stated when hit.
+3. `/morse` — direction auto-detected in one box, full ITU table plus
+   punctuation, unencodable characters named, playback scheduled entirely on
+   the WebAudio clock (dot 1 / dash 3 / gaps 1-3-7, PARIS unit = 1.2÷WPM s,
+   5–35 WPM, 300–1200 Hz, 5 ms click-free ramps), flashing element readout.
+4. `/font-changer` — thirteen Unicode styles live at once with per-card
+   "no mapping for" notes, honorific substitutes for the script/fraktur
+   holes, digits only where blocks provide them, screen-reader caveat on the
+   page.
+5. `/emoji` — embedded dataset (891 entries, names + real keywords, nine
+   categories, global dedupe at parse), live search, click-to-copy with
+   visible state, tab-local recents, honest scope statement.
+6. `/json-to-ts` — structural dedup (identical shapes share one interface),
+   optional fields derived from array members that omit or null them,
+   singularized item names, unions for mixed arrays, unknown[] for empty
+   arrays, line/column parse errors, interface/type-alias + readonly knobs.
+7. `/compress-pdf` — pdf.js rasterize at 0.75–2× + JPEG 30–95%, pdf-lib
+   rebuild at the original point size, per-page progress, honest verdict in
+   BOTH directions ("keep the original" when a vector-heavy file grows),
+   selectability cost stated.
+8. `/time-card` — two in/out pairs + break minutes per day, overnight shifts
+   across midnight, h:mm and decimal totals, configurable OT threshold and
+   multiplier, gross pay with the formula printed and the pre-tax caveat.
+9. `/grade` — three tabs: weighted grade over graded weights (standing, not
+   prediction), final-exam solver with the algebra printed and unreachable
+   targets named, GPA on the unweighted 4.0 mapping from letters or percents.
+10. `/todo` — localStorage persistence via useSyncExternalStore (server
+    snapshot empty, storage-loaded client snapshot, cross-tab storage events
+    subscribed), defensive store read, inline edit, drag + button reorder,
+    filters, clear-completed, copy-as-Markdown export, deletion story on the
+    page.
+
+**Real bugs the new QA caught and this run fixed (all verified by re-run):**
+- `/font-changer` produced WRONG characters: `String.fromCharCode(0x1D5D4)`
+  wraps modulo 0x10000 (U+1D5D4 → Hangul U+D5D4), and the digit tables were
+  indexed by UTF-16 unit so astral digits split into surrogate halves. Both
+  mappers now use `String.fromCodePoint` and spread-index the digit strings;
+  QA asserts the exact code points.
+- `/number-to-words` joined "thirty" and "-four" as separate array elements,
+  rendering "thirty -four"; the hyphenated tens are now one token. Caught by
+  the offline algorithm check (`scripts/r3-algorithm-check.cjs`), not the
+  browser.
+- `/todo` read a ref during render (react-hooks/refs) and called setState in
+  a mount effect (react-hooks/set-state-in-effect); the drag id moved to
+  state and persistence moved to a localStorage-backed store read through
+  `useSyncExternalStore` — the React-19-correct pattern, which also buys
+  cross-tab sync for free.
+- The `fromCodePoint` hardening exposed a latent NaN: circled digits passed
+  a STRING where the mapper did arithmetic (`'⓪' + 1`); `fromCharCode` had
+  silently swallowed it into U+0000, `fromCodePoint` throws — the mapper now
+  indexes the digit string per code point like the rest.
+- QA-harness hardening: the /beautify lazy-engine check retries like
+  snap_hit (a cold chunk load raced the eval); astral-character assertions
+  return code points as ASCII because the eval bridge mangles non-BMP
+  string returns; invalid unquoted CSS attribute selectors replaced with
+  getAttribute filters.
+
+sw.js bumped to sow-shell-v8 — **65 instant shells** precached; the mirror
+sweep asserts all 65 answer 200 through the gateway. No new dependencies.
+
+**Concurrency incident, handled:** mid-run this session was killed during a
+QA phase, and a concurrently-started session amended the R2 commit
+(78f7233 → 57a5ce1) with this run's uncommitted R3 files at 17:01:58 +08:00 —
+R3 work hidden under an R2-labeled commit message. Remote was still at
+78f7233 (never pushed), so history was repaired locally: `git reset --soft
+78f7233`, then the R3 work committed under its own message (0e6270f) and
+pushed as a clean fast-forward. Check `git log` if another session's commit
+ever looks like it contains foreign files.
+
+Ops: ~/.git-credentials was wiped twice this run (two sandbox recycles);
+both times restored from the owner's earlier fine-grained PAT (URL-style
+line, chmod 600) and both pushes used it. Next run: **Batch R4** per §13
+(image toolkit modes, meme, svg-convert, cipher, due-date, word-frequency,
+vcard, calendar-link, px-rem, binary).
