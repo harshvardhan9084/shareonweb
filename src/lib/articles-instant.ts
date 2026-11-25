@@ -2684,4 +2684,299 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ------------------------------------------------------------ sound-tools
+  'sound-tools': {
+    lede: [
+      'Sound Tools puts four audio utilities on one page: a decibel meter, a tone generator, a guitar tuner and a metronome. They share one design rule — every audio resource is created when you press start and closed the moment you stop, so nothing keeps listening, playing or running after you leave a mode.',
+      'The microphone modes analyse the stream in memory, in real time, and never record: there is no buffer kept, no file written, no upload path in the code at all. You can verify it in the browser\u2019s network tab — the page has nothing to send audio to.',
+    ],
+    sections: [
+      {
+        heading: 'The dB meter, calibrated honestly',
+        paragraphs: [
+          'A microphone measures pressure; a meter wants a calibrated reference. The raw number here is dBFS — decibels relative to digital full scale — which is real and repeatable for your device. The displayed figure adds a calibration offset (default 100) so conversational speech lands near 60 dBA on typical built-in microphones. Hold a real SPL meter next to the mic once, slide the offset until they agree, and the estimate becomes genuinely useful for that room.',
+          'The meter tracks peak, running average and min/max since start, with a bar scaled from 30 to 130 dBA. What it refuses to do is pretend a laptop mic is a Class-2 instrument — the page keeps the “estimate” label because the honest number you can calibrate beats a precise one you cannot.',
+        ],
+      },
+      {
+        heading: 'Tone generator and guitar tuner',
+        paragraphs: [
+          'The tone generator sweeps 20 Hz to 20 kHz on a log scale — one decade per third of the slider, the way hearing tests present frequency — in sine, square, sawtooth or triangle, with the nearest note name shown. Gain changes ramp on the audio clock, so there are no clicks when you start, stop or slide.',
+          'The tuner detects pitch by trimmed autocorrelation: gate on signal level, trim the quiet head and tail, correlate the waveform against itself, and parabolic-interpolate the strongest peak. That yields a frequency, which maps onto the chromatic scale with a cents needle from −50 flat to +50 sharp, and the standard-tuning reference (E2 82.41 Hz up to E4 329.63 Hz) highlights the string you are closest to. It needs a clean single pitch — pluck one open string and let it ring.',
+        ],
+      },
+      {
+        heading: 'Why the metronome does not drift',
+        paragraphs: [
+          'Naive metronomes schedule clicks with setTimeout, and the beat wanders the moment the browser throttles timers. This one runs a 25 ms look-ahead loop that queues every click on the AudioContext clock ahead of time — the same discipline the morse player uses — so the tempo stays true even when the tab is busy. Accenting the first beat, 2/3/4/6/8 beats per bar and tap tempo (average of your last four taps) are all there.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------------- tts
+  tts: {
+    lede: [
+      'Text to Speech Reader speaks any text through your browser\u2019s own voices — the ones your operating system already ships, nothing downloaded, nothing uploaded. Voice, rate, pitch and volume are yours to set, and pause, resume and stop actually control the audio clock.',
+      'The design problem worth explaining is length: browsers silently truncate or stall a single long utterance, so pasting a whole article into one speak() call fails in a way you cannot see. This tool splits text into sentence-bounded chunks, queues them in order, highlights the one being spoken, and shows real progress — chunk 3 of 9 — so playback is stable and inspectable.',
+    ],
+    sections: [
+      {
+        heading: 'How the chunking works',
+        paragraphs: [
+          'Text splits on sentence boundaries (periods, question marks, exclamation points, line breaks) and accumulates sentences up to about 220 characters per chunk; a pathological single sentence longer than the cap is hard-split. Each chunk becomes its own utterance, and the queue advances on each utterance\u2019s own end event — which is why pause and stop land cleanly between sentences instead of mid-word.',
+          'The chunk list is visible before you press play, so you can see exactly what will be spoken and in what order. The highlighted line follows playback live.',
+        ],
+      },
+      {
+        heading: 'Who reads with this',
+        paragraphs: [
+          'Proofreaders — the ear catches repeated words, missing commas and sentences that never end, which the eye slides past. Students listening to notes while commuting. Writers hearing how their prose actually sounds. Anyone whose eyes are tired at the end of a long document.',
+        ],
+        list: [
+          'Proofread an essay or email by listening at 0.8×',
+          'Get through a long article hands-free at 1.5×',
+          'Hear how a piece of writing flows before you publish it',
+          'Rest your eyes while keeping up with a report',
+        ],
+      },
+      {
+        heading: 'Honest about the limits',
+        paragraphs: [
+          'Voice quality is whatever your OS provides — the tool prefers a local English voice and labels network voices, which can be slower and stop working offline. If the browser has no Web Speech API, or no voices are installed, the page says exactly that instead of showing a play button that does nothing. And nothing is sent anywhere: the engine runs on your device, the text never leaves the tab.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- fuel-cost
+  'fuel-cost': {
+    lede: [
+      'Trip Fuel Cost Calculator answers the question every road trip starts with: what will the fuel actually cost, and what does each person owe? Distance, efficiency and price, each in the units you already think in — km or miles, L/100km or km/L or MPG (US/UK), price per liter or per gallon — with an even passenger split and a round-trip toggle.',
+      'The reason it accepts all those units without getting one wrong is a single design decision: everything normalizes internally to liters per kilometer and currency per liter. Your input is converted once, at the boundary, and the arithmetic after that is plain multiplication you can check by hand.',
+    ],
+    sections: [
+      {
+        heading: 'The unit trap this tool avoids',
+        paragraphs: [
+          'MPG is where most calculators lie. A US gallon is 3.79 liters and a UK (imperial) gallon is 4.55 — the same “35 MPG” is two different cars. Worse, MPG and L/100km are reciprocally related, so “twice the MPG” is not “half the consumption”: going from 25 to 50 MPG saves more fuel per km than going from 50 to 100. The equivalence line shows your figure in all three systems side by side, with the gallon caveat printed.',
+          'Mile distances work the same way — the trip length is converted once and the vehicle\u2019s efficiency belongs to the vehicle, not the trip.',
+        ],
+      },
+      {
+        heading: 'What the outputs mean',
+        paragraphs: [
+          'Fuel needed is liters (the internal currency), shown to two decimals. Total cost multiplies through your chosen price. The per-km (or per-mile) figure is the one to compare vehicles, routes or driving styles with. The per-passenger split assumes everyone rides the same distance — fair for a road trip, and stated so you can decide.',
+        ],
+        list: [
+          'Split a trip\u2019s petrol evenly before you leave',
+          'Compare two cars\u2019 real cost per km, not their brochures',
+          'Budget a road trip including the drive back',
+          'Decode what your car\u2019s L/100km means in MPG, or the reverse',
+        ],
+      },
+      {
+        heading: 'Where the number meets reality',
+        paragraphs: [
+          'Real consumption climbs with highway speed, headwinds, roof boxes, cold starts, short trips and air conditioning — planning figures from the brochure assume ideal conditions. Treat the result as the center of a range and budget 10–15% above it for loaded cars at 120 km/h.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------------- salary
+  salary: {
+    lede: [
+      'Salary Converter turns one number in one pay frequency into the whole table — hourly, daily, weekly, two-weekly, monthly and annual — and prints the exact pipeline it used, so every figure is checkable instead of magical.',
+      'Two details it refuses to skip. Unpaid break minutes shrink the paid shift before anything is annualized (a 60-minute lunch in an 8-hour shift is 7 paid hours, and “annual salary” built on 8 would overstate it by more than 12%). And overtime enters at its multiplier on top of the base, not folded invisibly into the rate.',
+    ],
+    sections: [
+      {
+        heading: 'The pipeline, in order',
+        paragraphs: [
+          'Paid shift = shift hours minus unpaid break. Paid week = paid shift times days per week. Base annual = your amount annualized through its own frequency (hourly uses paid hours times weeks per year; monthly times twelve; and so on). Overtime annual = hourly rate times multiplier times OT hours times weeks. Every row in the table derives from that one annual figure — no rounding drift between rows, because there is one source of truth.',
+          'The weeks-per-year input is not decoration: teachers on 40-week contracts, seasonal workers and contractors with unpaid time off all break the default 52, and a converter that hardcodes 52 quietly lies to them.',
+        ],
+      },
+      {
+        heading: 'Why there is no “take-home” estimate',
+        paragraphs: [
+          'Net pay depends on income tax brackets, social contributions, local surcharges, benefit deductions, retirement contributions and filing status — dozens of parameters that change every year and every jurisdiction. A converter that guesses them prints a confident-looking number that is wrong in ways you cannot audit. This tool states the honest boundary: everything here is gross and pre-tax, and the page says so on the table itself.',
+        ],
+      },
+      {
+        heading: 'Where it earns its keep',
+        paragraphs: [
+          'Comparing a salaried offer with a contract rate; checking that an overtime-heavy month is actually paid correctly; converting a freelancer\u2019s day rate into the annual it implies; sanity-checking what an unpaid break is really costing across a year.',
+        ],
+        list: [
+          'Compare a job offer stated yearly with your current hourly rate',
+          'Price a freelance day rate against a salaried month',
+          'See what unpaid lunch breaks cost over a year',
+          'Check overtime math before payday does',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------ sleep
+  sleep: {
+    lede: [
+      'Sleep Cycle Calculator plans bedtimes and alarms around the 90-minute sleep cycle — the standard heuristic that waking at the end of a cycle feels easier than waking from deep sleep mid-cycle. Tell it when your alarm rings and read the bedtimes that complete 3 to 6 cycles before it, or say “going to bed now” and read the alarm times that land between cycles.',
+      'The model is simple and stated openly: add your fall-asleep latency (default 15 minutes), add or subtract whole 90-minute cycles, and rank the results — six cycles marked as the most-rested target, three as the shortest suggestion.',
+    ],
+    sections: [
+      {
+        heading: 'The two directions',
+        paragraphs: [
+          'Wake-at mode anchors on your alarm: bedtimes are alarm minus (cycles × 90 min) minus latency, wrapping past midnight cleanly — a 07:00 alarm suggests 21:45 for six cycles, 23:15 for five, 00:45 for four, 02:15 for three. Sleep-now mode anchors on lights-out: alarm times are lights-out plus latency plus whole cycles, for the nights you simply want to know when to set the alarm.',
+          'The latency input matters more than people expect: if you typically take 30 minutes to fall asleep, a “six cycles” bedtime calculated without it is really five and a bit cycles in practice.',
+        ],
+      },
+      {
+        heading: 'The honesty section',
+        paragraphs: [
+          'Ninety minutes is a population average — individual cycles run roughly 80 to 110 minutes and vary night to night, and the stages inside a cycle shift across the night. The times here are a planning aid built on the standard heuristic, useful for deciding between a 23:00 and a 23:45 bedtime, not a medical instrument. Persistent sleep problems — trouble falling asleep, waking unrefreshed on a full schedule, snoring with gaps — belong with a doctor.',
+        ],
+        list: [
+          'Pick a bedtime that completes whole cycles before a fixed alarm',
+          'Set an alarm that lands between cycles after a late night',
+          'Adjust for how long you actually take to fall asleep',
+          'Plan a short night deliberately instead of accidentally',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------------- pace
+  pace: {
+    lede: [
+      'Running Pace Calculator turns one run — a distance and a time — into pace per km and per mile, speed in both units, an even-pace splits table, and race-time predictions from 5K to marathon by Riegel\u2019s formula.',
+      'The predictions use T₂ = T₁ × (D₂/D₁)^1.06, Peter Riegel\u2019s 1977 fit across real performances. It is the standard because it works across distances for trained runners — and it deserves the caveat it gets here: it assumes your training scales with the target distance. A 25-minute 5K projects about 3:59 for a marathon, but only for someone who has actually run the long runs.',
+    ],
+    sections: [
+      {
+        heading: 'Pace, speed and splits',
+        paragraphs: [
+          'Pace is time per unit distance (minutes and seconds per km, and per mile for the treadmill-bound); speed is its reciprocal in km/h and mph. The splits table walks the run at even pace, showing elapsed time at every full kilometer or mile plus the final partial — the reference line to check a real race against. Negative-splitting a race changes the finish time, not this table\u2019s usefulness as a pacing baseline.',
+        ],
+      },
+      {
+        heading: 'Using the prediction table honestly',
+        paragraphs: [
+          'The table predicts 5K, 10K, half marathon and marathon from your input run, each with its projected per-km pace. Long predictions are the least reliable: the exponent was fitted on trained racers, so a 5K alone under-predicts a marathon for a runner without long-run volume. The right use is directional — “is my goal marathon pace realistic given my half?” — not a promise.',
+        ],
+        list: [
+          'Find the pace to hold for a goal race time',
+          'Check whether a marathon goal matches your half marathon',
+          'Build an even-pace splits plan for race day',
+          'Convert treadmill speed (km/h) to outdoor pace',
+        ],
+      },
+    ],
+  },
+
+  // ------------------------------------------------------------ one-rep-max
+  'one-rep-max': {
+    lede: [
+      'One Rep Max Calculator estimates the most you could lift once, from a set you can already do: enter the weight and reps and read four published formulas side by side — Epley, Brzycki, Lander and Lombardi — plus a consensus that averages the three the evidence favors.',
+      'Showing the formulas together is the point. They agree tightly at one to six reps and drift apart as reps climb — by twelve reps the spread can exceed ten percent of the answer. A calculator that shows only one formula hides that disagreement; this one puts it on the page and anchors programming to the consensus.',
+    ],
+    sections: [
+      {
+        heading: 'The formulas, and why they differ',
+        paragraphs: [
+          'Epley (w × (1 + r/30)) is the 1985 classic, linear in reps. Brzycki (w × 36 / (37 − r)) decays faster at high reps and tracks fatigue accumulation better there. Lander is close to Brzycki; Lombardi\u2019s power law (w × r^0.10) is the outlier that runs hot on short sets. All were fitted on real lifters doing real reps-to-failure — none is truth, and the truth varies by lift and by person (fatigue resistance differs between a squat and a bench).',
+          'The consensus averages Epley, Brzycki and Lander, which cluster around the middle of the pack, and the training table uses it.',
+        ],
+      },
+      {
+        heading: 'Programming from the percentage table',
+        paragraphs: [
+          'The table maps percentages of the consensus to loads and the reps they typically allow: 95% for heavy doubles, 90% for strength fours, 85% for strength-hypertrophy sixes, 80% for the classic eights, 75% for tens, 70% for twelves, 60% for endurance and technique work. Percent-of-1RM programming exists precisely so loads scale automatically as the max moves — re-test, and the whole table shifts with it.',
+        ],
+        list: [
+          'Set training loads without ever testing a true 1RM',
+          'Check whether a rep-out PR implies the max you think it does',
+          'Compare strength across bodyweight with kg and lb support',
+          'Program strength blocks (90%+) and hypertrophy blocks (70–80%) from one number',
+        ],
+      },
+      {
+        heading: 'The safety line',
+        paragraphs: [
+          'An estimate is not a measured max. Testing a true 1RM is a skill — warm-up ramping, bar speed judgment, a spotter or safety pins — and fatigue, sleep and readiness move it day to day. For programming, the estimate from a hard set of 3–5 reps is as good as a max test and considerably safer; the page prints that, because it is the part that actually prevents injuries.',
+        ],
+      },
+    ],
+  },
+
+  // --------------------------------------------------------------- fraction
+  fraction: {
+    lede: [
+      'Fraction Calculator does the four operations on two fractions and shows every step it took: the LCD rewrite for addition and subtraction, the cross products for multiplication, keep-change-flip for division, and the GCD that reduced the result. The answer arrives four ways — unreduced, reduced, as a mixed number, and as a decimal — because homework, recipes and shop drawings all ask in different languages.',
+      'A converter sits alongside: fraction to decimal by real long division with repeat detection (1/7 prints 0.(142857), the digits in parentheses looping forever), and decimal to fraction that is exact up to eight places and honestly labelled approximate beyond.',
+    ],
+    sections: [
+      {
+        heading: 'Why the steps are the product',
+        paragraphs: [
+          'An answer without steps teaches nothing and checks nothing. The printed steps show the least common multiple that aligns denominators, the multipliers each fraction needed, the exact integer arithmetic over that LCD, and the Euclidean GCD that reduced the result — which is precisely the sequence a student is being graded on reproducing. For the cook scaling a recipe, the mixed number (1 7/12 cups) is the usable form; the reduced improper fraction (19/12) is the canonical one.',
+        ],
+      },
+      {
+        heading: 'Terminating, repeating, and the honest approximation',
+        paragraphs: [
+          'A fraction of integers always produces a decimal that terminates or repeats — that is what a rational number is. The long-division engine detects the repeat by watching remainders: the first remainder seen twice marks the start of the cycle, so 1/7 yields 0.(142857) exactly rather than a truncated prefix pretending to be the whole answer. Decimal to fraction runs the reverse: place value makes it exact through eight decimal places, and longer decimals get the closest small-denominator fraction with the error stated, because a fifteen-digit decimal usually is not exactly any short fraction.',
+        ],
+        list: [
+          'Check homework with the full worked steps visible',
+          'Scale recipe quantities that arrive as fractions',
+          'Convert 0.375 or 1/7 exactly, repeats included',
+          'Reduce 15/24 to 5/8 and see the GCD that did it',
+        ],
+      },
+      {
+        heading: 'Exact arithmetic',
+        paragraphs: [
+          'Everything runs on integer arithmetic with inputs clamped below 2^53, so products of numerators and denominators never round — the answer is exact, not a float that happens to print cleanly. Division by the zero fraction is named and refused, not silently answered with Infinity.',
+        ],
+      },
+    ],
+  },
+
+  // -------------------------------------------------------------- quadratic
+  quadratic: {
+    lede: [
+      'Quadratic Equation Solver answers ax² + bx + c = 0 completely: the discriminant, both roots (real, repeated, or complex conjugates stated as such), the vertex with its axis of symmetry, the opening direction, and the factored form when the roots print cleanly — with the worked steps substituting your actual numbers into D = b² − 4ac and the quadratic formula.',
+      'It also draws the parabola. An SVG plot samples the function, auto-scales around the vertex so the interesting region fills the frame, and marks the roots where they cross the axis — so the algebra and the shape can be checked against each other in one glance, which is how the concepts actually stick.',
+    ],
+    sections: [
+      {
+        heading: 'What the discriminant decides',
+        paragraphs: [
+          'D = b² − 4ac sorts every quadratic into three families before any root is computed: D > 0 gives two distinct real roots where the parabola crosses the axis twice; D = 0 gives one repeated root — the vertex touching the axis; D < 0 gives complex conjugates a ± bi, which is the mathematically correct answer and the page\u2019s wording, never “no solution”. The nature line appears next to the discriminant itself, so the sign and its consequence are read together.',
+        ],
+      },
+      {
+        heading: 'Vertex, factoring, and when factoring is refused',
+        paragraphs: [
+          'The vertex sits at x = −b/2a with y = c − b²/4a, printed with the axis of symmetry and whether it is a minimum (a > 0) or maximum (a < 0). The factored form prints when both roots are clean at three decimals — (x − 1)(x − 2) for the default 1, −3, 2 — and the tool says why it refuses when it must: irrational roots (D not a perfect square) and complex roots are named as such rather than forced into a fake factorization. The y-intercept (0, c) is on the same card.',
+        ],
+        list: [
+          'Check algebra homework against steps, not just answers',
+          'See which quadratics factor and which need the formula',
+          'Read the vertex form from the vertex card directly',
+          'Connect the roots you computed to where the curve actually crosses',
+        ],
+      },
+      {
+        heading: 'The plot is the same math',
+        paragraphs: [
+          'The SVG samples 200 points of your actual coefficients and rescales both axes around the vertex — it is not a stock picture. Roots are drawn only when they are real, the vertex dot is the same (−b/2a, c − b²/4a) the card prints, and when the roots move because you typed new coefficients, the drawing moves with them. Everything is computed and drawn in this tab per keystroke.',
+        ],
+      },
+    ],
+  },
 }

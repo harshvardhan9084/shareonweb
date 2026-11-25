@@ -85,6 +85,15 @@ import { VCardTool } from '@/components/instant/vcard-tool'
 import { CalendarLinkTool } from '@/components/instant/calendar-link-tool'
 import { PxRemTool } from '@/components/instant/px-rem-tool'
 import { BinaryTool } from '@/components/instant/binary-tool'
+import { SoundToolsTool } from '@/components/instant/sound-tools-tool'
+import { TtsTool } from '@/components/instant/tts-tool'
+import { FuelCostTool } from '@/components/instant/fuel-cost-tool'
+import { SalaryTool } from '@/components/instant/salary-tool'
+import { SleepTool } from '@/components/instant/sleep-tool'
+import { PaceTool } from '@/components/instant/pace-tool'
+import { OneRepMaxTool } from '@/components/instant/one-rep-max-tool'
+import { FractionTool } from '@/components/instant/fraction-tool'
+import { QuadraticTool } from '@/components/instant/quadratic-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -161,6 +170,15 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'calendar-link': CalendarLinkTool,
   'px-rem': PxRemTool,
   binary: BinaryTool,
+  'sound-tools': SoundToolsTool,
+  tts: TtsTool,
+  'fuel-cost': FuelCostTool,
+  salary: SalaryTool,
+  sleep: SleepTool,
+  pace: PaceTool,
+  'one-rep-max': OneRepMaxTool,
+  fraction: FractionTool,
+  quadratic: QuadraticTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

@@ -101,6 +101,15 @@ const SEO_TITLES: Record<string, string> = {
   'calendar-link': 'Add to Calendar Links — Google, Outlook and Yahoo links plus a real .ics download',
   'px-rem': 'px ⇄ rem Converter — px, rem, em and % at once, with a clamp() builder',
   binary: 'Binary to Text Converter — text ↔ binary, hex, octal and decimal, live both ways',
+  'sound-tools': 'Sound Tools — online dB meter, tone generator, guitar tuner and drift-free metronome, all in one page',
+  tts: 'Text to Speech Reader — read text aloud with your browser’s own voices, chunked and pausable',
+  'fuel-cost': 'Fuel Cost Calculator — trip fuel cost from distance, efficiency and price, split per passenger',
+  salary: 'Salary Converter — hourly, daily, weekly, monthly and annual pay from one number, breaks and OT included',
+  sleep: 'Sleep Calculator — bedtimes and alarms that land on whole 90-minute sleep cycles',
+  pace: 'Running Pace Calculator — pace, splits and Riegel race predictions from 5K to marathon',
+  'one-rep-max': 'One Rep Max Calculator — 1RM via Epley, Brzycki, Lander and Lombardi plus the training table',
+  fraction: 'Fraction Calculator — add, subtract, multiply and divide fractions with every step shown',
+  quadratic: 'Quadratic Formula Calculator — roots, discriminant, vertex, factored form, steps and a live plot',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -275,6 +284,24 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Convert px to rem, em and % at once against a configurable root and em context, with a quick-reference grid and a clamp() builder for fluid type — including the honest inverted-bounds warning.',
   binary:
     'Convert text to binary, hex, octal or decimal and back, live in both directions — UTF-8 with real byte counts or strict ASCII that names the first bad character, forgiving grouping.',
+  'sound-tools':
+    'Four sound tools on one page: a dB meter with calibration, a 20 Hz–20 kHz tone generator, an autocorrelation guitar tuner with a cents needle, and a metronome scheduled on the audio clock. Nothing is recorded.',
+  tts:
+    'Read any text aloud with the voices your browser already ships — sentence-chunked playback that survives long articles, real progress, pause and stop that work, and honest states when a browser has no speech engine.',
+  'fuel-cost':
+    'Work out a trip’s fuel cost in km or miles, L/100km, km/L or MPG (US/UK), priced per liter or gallon — with an even passenger split, round-trip toggle and the L/100km ↔ MPG equivalence shown both ways.',
+  salary:
+    'Convert pay between hourly, daily, weekly, monthly and annual — with unpaid breaks deducted before annualizing, overtime at its multiplier on top, and the whole pipeline printed. Gross, pre-tax, honestly labelled.',
+  sleep:
+    'Bedtimes that complete 3–6 ninety-minute sleep cycles before your alarm, or wake times after whole cycles from lights-out — with adjustable fall-asleep latency and the average-cycle caveat stated, not hidden.',
+  pace:
+    'Pace per km and per mile, speed, an even-pace splits table, and race-time predictions for 5K, 10K, half and full marathon by Riegel’s formula — with the assumptions the formula carries stated on the page.',
+  'one-rep-max':
+    'Estimate your one-rep max from weight × reps with Epley, Brzycki, Lander and Lombardi side by side, a consensus average, and the training-percentage table from 95% strength doubles down to 60% endurance work.',
+  fraction:
+    'Add, subtract, multiply and divide fractions with the full worked steps — LCD rewriting, cross products, keep-change-flip, GCD reduction — plus fraction ↔ decimal conversion with repeating cycles detected and parenthesised.',
+  quadratic:
+    'Solve ax² + bx + c = 0: discriminant, real or complex roots, vertex and axis of symmetry, factored form when it prints cleanly — worked steps with your numbers, and an SVG parabola that rescales around the vertex.',
 }
 
 /**
@@ -1736,6 +1763,186 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What is ASCII mode for?',
       a: 'Strictness: it refuses any character above 127, naming the exact character and its position — the right mode when the target system genuinely only speaks ASCII (many protocols, labels and legacy formats), where a silent é would produce bytes the other end cannot read.',
+    },
+  ],
+
+  // ------------------------------------------------------------ sound-tools
+  'sound-tools': [
+    {
+      q: 'Is the dB meter accurate?',
+      a: 'It is an estimate until you calibrate it, and the page says so. The raw measurement is dBFS — real and repeatable for your device — and the displayed figure adds an adjustable offset (default 100). Hold a trusted SPL meter next to the mic once, slide the offset until the numbers agree, and the estimate is genuinely useful for that room. A laptop mic is not a Class-2 instrument, and pretending otherwise would be the dishonest version.',
+    },
+    {
+      q: 'Does the meter or tuner record me?',
+      a: 'No. The microphone stream is analysed in memory one buffer at a time — the meter reads RMS levels, the tuner reads pitch — and the stream is stopped and closed the moment you press stop or leave the mode. There is no recording buffer, no file, and no upload path in the code; you can watch the network tab stay silent.',
+    },
+    {
+      q: 'Why can’t the tuner find my pitch?',
+      a: 'The detector needs a clean single pitch above a quiet floor: pluck one open string, let it ring, and play nothing else. Heavy fret buzz, multiple strings at once or a noisy room drop the correlation peak below the confidence gate — the tool shows “—” rather than a wrong note it does not believe.',
+    },
+    {
+      q: 'Why doesn’t the metronome drift like web metronomes usually do?',
+      a: 'Clicks are scheduled on the AudioContext clock through a 25 ms look-ahead loop, not fired by setTimeout — the same discipline professional metronome apps use. Timer throttling slows the scheduler, but every click still lands where the audio clock says it should, so the tempo stays true even in a busy tab.',
+    },
+  ],
+
+  // -------------------------------------------------------------------- tts
+  tts: [
+    {
+      q: 'Which voices does it use?',
+      a: 'Whatever your operating system and browser already ship — nothing is downloaded. The list loads asynchronously (browsers populate it after the page starts), local voices are preferred by default, and network voices are labelled as such since they can be slower and stop working offline.',
+    },
+    {
+      q: 'Why is my long text split into chunks?',
+      a: 'Browsers silently truncate or stall a single utterance that runs too long — the failure is invisible, the audio just stops. Sentence-bounded chunks (about 220 characters) each become their own utterance, so playback is stable, pause and resume land cleanly between sentences, and the visible chunk list shows the real queue with the current line highlighted.',
+    },
+    {
+      q: 'Does my text get uploaded anywhere?',
+      a: 'No. The Web Speech API is the browser’s own engine running on your device; the text is handed to it locally and never leaves the tab. There is no server call in this page at all — that is also why the tool cannot fake a voice when your browser has none.',
+    },
+    {
+      q: 'Why is there no play button working in some browsers?',
+      a: 'When a browser ships no speech synthesis engine, or the system has no installed voices, the page states exactly that instead of showing a button that does nothing — the honest failure state. Chrome, Edge and Safari all ship an engine; some minimal browsers and kiosk setups do not.',
+    },
+  ],
+
+  // -------------------------------------------------------------- fuel-cost
+  'fuel-cost': [
+    {
+      q: 'Why does MPG need a US/UK switch?',
+      a: 'Because “gallon” means two things: a US gallon is 3.785 liters and a UK (imperial) gallon is 4.546. The same “35 MPG” is 6.7 L/100km in the US system and 8.1 in the UK — two different cars. The tool keeps the systems separate and the equivalence line shows what your figure means in both, plus L/100km.',
+    },
+    {
+      q: 'How is the per-passenger split computed?',
+      a: 'Total fuel cost divided evenly by the passenger count including the driver — the fair default for a shared road trip where everyone rides the same distance. Parking, tolls and wear are deliberately excluded; this is the fuel line only.',
+    },
+    {
+      q: 'Can I price fuel per gallon?',
+      a: 'Yes — per liter, per US gallon or per UK gallon, in $, €, £, ₹ or unit-free. Everything normalizes to currency per liter internally, so mixing “MPG UK car with US pump prices” still gives the honest answer instead of the silently wrong one most calculators produce.',
+    },
+    {
+      q: 'Why does my real cost come out higher?',
+      a: 'Real consumption climbs with highway speed, headwinds, roof boxes, cold starts, short trips and air conditioning — brochure figures assume ideal conditions. Budget 10–15% above the calculator’s number for a loaded car driven fast; the tool is the planning center of the range, not the receipt.',
+    },
+  ],
+
+  // ----------------------------------------------------------------- salary
+  salary: [
+    {
+      q: 'Why is my unpaid break deducted?',
+      a: 'Because it is unpaid — a 60-minute lunch inside an 8-hour shift means 7 paid hours, and annualizing from 8 overstates the true hourly rate by about 6%. The deduction happens before anything else is derived, so hourly, weekly and annual figures all stay consistent with what actually gets paid.',
+    },
+    {
+      q: 'Are these numbers take-home pay?',
+      a: 'No — and the tool refuses to pretend otherwise. Everything shown is gross and pre-tax; net pay depends on tax brackets, social contributions and deductions that vary by year and jurisdiction, and a bracket-less “net” estimate would be a confident-looking wrong number. The gross boundary is stated on the table itself.',
+    },
+    {
+      q: 'How is overtime handled?',
+      a: 'Overtime hours per week are paid at the hourly rate times your multiplier (1.5 default), on top of the base salary — added after annualization, never folded invisibly into the rate. The pipeline line at the bottom shows the exact OT math so you can check it against your pay slip.',
+    },
+    {
+      q: 'What if I don’t work 52 weeks a year?',
+      a: 'Set the weeks-per-year field: teachers on 40-week contracts, seasonal workers and contractors with unpaid time off all break the default 52, and a converter that hardcodes 52 quietly lies to them. Every figure in the table re-derives from your weeks.',
+    },
+  ],
+
+  // ------------------------------------------------------------------ sleep
+  sleep: [
+    {
+      q: 'Is the 90-minute cycle rule real?',
+      a: 'It is a useful average, not a law: sleep cycles run roughly 80–110 minutes and vary between people and between nights. The calculator treats it as the planning heuristic it is — good for choosing between a 23:00 and a 23:45 bedtime — and the page states the real-world variation instead of hiding it behind false precision.',
+    },
+    {
+      q: 'Why do the bedtimes include a 15-minute offset?',
+      a: 'You do not fall asleep the moment your head hits the pillow. The default 15-minute fall-asleep latency is added on top of the sleep time; if you typically take 30 minutes, set it, because a “six cycles” bedtime computed without your real latency is really five and a bit cycles in practice.',
+    },
+    {
+      q: 'Should I aim for 6 cycles?',
+      a: 'Six cycles is about 9 hours of sleep and is the most-rested target on the list; five is solid, four is a decent short night, three is the shortest the tool suggests deliberately. Adults generally do best in the 5–6 cycle range — consistently waking tired on 6 cycles is information worth acting on, not something to override with more alarms.',
+    },
+    {
+      q: 'Is this medical advice?',
+      a: 'No, and the page says so. This is arithmetic around the standard sleep-cycle heuristic. Persistent trouble falling asleep, waking unrefreshed on a full schedule, or snoring with breathing gaps are things to raise with a doctor, not to solve with a calculator.',
+    },
+  ],
+
+  // ------------------------------------------------------------------- pace
+  pace: [
+    {
+      q: 'How accurate are the race predictions?',
+      a: 'Riegel’s formula T₂ = T₁ × (D₂/D₁)^1.06 is fitted from real performances and holds well for trained runners between distances they have trained for. Long jumps are the least reliable — a 5K under-predicts a marathon for a runner without long-run volume — so treat the table as directional: a sanity check on a goal, not a promise.',
+    },
+    {
+      q: 'What pace should I aim for on race day?',
+      a: 'The splits table shows the even-pace line: elapsed time at every kilometer or mile at your target pace. Even splits are the standard recommendation; if you plan to negative-split, run the first half slightly slower than the table and bank the difference — the table is the baseline to deviate from deliberately.',
+    },
+    {
+      q: 'Why does the tool show both km and miles?',
+      a: 'Because runners are bilingual in practice: races are measured in km (5K, 10K, marathon 42.195 km), treadmills often speak mph, and training plans mix both. Pace per km and per mile, speed in km/h and mph, and the distance itself in both units are all shown so no conversion happens in your head.',
+    },
+    {
+      q: 'Is my pace from a treadmill the same as outside?',
+      a: 'The math is identical, but treadmills often overestimate — no wind resistance, a belt that assists stride, and frequently uncalibrated speed readouts. Enter an outdoor race or GPS run for predictions; treat treadmill-derived pace as its own local currency.',
+    },
+  ],
+
+  // ------------------------------------------------------------ one-rep-max
+  'one-rep-max': [
+    {
+      q: 'Why do the formulas disagree?',
+      a: 'Each was fitted on a different population of lifters doing reps-to-failure, and none accounts for how fatigue resistance varies by lift and by person. They agree tightly at 1–6 reps and drift apart beyond — by 12 reps the spread can exceed 10%. The tool shows all four so the disagreement is visible, and anchors the training table to a consensus average of Epley, Brzycki and Lander.',
+    },
+    {
+      q: 'How many reps should I base the estimate on?',
+      a: 'A hard, honest set of 3–5 reps. Short sets keep the formulas in their tight-agreement window and avoid the compounding errors of high-rep estimates; a true maximal set of 1 also works but carries the injury risk the whole point of estimating is to avoid.',
+    },
+    {
+      q: 'What is the training table for?',
+      a: 'Programming loads as percentages of your 1RM: 95% for heavy doubles, 90% for strength fours, 85% for sixes, 80% for the classic eights, 75% for tens, 70% for twelves, 60% for endurance work. Percent-based programming lets the whole plan scale automatically when the estimated max moves.',
+    },
+    {
+      q: 'Can I test a real 1RM instead?',
+      a: 'You can, and it is the ground truth — but it is a skill: warm-up ramping, bar-speed judgment, and a spotter or safety pins are not optional. An estimate from a hard set of 3–5 is as useful for programming and considerably safer; the page prints that because it is the part that prevents injuries.',
+    },
+  ],
+
+  // --------------------------------------------------------------- fraction
+  fraction: [
+    {
+      q: 'Why does the answer show both 19/12 and 1 7/12?',
+      a: 'The same value in two dialects: the reduced improper fraction is the canonical math form, and the mixed number is the practical one for recipes, lengths and shop drawings. The decimal expansion is the third form, with repeating cycles shown in parentheses rather than truncated into a lie.',
+    },
+    {
+      q: 'How does the tool decide the LCD?',
+      a: 'Least common multiple of the two denominators by Euclid’s GCD: lcm(a, b) = |a·b| / gcd(a, b). The steps show the LCM, the multiplier each fraction needed, and the arithmetic over the common denominator — the exact sequence a graded solution is expected to show.',
+    },
+    {
+      q: 'What does 0.(142857) mean?',
+      a: 'The digits in parentheses repeat forever: 1/7 = 0.142857142857… . The long-division engine detects the cycle by watching remainders — the first remainder seen twice starts it — so repeating fractions are shown exactly, not cut off after some digits with the rest silently lost.',
+    },
+    {
+      q: 'How exact is decimal → fraction?',
+      a: 'Exact through eight decimal places by place value — 0.375 is exactly 375/1000 reduced to 3/8. Longer decimals get the closest small-denominator fraction with the error printed, honestly labelled approximate, because a fifteen-digit decimal is usually not exactly any short fraction.',
+    },
+  ],
+
+  // -------------------------------------------------------------- quadratic
+  quadratic: [
+    {
+      q: 'What does a negative discriminant mean?',
+      a: 'That no real number solves the equation — the parabola never crosses the x-axis. The roots are complex conjugates x = (−b ± i√|D|)/2a, which the tool states as the correct answer rather than “no solution”: complex roots are a real answer, just not a point on the real-number line.',
+    },
+    {
+      q: 'Why does the factored form sometimes refuse?',
+      a: 'It prints only when both roots are clean at three decimals, so you get (x − 1)(x − 2), not (x − 1.0000001)(x − 1.9999999) dressed up as factoring. Irrational roots (discriminant not a perfect square) and complex roots are named as such — a refusal with a reason instead of a fake factorization.',
+    },
+    {
+      q: 'How is the vertex computed?',
+      a: 'x = −b/2a, then y = c − b²/4a (equivalently f(−b/2a)). The card shows both coordinates with the axis of symmetry and whether the point is a minimum (a > 0) or maximum (a < 0) — the same numbers the SVG plot uses to position the vertex dot, so the two views cannot disagree.',
+    },
+    {
+      q: 'What if a = 0?',
+      a: 'Then the equation is linear (bx + c = 0), not quadratic, and the tool says so instead of dividing by zero. Set a to any non-zero value to get the full solve — the nature of the discriminant, the roots, the vertex and the plot all follow from that one constraint.',
     },
   ],
 

@@ -146,7 +146,10 @@ export function BeautifyTool() {
   useEffect(() => {
     let alive = true
     // Warm both engines once so the first keystroke is already fast.
-    void Promise.all([import('js-beautify'), import('sql-formatter')]).then(() => {
+    // allSettled so one failing chunk still flips the flag and re-renders —
+    // the getters below then keep their honest "loading" text instead of
+    // leaving the pane stuck on a stale memo.
+    void Promise.allSettled([import('js-beautify'), import('sql-formatter')]).then(() => {
       if (alive) setEnginesReady(true)
     })
     return () => { alive = false }
@@ -169,8 +172,11 @@ export function BeautifyTool() {
       if (lang === 'sql') {
         if (mode === 'compact') return compactSql(input)
         // sql-formatter is imported synchronously here via the warmed module;
-        // to keep render sync, use the cached namespace.
-        const sqlFormatter = sqlMod
+        // to keep render sync, use the cached namespace. Reading it through
+        // the enginesReady flag keeps the first (hydrating) render identical
+        // to the server's "loading" text and puts the flag in the memo deps,
+        // so the output recomputes the moment the engines arrive.
+        const sqlFormatter = enginesReady ? sqlMod : null
         if (!sqlFormatter) return 'Loading the SQL engine…'
         return sqlFormatter.format(input, {
           language: dialect,
@@ -179,7 +185,7 @@ export function BeautifyTool() {
           keywordCase,
         })
       }
-      const b = jsbMod
+      const b = enginesReady ? jsbMod : null
       if (!b) return 'Loading the formatter engine…'
       if (lang === 'html') {
         return mode === 'compact'
@@ -202,7 +208,7 @@ export function BeautifyTool() {
     } catch (e) {
       return `✗ ${e instanceof Error ? e.message : 'The formatter choked on this input'}`
     }
-  }, [lang, mode, input, indent, wrap, dialect, keywordCase])
+  }, [lang, mode, input, indent, wrap, dialect, keywordCase, enginesReady])
 
   const copy = async () => {
     try {

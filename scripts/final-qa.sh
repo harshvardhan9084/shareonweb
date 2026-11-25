@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|5|6)
+  4|4b|5|6|9)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -55,6 +55,8 @@ case "$PHASE" in
              "/json-to-ts" "/compress-pdf" "/time-card" "/grade" "/todo" \
              "/meme" "/svg-convert" "/cipher" "/due-date" "/word-frequency" \
              "/vcard" "/calendar-link" "/px-rem" "/binary" \
+             "/sound-tools" "/tts" "/fuel-cost" "/salary" "/sleep" \
+             "/pace" "/one-rep-max" "/fraction" "/quadratic" \
              "/beam" "/call"; do
       printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
     done
@@ -62,7 +64,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -889,6 +891,11 @@ if [ "$PHASE" = "3" ]; then
   exit 0
 fi
 
+# PHASE=4b skips the (already verified in this run) R3 block and PHASE=9
+# skips R3+R4, so each batch block can run alone on a memory-tight box
+# without blowing the invocation timeout.
+if [ "$PHASE" != "4b" ] && [ "$PHASE" != "9" ]; then
+
 # 11u5. Batch R3 — data & text utilities (one real interaction per tool)
 
 # /stats: numbers typed via the input path compute a verifiable mean
@@ -1006,7 +1013,11 @@ tdPersist=$(agent-browser eval "(() => { const raw = window.localStorage.getItem
 echo "$tdPersist" | rg -q 'yes' && ok "/todo persists the item to localStorage" || bad "/todo persist: $tdPersist"
 agent-browser close > /dev/null 2>&1
 
+fi  # end the PHASE=4b/9 skip wrapper around the R3 block
+
 # 11u6. Batch R4 — image & format utilities (one real interaction per tool)
+
+if [ "$PHASE" != "9" ]; then
 
 # /cipher: ROT13 default encodes hello → uryyb; Atbash flips to svool; brute panel has 25 rows
 open_page "http://localhost:81/cipher"
@@ -1143,9 +1154,140 @@ imCropOut=$(agent-browser eval "(() => { const t = document.body.textContent; re
 echo "$imCropOut" | rg -q 'yes' && ok "/image crop 200×100 lands exactly" || bad "/image crop: $imCropOut"
 agent-browser close > /dev/null 2>&1
 
-if [ "$PHASE" = "4" ]; then
+fi  # end the PHASE=9 skip wrapper around the R4 block
+
+if [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ]; then
   echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
-  echo "== RESULT (phase 4): $pass passed, $fail failed — run PHASE=5 for the final sweeps =="
+  echo "== RESULT (phase $PHASE): $pass passed, $fail failed — run PHASE=9 for Batch R5, PHASE=8 for the sweeps =="
+  exit 0
+fi
+
+# 11u7. Batch R5 — sound, body & misc calculators (one real interaction per tool)
+
+# /sound-tools: tone tab shows 440 Hz; metronome tab accepts a tempo change
+open_page "http://localhost:81/sound-tools"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+stTab=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Tone generator'); if (!b) return 'no-tab'; b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'keyed' })()" 2>/dev/null)
+sleep 1
+stTone=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=sound-tone-readout]'); return el && el.textContent.includes('440 Hz') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$stTone" | rg -q 'yes' && ok "/sound-tools tone generator reads 440 Hz" || bad "/sound-tools tone: $stTone"
+stTab2=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Metronome'); if (!b) return 'no-tab'; b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'keyed' })()" 2>/dev/null)
+sleep 1
+stBpm=$(agent-browser eval "(() => { const el = document.getElementById('sound-bpm'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '144'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+stOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=sound-bpm-out]'); return el && el.textContent.includes('144 BPM') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$stOut" | rg -q 'yes' && ok "/sound-tools metronome accepts 144 BPM live" || bad "/sound-tools metronome: $stOut"
+stStr=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=tab]')].find(x => x.textContent.trim() === 'Guitar tuner'); if (!b) return 'no-tab'; b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'keyed' })()" 2>/dev/null)
+sleep 1
+stRef=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=sound-strings]'); return el && el.textContent.includes('82.41') && el.textContent.includes('E2') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$stRef" | rg -q 'yes' && ok "/sound-tools tuner shows the standard-tuning reference" || bad "/sound-tools tuner: $stRef"
+agent-browser close > /dev/null 2>&1
+
+# /tts: sample text chunked; replacing the text re-chunks live
+open_page "http://localhost:81/tts"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ttSet=$(agent-browser eval "(() => { const el = document.getElementById('tts-input'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set; s.call(el, new Array(15).fill('The cat sat on the mat.').join(' ')); el.dispatchEvent(new Event('input', { bubbles: true })); return 'typed' })()" 2>/dev/null)
+sleep 1
+ttChunks=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=tts-chunks]'); return el && el.textContent.includes('2 chunks') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$ttChunks" | rg -q 'yes' && ok "/tts re-chunks the text live into 2 chunks" || bad "/tts chunks: $ttChunks"
+ttBtn=$(agent-browser eval "(() => { const b = document.getElementById('tts-read'); return b ? 'present' : 'missing' })()" 2>/dev/null)
+echo "$ttBtn" | rg -q 'present' && ok "/tts Read aloud control present" || bad "/tts button: $ttBtn"
+agent-browser close > /dev/null 2>&1
+
+# /fuel-cost: 500 km at 8 L/100km and 1.50/L = 40 L, 60 total; 4 passengers split 15 each
+open_page "http://localhost:81/fuel-cost"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+fcVol=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=fuel-volume]'); return el && el.textContent.includes('40.00 L') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$fcVol" | rg -q 'yes' && ok "/fuel-cost computes 40.00 L from the defaults" || bad "/fuel-cost volume: $fcVol"
+fcTot=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=fuel-total]'); return el && el.textContent.includes('60.00') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$fcTot" | rg -q 'yes' && ok "/fuel-cost totals 60.00 at 1.50 per liter" || bad "/fuel-cost total: $fcTot"
+fcPax=$(agent-browser eval "(() => { const el = document.getElementById('fuel-pax'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '4'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+fcSplit=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=fuel-per-pax]'); return el && el.textContent.includes('15.00') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$fcSplit" | rg -q 'yes' && ok "/fuel-cost splits 60.00 as 15.00 across 4 passengers" || bad "/fuel-cost split: $fcSplit"
+agent-browser close > /dev/null 2>&1
+
+# /salary: 25/h, 8 h shifts, 5 days, 60 min unpaid break (7 paid h), 52 weeks = 45,500 annual
+open_page "http://localhost:81/salary"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+slAnn=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=salary-annual]'); return el && el.textContent.includes('45,500') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$slAnn" | rg -q 'yes' && ok "/salary derives 45,500 annual from 25/h with unpaid break" || bad "/salary annual: $slAnn"
+slOt=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; return set('salary-ot', '5') ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+slOt2=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=salary-annual]'); return el && el.textContent.includes('55,250') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$slOt2" | rg -q 'yes' && ok "/salary adds 5 OT hours at 1.5x to 55,250" || bad "/salary ot: $slOt2"
+agent-browser close > /dev/null 2>&1
+
+# /sleep: 06:30 alarm -> 6 cycles lands 21:15 (cycles × 90 min + latency)
+open_page "http://localhost:81/sleep"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+slSet=$(agent-browser eval "(() => { const el = document.getElementById('sleep-wake'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '06:30'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+slList=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=sleep-list]'); return el && el.textContent.includes('21:15') ? 'yes' : (el ? el.textContent.slice(0, 80) : 'no-el') })()" 2>/dev/null)
+echo "$slList" | rg -q 'yes' && ok "/sleep plans 6 cycles at 21:15 for a 06:30 alarm" || bad "/sleep bedtimes: $slList"
+slNote=$(agent-browser eval "(() => { const t = document.body.textContent.toLowerCase(); return t.includes('not medical advice') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$slNote" | rg -q 'yes' && ok "/sleep carries the not-medical-advice framing" || bad "/sleep framing: $slNote"
+agent-browser close > /dev/null 2>&1
+
+# /pace: 5 km in 25:00 -> 5:00 /km; 24:00 -> 4:48 /km; Riegel table present
+open_page "http://localhost:81/pace"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+pcOut=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=pace-out]'); return el && el.textContent.includes('5:00 /km') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$pcOut" | rg -q 'yes' && ok "/pace computes 5:00 /km from 5 km in 25:00" || bad "/pace default: $pcOut"
+pcSet=$(agent-browser eval "(() => { const el = document.getElementById('pace-m'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '24'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+pcNew=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=pace-out]'); return el && el.textContent.includes('4:48 /km') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$pcNew" | rg -q 'yes' && ok "/pace recomputes 4:48 /km for a 24-minute 5K" || bad "/pace recompute: $pcNew"
+pcPred=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=pace-predict]'); return el && el.textContent.includes('Marathon') && el.textContent.includes('5K') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$pcPred" | rg -q 'yes' && ok "/pace renders the Riegel prediction table" || bad "/pace predictions: $pcPred"
+agent-browser close > /dev/null 2>&1
+
+# /one-rep-max: 100 kg x 5 reps -> consensus 114.3; reps 3 -> Epley 110.0
+open_page "http://localhost:81/one-rep-max"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ormC=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=orm-consensus]'); return el && el.textContent.includes('114.3') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$ormC" | rg -q 'yes' && ok "/one-rep-max consensus for 100x5 is 114.3 kg" || bad "/one-rep-max consensus: $ormC"
+ormSet=$(agent-browser eval "(() => { const el = document.getElementById('orm-reps'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, '3'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+ormE=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=orm-epley]'); return el && el.textContent.includes('110.0') ? 'yes' : (el ? el.textContent.slice(0, 30) : 'no-el') })()" 2>/dev/null)
+echo "$ormE" | rg -q 'yes' && ok "/one-rep-max Epley recomputes to 110.0 at 3 reps" || bad "/one-rep-max epley: $ormE"
+ormT=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=orm-table]'); return el && el.textContent.includes('95%') && el.textContent.includes('60%') ? 'yes' : (el ? el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$ormT" | rg -q 'yes' && ok "/one-rep-max training table spans 95% to 60%" || bad "/one-rep-max table: $ormT"
+agent-browser close > /dev/null 2>&1
+
+# /fraction: 3/4 + 5/6 = 19/12 (mixed 1 7/12); switching to x gives 5/8
+open_page "http://localhost:81/fraction"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+frRes=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=frac-result]'); const mx = document.querySelector('[data-testid=frac-mixed]'); return el && el.textContent.trim() === '19/12' && mx && mx.textContent.trim() === '1 7/12' ? 'yes' : 'res:' + (el ? el.textContent.trim() : 'none') + ' mixed:' + (mx ? mx.textContent.trim() : 'none') })()" 2>/dev/null)
+echo "$frRes" | rg -q 'yes' && ok "/fraction 3/4 + 5/6 reduces to 19/12 = 1 7/12" || bad "/fraction add: $frRes"
+frX=$(agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.getAttribute('aria-label') === 'Operation ×'); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+frMul=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=frac-result]'); return el && el.textContent.trim() === '5/8' ? 'yes' : (el ? el.textContent.trim() : 'no-el') })()" 2>/dev/null)
+echo "$frMul" | rg -q 'yes' && ok "/fraction 3/4 × 5/6 reduces to 5/8" || bad "/fraction mul: $frMul"
+frConv=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=frac-conv-out]'); return el && el.textContent.includes('0.(142857)') ? 'yes' : (el ? el.textContent.slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$frConv" | rg -q 'yes' && ok "/fraction converter detects the 1/7 repeat cycle" || bad "/fraction repeat: $frConv"
+agent-browser close > /dev/null 2>&1
+
+# /quadratic: 1,-3,2 -> roots 1 and 2, vertex (1.5, -0.25); c=5 -> complex ± 2i
+open_page "http://localhost:81/quadratic"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+qdRoots=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=quad-roots]'); return el && el.textContent.includes('x₁ = 1') && el.textContent.includes('x₂ = 2') ? 'yes' : (el ? el.textContent.slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$qdRoots" | rg -q 'yes' && ok "/quadratic roots of x²-3x+2 are 1 and 2" || bad "/quadratic roots: $qdRoots"
+qdVtx=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=quad-vertex]'); return el && el.textContent.includes('(1.5, -0.25)') ? 'yes' : (el ? el.textContent.slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$qdVtx" | rg -q 'yes' && ok "/quadratic vertex prints (1.5, -0.25)" || bad "/quadratic vertex: $qdVtx"
+qdSteps=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=quad-steps]'); return el && el.textContent.includes('9') && el.textContent.includes('8') ? 'yes' : (el ? 'steps:' + el.textContent.slice(0, 60) : 'no-el') })()" 2>/dev/null)
+echo "$qdSteps" | rg -q 'yes' && ok "/quadratic worked steps substitute the real numbers" || bad "/quadratic steps: $qdSteps"
+qdPlot=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=quad-plot]'); return el && el.querySelector('path') ? 'yes' : (el ? 'no-path' : 'no-el') })()" 2>/dev/null)
+echo "$qdPlot" | rg -q 'yes' && ok "/quadratic draws the SVG parabola" || bad "/quadratic plot: $qdPlot"
+qdSet=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('quad-b', '2'); const b = set('quad-c', '5'); return a && b ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+qdCx=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=quad-roots]'); return el && el.textContent.includes('± 2i') ? 'yes' : (el ? el.textContent.slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$qdCx" | rg -q 'yes' && ok "/quadratic reports complex roots -1 ± 2i for x²+2x+5" || bad "/quadratic complex: $qdCx"
+agent-browser close > /dev/null 2>&1
+
+if [ "$PHASE" = "9" ]; then
+  echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+  echo "== RESULT (phase 9): $pass passed, $fail failed — run PHASE=8 for the final sweeps =="
   exit 0
 fi
 
@@ -1205,7 +1347,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)
