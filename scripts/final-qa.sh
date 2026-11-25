@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|4b|5|6|9)
+  4|4b|4c|5|6|9)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -64,7 +64,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -891,8 +891,8 @@ if [ "$PHASE" = "3" ]; then
   exit 0
 fi
 
-# PHASE=4b skips the (already verified in this run) R3 block and PHASE=9
-# skips R3+R4, so each batch block can run alone on a memory-tight box
+# PHASE=4b skips the R3 block, PHASE=4c skips the R4 block, and PHASE=9
+# skips R3+R4 — so each batch block can run alone on a memory-tight box
 # without blowing the invocation timeout.
 if [ "$PHASE" != "4b" ] && [ "$PHASE" != "9" ]; then
 
@@ -1017,7 +1017,7 @@ fi  # end the PHASE=4b/9 skip wrapper around the R3 block
 
 # 11u6. Batch R4 — image & format utilities (one real interaction per tool)
 
-if [ "$PHASE" != "9" ]; then
+if [ "$PHASE" != "9" ] && [ "$PHASE" != "4c" ]; then
 
 # /cipher: ROT13 default encodes hello → uryyb; Atbash flips to svool; brute panel has 25 rows
 open_page "http://localhost:81/cipher"
@@ -1154,9 +1154,9 @@ imCropOut=$(agent-browser eval "(() => { const t = document.body.textContent; re
 echo "$imCropOut" | rg -q 'yes' && ok "/image crop 200×100 lands exactly" || bad "/image crop: $imCropOut"
 agent-browser close > /dev/null 2>&1
 
-fi  # end the PHASE=9 skip wrapper around the R4 block
+fi  # end the PHASE=9/4c skip wrapper around the R4 block
 
-if [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ]; then
+if [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ]; then
   echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
   echo "== RESULT (phase $PHASE): $pass passed, $fail failed — run PHASE=9 for Batch R5, PHASE=8 for the sweeps =="
   exit 0

@@ -653,17 +653,17 @@ work through them 10 per run. Selection rules used for this list:
 - [x] `/px-rem` — px ↔ rem/em/% converter with configurable root size + clamp() builder
 - [x] `/binary` — text ↔ binary/hex/octal/decimal (ASCII/UTF-8, live both ways)
 
-### Batch R5 — sound, body & misc calculators
-- [ ] `/sound-tools` — dB meter (mic), tone generator, guitar tuner (pitch detect), metronome (4-in-1)
+### Batch R5 — sound, body & misc calculators — DONE this run, 2026-11-25, QA-verified per tool (see §18)
+- [x] `/sound-tools` — dB meter (mic), tone generator, guitar tuner (pitch detect), metronome (4-in-1)
 - [ ] `/heic` — HEIC → JPG/PNG (lazy libheif wasm) — **flagged like /video-trim: needs the owner's size acceptance before building**
-- [ ] `/tts` — read text aloud with speechSynthesis (voice/rate/pitch, chunked playback)
-- [ ] `/fuel-cost` — trip fuel cost: distance, efficiency, price, passenger split
-- [ ] `/salary` — hourly ↔ annual ↔ monthly, overtime, unpaid-break adjustment (pre-tax, honest)
-- [ ] `/sleep` — sleep-cycle planner (90-min cycles, wake-at / sleep-now modes)
-- [ ] `/pace` — running pace/speed/splits table + race-time predictions (5K→marathon)
-- [ ] `/one-rep-max` — 1RM via Epley/Brzycki/Lander + training-percentage table
-- [ ] `/fraction` — fraction ↔ decimal, simplify, + − × ÷ with steps
-- [ ] `/quadratic` — roots, discriminant, vertex, complex roots, worked steps
+- [x] `/tts` — read text aloud with speechSynthesis (voice/rate/pitch, chunked playback)
+- [x] `/fuel-cost` — trip fuel cost: distance, efficiency, price, passenger split
+- [x] `/salary` — hourly ↔ annual ↔ monthly, overtime, unpaid-break adjustment (pre-tax, honest)
+- [x] `/sleep` — sleep-cycle planner (90-min cycles, wake-at / sleep-now modes)
+- [x] `/pace` — running pace/speed/splits table + race-time predictions (5K→marathon)
+- [x] `/one-rep-max` — 1RM via Epley/Brzycki/Lander + training-percentage table
+- [x] `/fraction` — fraction ↔ decimal, simplify, + − × ÷ with steps
+- [x] `/quadratic` — roots, discriminant, vertex, complex roots, worked steps
 
 Rules: one batch of 10 per run, deep implementations only, same QA/commit/
 push discipline as every other batch. Update this section as items ship.
@@ -1015,3 +1015,131 @@ Next run: **Batch R5** per §13 (sound-tools 4-in-1 — dB meter/tone/tuner/
 metronome, tts via speechSynthesis, fuel-cost, salary, sleep, pace,
 one-rep-max, fraction, quadratic; /heic stays owner-flagged pending the
 size-acceptance call, like /video-trim).
+
+## 18. Batch R5 — §13 expansion completes the 50-tool checklist (this run, 2026-11-25)
+
+This run shipped **Batch R5 — sound, body & misc calculators**: nine new
+tools (/sound-tools, /tts, /fuel-cost, /salary, /sleep, /pace, /one-rep-max,
+/fraction, /quadratic), each with the full pipeline (registry entry with 8
+SEO intents → component → instant-surface mount → long-form article →
+title/description/FAQs → app-icon mapping → sw precache). That completes the
+§13 50-item list: R1–R5 all shipped; the only unticked items are the three
+owner decisions (/video-trim, AI background removal, and /heic's
+size-acceptance flag).
+
+**QA: 600 PASS / 0 FAIL** in the final tally, assembled across phase runs
+through the :81 gateway after the sandbox recycle wiped /tmp: PHASE=1 (22/0)
+and PHASE=2 (34/0) earlier in the run, then freshly re-run post-recycle —
+PHASE=3 (103/0), PHASE=4c (middle+R3, cumulative 226/0), PHASE=4b (middle+R4,
+352/0), PHASE=9 (middle+R5, 481/0), PHASE=8 sweeps (119 checks, final 600/0:
+session flow + ALL_LIVE 83-page JSON-LD sweep + instant-body + sw mirror +
+landing + console). The phase mechanism gained 4b/4c variants (skip R3 or R4
+respectively) after two PHASE=4 invocations timed out on a cold server —
+each batch block now fits one invocation. The R5 browser checks drive the
+real input path and assert computed facts: /sound-tools tone readout 440 Hz,
+metronome accepting 144 BPM live, the standard-tuning reference table;
+/fuel-cost 40.00 L and 60.00 from the defaults with a 15.00 four-way split;
+/salary 45,500 annual from 25/h with the unpaid break (7 paid h/shift) and
+55,250 with 5 OT hours at 1.5×; /sleep 21:15 for a 06:30 alarm at six cycles;
+/pace 5:00 /km recomputing to 4:48 and the Riegel table; /one-rep-max
+consensus 114.3 with Epley 110.0 at 3 reps; /fraction 19/12 = 1 7/12 and 5/8
+with the 0.(142857) repeat cycle; /quadratic roots 1 and 2 with vertex
+(1.5, −0.25), a real SVG parabola, and complex −1 ± 2i. Every R5 page is in
+the warm list, ALL_LIVE sweep and the sw mirror (83 shells, v10).
+
+Shipped (all instant, 100% client-side):
+
+1. `/sound-tools` — 4-in-1: dB meter (mic → RMS → dBFS with an adjustable
+   calibration offset, peak/avg/min, honest "estimate" labeling), tone
+   generator (20 Hz–20 kHz log slider, four waveforms, ramped gain, nearest
+   note), guitar tuner (trimmed-autocorrelation pitch detection, cents
+   needle, standard-tuning reference), metronome (audio-clock look-ahead
+   scheduling, accents, 2/3/4/6/8 beats, tap tempo). Mic streams analysed in
+   memory and dropped on stop; tab switch tears down every audio resource.
+2. `/tts` — speechSynthesis reader with sentence-bounded chunking (browsers
+   truncate single long utterances), visible chunk queue with live highlight,
+   voice/rate/pitch/volume, pause/resume/stop, and honest states via
+   useSyncExternalStore when the engine is missing. No window reads at render.
+3. `/fuel-cost` — km/mi × L/100km · km/L · MPG-US · MPG-UK × price per
+   liter/gallon, all normalized internally to L/km and currency-per-liter;
+   passenger split, round-trip toggle, and an equivalence line that names the
+   US/UK gallon gap.
+4. `/salary` — all six frequencies from one amount with unpaid-break minutes
+   deducted BEFORE annualizing, overtime at a configurable multiplier on top,
+   weeks-per-year for non-52 schedules, the full pipeline printed, and an
+   explicit refusal to invent take-home figures.
+5. `/sleep` — wake-at and sleep-now modes over 90-minute cycles with an
+   adjustable fall-asleep latency, midnight-safe times, per-row expectations,
+   and the 80–110-minute real-world variation stated on the page.
+6. `/pace` — pace per km/mile, speed, even-pace splits with elapsed and
+   per-split columns, Riegel predictions (5K/10K/HM/M) with projected paces
+   and the training-scaling caveat.
+7. `/one-rep-max` — Epley/Brzycki/Lander/Lombardi side by side, consensus
+   average, training table 95%→60% with typical reps, divergence and safety
+   notes printed.
+8. `/fraction` — four operations with full worked steps (LCD rewriting, cross
+   products, keep-change-flip, GCD reduction), mixed-number and decimal forms,
+   exact 2^53-clamped integer math, long-division repeat detection
+   (0.(142857)), decimal→fraction exact to 8 places and honestly approximate
+   beyond.
+9. `/quadratic` — discriminant with the nature of the roots stated, real/
+   repeated/complex conjugates, vertex + axis, factored form when it prints
+   cleanly (named refusal otherwise), worked steps, and an SVG parabola
+   rescaling around the vertex with roots marked.
+
+**Real issues the QA caught and this run fixed (verified by re-run):**
+- `/beautify` — a shipped-tool regression surfaced mid-run as a persistent
+  "Loading the formatter engine…": the output useMemo read the module-scope
+  engine caches (jsbMod/sqlMod) without them being memo dependencies, so when
+  the dynamic import resolved after first render the flag flip re-rendered
+  but the memo returned its cached loading text forever — and when the import
+  resolved BEFORE hydration the client rendered formatted output against the
+  server's loading text, throwing a hydration mismatch. Fixed by gating the
+  engine reads behind the existing enginesReady state (flips only post-
+  hydration, now in the memo deps; Promise.allSettled so a failed chunk still
+  un-sticks the pane). Two consecutive fresh loads verified clean.
+- `/fuel-cost` — the "no symbol" currency option used an empty-string Radix
+  Select value, which Radix rejects: the component threw during render and
+  the whole tool died behind the error boundary (QA saw no-el on every
+  testid). Replaced with a 'none' sentinel mapped to an empty display prefix.
+- The offline algorithm check caught THIS RUN's own salary arithmetic before
+  any browser ran: the worklog/article draft said a 60-minute unpaid break in
+  an 8-hour shift leaves 7.5 paid hours — it leaves 7, and the correct
+  default annual is 45,500 (not 48,750). The QA expectations and the article
+  were corrected to the verified math.
+- Two QA expectations were wrong, not the tools: /tts merges short sentences
+  up to its 220-char cap by design (three short sentences are one chunk), so
+  the check now feeds >220 chars and expects 2; the /quadratic complex-roots
+  check set only c=5 while b stayed −3 (x²−3x+5 → 1.5 ± 1.658312i is the
+  CORRECT answer) — the check now sets b=2 AND c=5 and asserts −1 ± 2i.
+- Ops: the dev server wedged mid-run with ~3.4 GB held (box has 4 GB);
+  pkill + script restart per the runbook cleared it. Phase-4 invocations
+  timed out twice on the cold server, hence the 4b/4c split.
+
+**Concurrency incident, handled:** the harness interrupted this session
+mid-PHASE=9 and the 05:39 cron re-fire resumed in a recycled sandbox while a
+rewrite of the tip commit had swallowed this run's uncommitted R5 files into
+an amended copy of the §17 pointer-fix commit (5221c6e → fc76307, same
+message, committer 16:45:18) — R5 work hidden under a worklog message, the
+§16 pattern again. Remote was still at 5221c6e (never pushed), so history was
+repaired locally: git reset --soft 5221c6e, then the R5 work committed under
+its own message (3347b84) as a clean child. Check git log if a commit ever
+looks like it contains foreign files.
+
+Ops: ~/.git-credentials was wiped by the recycle (as §7 documents); no
+restore source exists in the repo — the previous PAT lived only in that
+session's context. **PUSH PENDING: a fresh fine-grained PAT is needed**
+(repo harshvardhan9084/shareonweb, Contents: Read & write) — the commit
+above is ready and the push will be retried with it; see the run report for
+the exact failure mode if it still fails.
+
+lint clean (one React-19 set-state-in-effect hit in the new /tts fixed with
+the useSyncExternalStore capability-probe pattern §16 introduced). sw.js
+bumped to sow-shell-v10 — **83 instant shells** precached, mirror sweep
+asserts all answer 200 through the gateway. No new dependencies (sound-tools
+uses WebAudio + canvas-free SVG; tts uses the stock speechSynthesis API).
+
+Next run: the §13 checklist is complete. Owner decisions outstanding: /heic
+size acceptance, /video-trim, AI background removal. Suggested next work
+candidates (owner's call): polish/QA hardening passes, or new demand-driven
+tools — but no unprompted expansion beyond the agreed 50.
