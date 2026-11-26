@@ -98,6 +98,7 @@ import { SpreadsheetTool } from '@/components/instant/spreadsheet-tool'
 import { ChartMakerTool } from '@/components/instant/chart-maker-tool'
 import { ResumeTool } from '@/components/instant/resume-tool'
 import { VideoStudioTool } from '@/components/instant/video-studio-tool'
+import { BgRemoveTool } from '@/components/instant/bg-remove-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -187,6 +188,7 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'chart-maker': ChartMakerTool,
   resume: ResumeTool,
   'video-studio': VideoStudioTool,
+  'bg-remove': BgRemoveTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

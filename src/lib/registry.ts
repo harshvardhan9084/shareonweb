@@ -3846,6 +3846,40 @@ export const APPS: AppDef[] = [
       'Watch live progress, then download the MP4',
     ],
   },
+  {
+    id: 'bg-remove',
+    name: 'Background Remover',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'AI cutouts and solid-color keys computed in this tab — people, products and pets, with the photo never leaving the device.',
+    description:
+      'Two honest removal engines, one page. AI cutout runs an ISNet segmentation model in this browser: the model binary is a one-time download from the vendor CDN, then every image — headshots, products, pets — is segmented locally and exported as a transparent PNG. Solid-color key is pure canvas math: it samples the corners to guess the key color, applies your tolerance through a soft alpha ramp, and is instant with zero downloads — the right tool for green screens and white product shots. A drag slider compares original against cutout over a checkerboard so transparency is visible rather than guessed, and the PNG download keeps the alpha channel.',
+    icon: 'image-minus',
+    intents: [
+      'remove background from image',
+      'background remover online free',
+      'make image background transparent',
+      'ai background remover no upload',
+      'delete photo background on device',
+      'product photo white background remover',
+      'green screen remover online',
+      'transparent png maker',
+    ],
+    features: [
+      'AI cutout with ISNet fp16 running locally — heads, products, animals, any foreground',
+      'Solid-color key with corner auto-sampling, tolerance control and a soft alpha ramp',
+      'Before/after drag slider over a checkerboard — transparency you can see, not guess',
+      'Transparent PNG download with alpha intact and an honest before/after size readout',
+      'Paste from clipboard (Ctrl+V) straight into the picker, alongside file selection',
+      'Files never upload: only the one-time model binary comes from the vendor CDN',
+    ],
+    howItWorks: [
+      'Drop or paste an image — AI cutout for any subject, solid-key for flat backgrounds',
+      'AI mode fetches the model once and segments locally; key mode samples corners and thresholds',
+      'Drag the compare slider to inspect the edges, then download the transparent PNG',
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------

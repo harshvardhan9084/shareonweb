@@ -3097,4 +3097,39 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ------------------------------------------------------------ bg-remove
+  'bg-remove': {
+    lede: [
+      'Background Remover gives you two honest engines on one page: an AI cutout that segments people, products and pets with a real ISNet model running in this browser, and a solid-color key that is pure canvas math for flat backgrounds. Both export a transparent PNG, and neither one uploads your image anywhere.',
+      'The privacy model is structural, not a promise: there is no upload code on this page at all. The AI engine fetches its model binary once (tens of MB from the vendor CDN, then browser-cached) — after that, every cutout is computed on your CPU, which is also why it works on a plane, on a locked-down work laptop, and on photos you would rather not hand to a stranger\u2019s processing queue.',
+    ],
+    sections: [
+      {
+        heading: 'Two engines, honestly labeled',
+        paragraphs: [
+          'AI mode suits busy scenes: hair, fur, glassware, cluttered desks. It runs ISNet (fp16) locally through WebAssembly and shows live progress for both the one-time model fetch and the segmentation itself, so nothing ever looks like a frozen spinner. If the model fails to download, the page says so and points you at the mode that needs no network.',
+          'Solid-key mode suits flat backgrounds: green screens, white studio product shots, screenshots with a uniform margin. It samples the image corners to guess the key color, then applies a tolerance you control through a soft two-threshold alpha ramp — the boundary blends instead of shredding, which is the difference between a cutout and confetti.',
+        ],
+      },
+      {
+        heading: 'Seeing the result before you trust it',
+        paragraphs: [
+          'A drag slider compares the original against the cutout over a checkerboard, so transparency is visible rather than guessed. If edges eat into the subject, lower the tolerance and re-apply; if background speckles survive, raise it. The loop is instant in key mode because there is no model and no network — just pixels and math.',
+        ],
+      },
+      {
+        heading: 'What happens to your files',
+        paragraphs: [
+          'The image decodes to a bitmap in this tab, the mask is computed here, and the result re-encodes straight to a PNG download. PNG is non-negotiable because it is the format that carries alpha; JPEG would flatten your cutout onto black. The result card prints the before/after sizes honestly — a transparent PNG of a cutout can be larger than the compressed JPEG you started with, and pretending otherwise would be a lie.',
+        ],
+        list: [
+          'Profile photos and team pages — AI cutout, then drop the PNG onto any background',
+          'Marketplace listings — key out a white studio background without a photo editor',
+          'Screenshots and diagrams — paste with Ctrl+V, key the uniform margin, done',
+          'Sensitive imagery — nothing is ever uploaded, so there is nothing to delete later',
+        ],
+      },
+    ],
+  },
 }

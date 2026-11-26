@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|4b|4c|5|6|9|10)
+  4|4b|4c|5|6|9|10|11)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -58,6 +58,7 @@ case "$PHASE" in
              "/sound-tools" "/tts" "/fuel-cost" "/salary" "/sleep" \
              "/pace" "/one-rep-max" "/fraction" "/quadratic" \
              "/spreadsheet" "/chart-maker" "/resume" "/video-studio" \
+             "/bg-remove" \
              "/beam" "/call"; do
       printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
     done
@@ -65,7 +66,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ] || [ "$PHASE" = "11" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -368,7 +369,7 @@ if [ "$PHASE" != "7" ]; then
 # PHASE=8 skips the (already verified in this run) 11g→R4 browser region and
 # runs only the ALL_LIVE JSON-LD sweep, the instant-body check, the sw mirror
 # and the final landing + console sweep, so the sweeps fit one invocation.
-if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ]; then
+if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ] && [ "$PHASE" != "11" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -1018,7 +1019,7 @@ fi  # end the PHASE=4b/9 skip wrapper around the R3 block
 
 # 11u6. Batch R4 — image & format utilities (one real interaction per tool)
 
-if [ "$PHASE" != "9" ] && [ "$PHASE" != "4c" ]; then
+if [ "$PHASE" != "9" ] && [ "$PHASE" != "4c" ] && [ "$PHASE" != "11" ]; then
 
 # /cipher: ROT13 default encodes hello → uryyb; Atbash flips to svool; brute panel has 25 rows
 open_page "http://localhost:81/cipher"
@@ -1377,6 +1378,40 @@ exit 0
 
 fi  # end the PHASE=10 R6 block
 
+# 11b. PHASE=11 — R6b: /bg-remove (AI cutout + solid key, honest engines)
+if [ "$PHASE" = "11" ]; then
+
+# /bg-remove: honest AI status line + both mode tabs render
+open_page "http://localhost:81/bg-remove"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+bgTop=$(agent-browser eval "(() => { const a = document.querySelector('[data-testid=bg-mode-ai]'); const k = document.querySelector('[data-testid=bg-mode-key]'); const f = document.querySelector('[data-testid=bg-file-input]'); const s = document.querySelector('[data-testid=bg-ai-status]'); return a && k && f && s && s.textContent.includes('Model not loaded') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$bgTop" | rg -q 'yes' && ok "/bg-remove tabs + honest model-not-loaded status" || bad "/bg-remove top: $bgTop"
+bgK=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=bg-mode-key]'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+bgCtl=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=bg-key-color]'); const t = document.querySelector('[data-testid=bg-tolerance]'); const ap = document.querySelector('[data-testid=bg-apply]'); return c && t && ap ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$bgCtl" | rg -q 'yes' && ok "/bg-remove key mode shows color, tolerance and apply" || bad "/bg-remove key controls: $bgK / $bgCtl"
+
+# end-to-end solid key: synthetic red-field/green-square PNG -> key -> pixel-verified alpha
+bgSet=$(agent-browser eval "(async () => { const cv = document.createElement('canvas'); cv.width = 120; cv.height = 80; const g = cv.getContext('2d'); g.fillStyle = 'rgb(255,0,0)'; g.fillRect(0, 0, 120, 80); g.fillStyle = 'rgb(34,197,94)'; g.fillRect(40, 20, 40, 40); const blob = await new Promise((res) => cv.toBlob(res, 'image/png')); const dt = new DataTransfer(); dt.items.add(new File([blob], 'probe.png', { type: 'image/png' })); const inp = document.querySelector('input[type=file]'); if (!inp) return 'no-input'; inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+bgApply=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=bg-apply]'); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 3
+bgPix=$(agent-browser eval "(() => { const img = document.querySelector('[data-testid=bg-result-img]'); if (!img) return 'no-result'; const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; const g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, c.width, c.height).data; let out = 0; let keep = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 3] === 0) out++; else if (d[i + 3] === 255) keep++ } return out > 5000 && keep > 1000 ? 'yes:' + out + '/' + keep : 'thin:' + out + '/' + keep })()" 2>/dev/null)
+echo "$bgPix" | rg -q 'yes:' && ok "/bg-remove solid key removes the red field and keeps the green square (pixel-verified)" || bad "/bg-remove key e2e: $bgSet / $bgApply / $bgPix"
+bgDl=$(agent-browser eval "(() => { const a = document.querySelector('[data-testid=bg-download]'); const n = document.querySelector('[data-testid=bg-size-note]'); return a && a.download && a.download.endsWith('.png') && n && n.textContent.includes('Transparent PNG') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$bgDl" | rg -q 'yes' && ok "/bg-remove download anchor carries the .png filename and size note" || bad "/bg-remove download: $bgDl"
+bgAi=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=bg-mode-ai]'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+bgHonest=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=bg-ai-status]'); const n = document.querySelector('[data-testid=bg-ai-note]'); return s && s.textContent.includes('Model not loaded') && n && n.textContent.includes('never leaves this device') ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$bgHonest" | rg -q 'yes' && ok "/bg-remove AI tab restores the honest engine line without fetching" || bad "/bg-remove ai tab: $bgAi / $bgHonest"
+agent-browser close > /dev/null 2>&1
+
+echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+echo "== RESULT (phase 11): $pass passed, $fail failed — run PHASE=8 for the final sweeps =="
+exit 0
+
+fi  # end the PHASE=11 R6b block
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -1431,7 +1466,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic spreadsheet chart-maker resume video-studio"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic spreadsheet chart-maker resume video-studio bg-remove"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

@@ -114,6 +114,7 @@ const SEO_TITLES: Record<string, string> = {
   'chart-maker': 'Chart Maker — bar, line, area, pie, donut and scatter charts from pasted data, PNG & SVG',
   resume: 'Resume Builder — live A4 preview, ATS-friendly, themes, print-perfect PDF, nothing uploads',
   'video-studio': 'Video Studio — compress and trim video on your own CPU with a real ffmpeg engine',
+  'bg-remove': 'Background Remover — AI cutouts and solid keys, computed on this device',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -314,6 +315,8 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Build an ATS-friendly resume with a live true-scale A4 preview, three themes and reorderable bullets. Print a pixel-perfect PDF from your own browser; drafts autosave locally and never upload.',
   'video-studio':
     'Compress video with CRF quality control and trim with fast keyframe cuts or frame-exact re-encodes — a real ffmpeg engine on your own CPU, no upload, no watermark, standard MP4 output.',
+  'bg-remove':
+    'AI cutouts and solid-color background keys computed in this tab — transparent PNG out, checkerboard compare slider, and your photo never leaves the device.',
 }
 
 /**
@@ -2039,6 +2042,24 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What is the difference between the fast and precise trim?',
       a: 'Fast re-muxes without re-encoding — instant even on huge files, but the cut snaps to the nearest keyframe (usually within a second or two). Precise re-encodes the kept section and lands exactly where you pointed. You pick per job; both state the trade-off.',
+    },
+  ],
+  'bg-remove': [
+    {
+      q: 'Is the AI cutout really private?',
+      a: 'The image is segmented in this tab and never uploaded — there is no upload code on the page. The one thing that does download is the model itself (tens of MB, once, from the vendor CDN), after which the browser caches it for reuse.',
+    },
+    {
+      q: 'When should I use the solid-color key instead of AI?',
+      a: 'Flat backgrounds: green screens, white product shots, studio backdrops. It is instant, needs no download, and its tolerance slider with a soft alpha ramp handles anti-aliased edges cleanly. Busy scenes with many colors belong to the AI engine.',
+    },
+    {
+      q: 'Why does the edge look soft or shredded at the wrong tolerance?',
+      a: 'Key mode ramps alpha between two thresholds so anti-aliased edges blend instead of shredding. If the cutout eats into the subject, lower the tolerance; if background speckles survive, raise it and re-apply — the loop is instant because no model is involved.',
+    },
+    {
+      q: 'What format is the download and why PNG?',
+      a: 'Always PNG, because it is the format that carries the alpha channel transparency requires — JPEG has no alpha and would flatten the cutout onto black. The result card prints the before/after sizes honestly, since a transparent PNG can be larger than the compressed JPEG you started with.',
     },
   ],
 
