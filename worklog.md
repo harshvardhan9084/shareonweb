@@ -1133,6 +1133,19 @@ session's context. **PUSH PENDING: a fresh fine-grained PAT is needed**
 above is ready and the push will be retried with it; see the run report for
 the exact failure mode if it still fails.
 
+RESOLVED (same day, later fire, owner-supplied PAT): the owner pasted a fresh
+fine-grained PAT in chat. Credentials reinstalled per §7 (URL-style line in
+~/.git-credentials, chmod 600, credential.helper=store). Before pushing, the
+recycled sandbox re-verified the shipped tree rather than trusting the
+session above: `bun run lint` clean, and `PHASE=9 bash scripts/final-qa.sh`
+through the gateway scored **129 passed / 0 failed** on the R5 block plus
+mid-section re-checks from cold. History integrity re-checked after the
+amend incident (chain 5221c6e → 3347b84 → 255fc60; fc76307 only a dangling
+object; 3347b84 holds exactly the 17 R5 files). Push then landed clean as a
+fast-forward: **5221c6e..255fc60 main -> main**, confirmed by re-fetch
+(remote tip 255fc60, 0 commits ahead). No PAT material is stored in this
+repo or this file.
+
 lint clean (one React-19 set-state-in-effect hit in the new /tts fixed with
 the useSyncExternalStore capability-probe pattern §16 introduced). sw.js
 bumped to sow-shell-v10 — **83 instant shells** precached, mirror sweep
