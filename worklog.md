@@ -1156,3 +1156,66 @@ Next run: the §13 checklist is complete. Owner decisions outstanding: /heic
 size acceptance, /video-trim, AI background removal. Suggested next work
 candidates (owner's call): polish/QA hardening passes, or new demand-driven
 tools — but no unprompted expansion beyond the agreed 50.
+
+---
+
+## 19. Batch R6 — real-work tools by owner directive (this run, 2026-11-26)
+
+The owner reviewed the R5-complete state in chat and redirected the roadmap:
+"real things over extreme QUICK tools", then named the build list explicitly —
+Spreadsheet Studio, Chart Maker, Resume Builder "wider and deeper", a QR
+Studio "for real use cases", and video compression "and that another one too
+which was stopped with it" — read as the parked /video-trim pair. AI
+background removal remains parked (not mentioned; owner can unpark later).
+These 4 new tools + 1 deep rebuild extend BEYOND the §13 50-tool checklist,
+which R5 completed; no §13 boxes change hands.
+
+Shipped (4 new tools + 1 rebuild, full 7-point pipeline each):
+- /spreadsheet — Spreadsheet Studio (SheetJS, demo budget sheet live at first
+  paint, formula bar, lite formula engine with Excel-grammar errors,
+  column stats, numeric sort, pivot panel, regex find-and-replace, xlsx/csv
+  export, 2000-row windowed grid)
+- /chart-maker — Chart Maker (hand-rolled SVG engine: bar/line/area/pie/
+  donut/scatter, series toggles, per-series stats, editable axes, manual
+  bounds, nice-ticks, native tooltips, 2x PNG + SVG export)
+- /resume — Resume Builder (live true-A4 preview, repeatable/reorderable
+  entries, 3 themes x 4 accents, print-isolation portal + @page rules,
+  HTML export, debounced localStorage autosave with honest status line)
+- /video-studio — Video Studio (ffmpeg.wasm 0.12.15 single-thread,
+  self-hosted UMD + core in /public/ffmpeg — 32 MB core, no
+  SharedArrayBuffer needed; compress with CRF presets/custom + resolution/
+  fps/audio modes, trim with playhead stamping + fast keyframe cut vs
+  precise re-encode, live progress, MP4 faststart output)
+- /qr rebuilt as QR Studio (kept QrTool export + QrScanPanel scan tab for
+  legacy QA; added UPI upi://pay payload builder with encodeURIComponent
+  VPA + INR amount, wifi/vCard spec escaping incl. quotes/commas/newlines,
+  fg/bg color + transparent, WCAG contrast warning at 3:1, logo embed with
+  ECC Q/H guidance + one-click upgrade, quiet zone 0-4, batch lines ->
+  lazy-jszip ZIP of PNGs, raw payload always visible with copy)
+
+QA: PHASE=1 22/0, PHASE=2 34/0, PHASE=3 103/0, PHASE=4b 229/0, PHASE=9
+358/0, new PHASE=10 R6 block 13/0 after two script fixes, PHASE=8 final
+sweep RESULT 503/0. The ALL_LIVE sweep now covers 88 pages with JSON-LD;
+sw mirror asserts precache == ALL_LIVE; sw.js bumped to sow-shell-v11 with
+the 4 new shells precached.
+
+QA script engineering this run: added PHASE=10 (R6 deep block, warm-skip +
+counter-restore list extended), outer 11g->R5 wrapper now also skips 10.
+Two of this run's own check patterns were wrong and fixed in-script, not
+papered over: (1) agent-browser eval wraps output in quotes, so '^yes'
+anchors never matched "yes:14" — a check that would have been reported as
+FAIL although the tool rendered 14 bars correctly; (2) React renders the
+spreadsheet's cell editor one tick after the dispatched dblclick, so the
+type-and-commit must be two evals with a sleep, not one — the single-eval
+version found no input and would have mislabeled a working editor as broken.
+
+Honest notes: the QA asserts the video engine line, tabs and inputs but
+does NOT run a wasm transcode in-browser (cold-server time risk); the
+engine files themselves are asserted served through the gateway (32 MB
+wasm, 200). lint clean; tsc clean on all touched files. One lint warning
+fixed (unused disable directive), one chart-maker TS union issue fixed by
+converting the geometry memo to a tagged union (pie/scatter/bar/line/area).
+
+Push: committed as harshvardhan9084 and pushed with the owner-supplied PAT
+from the R5 resolution (credentials live in ~/.git-credentials outside the
+repo).

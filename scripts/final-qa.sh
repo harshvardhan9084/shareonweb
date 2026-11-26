@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|4b|4c|5|6|9)
+  4|4b|4c|5|6|9|10)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -57,6 +57,7 @@ case "$PHASE" in
              "/vcard" "/calendar-link" "/px-rem" "/binary" \
              "/sound-tools" "/tts" "/fuel-cost" "/salary" "/sleep" \
              "/pace" "/one-rep-max" "/fraction" "/quadratic" \
+             "/spreadsheet" "/chart-maker" "/resume" "/video-studio" \
              "/beam" "/call"; do
       printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
     done
@@ -64,7 +65,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -367,7 +368,7 @@ if [ "$PHASE" != "7" ]; then
 # PHASE=8 skips the (already verified in this run) 11g→R4 browser region and
 # runs only the ALL_LIVE JSON-LD sweep, the instant-body check, the sw mirror
 # and the final landing + console sweep, so the sweeps fit one invocation.
-if [ "$PHASE" != "8" ]; then
+if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -1293,6 +1294,89 @@ fi
 
 fi  # end the PHASE!=8 skip wrapper around the 11g→R4 region
 
+# 11w. Batch R6 — real-work tools: Spreadsheet Studio, Chart Maker, Resume
+#      Builder, Video Studio and the QR Studio rebuild (deep interactions)
+
+if [ "$PHASE" = "10" ]; then
+
+# /spreadsheet: demo sheet live, formula bar and stats populated, cell edit
+# commits, and a formula evaluates against the edited cell
+open_page "http://localhost:81/spreadsheet"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+ssGrid=$(agent-browser eval "(() => { const g = document.querySelector('[data-testid=spreadsheet-grid]'); const fb = document.querySelector('[data-testid=spreadsheet-formula-bar]'); return g && fb && fb.value !== '' ? 'yes' : (g ? 'grid-only' : 'no-el') })()" 2>/dev/null)
+echo "$ssGrid" | rg -q 'yes' && ok "/spreadsheet renders the demo sheet with a live formula bar" || bad "/spreadsheet grid: $ssGrid"
+ssStats=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=spreadsheet-col-stats]'); return s && s.textContent.length > 20 ? 'yes' : (s ? 'thin' : 'no-el') })()" 2>/dev/null)
+echo "$ssStats" | rg -q 'yes' && ok "/spreadsheet column stats strip computes" || bad "/spreadsheet stats: $ssStats"
+ssDbl=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c0]'); if (!c) return 'no-cell'; c.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); return 'dbl' })()" 2>/dev/null)
+sleep 1
+ssEdit=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c0]'); const inp = c && c.querySelector('input'); if (!inp) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(inp, '125'); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'committed' })()" 2>/dev/null)
+sleep 1
+ssVal=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c0]'); return c && c.textContent.includes('125') ? 'yes' : (c ? 'text:' + c.textContent.slice(0, 16) : 'no-el') })()" 2>/dev/null)
+echo "$ssVal" | rg -q 'yes' && ok "/spreadsheet cell edit commits to the grid" || bad "/spreadsheet edit: $ssEdit / $ssVal"
+ssFDbl=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c1]'); if (!c) return 'no-cell'; c.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); return 'dbl' })()" 2>/dev/null)
+sleep 1
+ssF=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c1]'); const inp = c && c.querySelector('input'); if (!inp) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(inp, '=A6*2'); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return 'committed' })()" 2>/dev/null)
+sleep 1
+ssFv=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=spreadsheet-cell-r5c1]'); return c && c.textContent.includes('250') ? 'yes' : (c ? 'text:' + c.textContent.slice(0, 20) : 'no-el') })()" 2>/dev/null)
+echo "$ssFv" | rg -q 'yes' && ok "/spreadsheet formula =A6*2 evaluates to 250" || bad "/spreadsheet formula: $ssF / $ssFv"
+agent-browser close > /dev/null 2>&1
+
+# /chart-maker: bars render from the sample, stats strip, pie switch re-renders
+open_page "http://localhost:81/chart-maker"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+cmSvg=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=chart-svg]'); const n = s ? s.querySelectorAll('rect').length : 0; return n >= 6 ? 'yes:' + n : (s ? 'thin:' + n : 'no-el') })()" 2>/dev/null)
+echo "$cmSvg" | rg -q 'yes:' && ok "/chart-maker draws grouped bars from the sample table" || bad "/chart-maker bars: $cmSvg"
+cmStats=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=chart-stats]'); return s && s.textContent.includes('Savings') ? 'yes' : (s ? 'thin' : 'no-el') })()" 2>/dev/null)
+echo "$cmStats" | rg -q 'yes' && ok "/chart-maker per-series stats strip" || bad "/chart-maker stats: $cmStats"
+cmPie=$(agent-browser eval "(() => { const b = document.querySelector('[data-kind=pie]'); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+cmPaths=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=chart-svg]'); const n = s ? s.querySelectorAll('path').length : 0; return n >= 6 ? 'yes:' + n : 'thin:' + n })()" 2>/dev/null)
+echo "$cmPaths" | rg -q 'yes:' && ok "/chart-maker pie slices render after switching type" || bad "/chart-maker pie: $cmPie / $cmPaths"
+agent-browser close > /dev/null 2>&1
+
+# /resume: sample A4 preview, live name edit, print + autosave affordances
+open_page "http://localhost:81/resume"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+rsPrev=$(agent-browser eval "(() => { const p = document.querySelector('[data-testid=resume-preview]'); return p && p.textContent.includes('Priya') ? 'yes' : (p ? 'thin' : 'no-el') })()" 2>/dev/null)
+echo "$rsPrev" | rg -q 'yes' && ok "/resume renders the sample resume in the A4 preview" || bad "/resume preview: $rsPrev"
+rsSet=$(agent-browser eval "(() => { const el = document.querySelector('[data-testid=resume-name-input]'); if (!el) return 'no-input'; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, 'Aarav Sharma'); el.dispatchEvent(new Event('input', { bubbles: true })); return 'set' })()" 2>/dev/null)
+sleep 1
+rsLive=$(agent-browser eval "(() => { const p = document.querySelector('[data-testid=resume-preview]'); const pr = document.querySelector('[data-testid=resume-print]'); return p && p.textContent.includes('Aarav Sharma') && pr ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$rsLive" | rg -q 'yes' && ok "/resume name edit flows to the preview live, print button present" || bad "/resume live edit: $rsSet / $rsLive"
+agent-browser close > /dev/null 2>&1
+
+# /video-studio: compress tab complete, trim tab swaps in its own file input
+open_page "http://localhost:81/video-studio"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+vsC=$(agent-browser eval "(() => { const f = document.querySelector('[data-testid=video-file-input]'); const q = document.querySelector('[data-testid=video-quality-balanced]'); const s = document.body.textContent; return f && q && s.includes('Engine not loaded') ? 'yes' : (f && q ? 'engine-line' : 'missing') })()" 2>/dev/null)
+echo "$vsC" | rg -q 'yes' && ok "/video-studio compress tab with honest engine line" || bad "/video-studio compress: $vsC"
+vsT=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=video-mode-trim]'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+vsTi=$(agent-browser eval "(() => { const f = document.querySelector('[data-testid=video-trim-file-input]'); return f ? 'yes' : 'no-el' })()" 2>/dev/null)
+echo "$vsTi" | rg -q 'yes' && ok "/video-studio trim tab swaps in the trim file input" || bad "/video-studio trim: $vsT / $vsTi"
+agent-browser close > /dev/null 2>&1
+
+# /qr studio: UPI payload builder with URL encoding and INR currency, batch input
+open_page "http://localhost:81/qr"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+qrU=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=qr-mode-upi]'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+qrSet=$(agent-browser eval "(() => { const set = (id, v) => { const el = document.getElementById(id); if (!el) return false; const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); return true }; const a = set('qr-upi-pa', 'shop@okaxis'); const b = set('qr-upi-am', '199'); return a && b ? 'set' : 'missing' })()" 2>/dev/null)
+sleep 1
+qrPay=$(agent-browser eval "(() => { const p = document.querySelector('[data-testid=qr-payload-preview]'); return p && p.textContent.startsWith('upi://pay?pa=shop%40okaxis') && p.textContent.includes('am=199') && p.textContent.includes('cu=INR') ? 'yes' : (p ? 'text:' + p.textContent.slice(0, 40) : 'no-el') })()" 2>/dev/null)
+echo "$qrPay" | rg -q 'yes' && ok "/qr UPI payload encodes the VPA and INR amount" || bad "/qr upi: $qrU / $qrSet / $qrPay"
+qrB=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=qr-mode-link]'); if (!b) return 'no-tab'; b.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1
+qrBi=$(agent-browser eval "(() => { const i = document.querySelector('[data-testid=qr-batch-input]'); return i ? 'yes' : 'no-el' })()" 2>/dev/null)
+echo "$qrBi" | rg -q 'yes' && ok "/qr batch textarea present for link codes" || bad "/qr batch: $qrB / $qrBi"
+agent-browser close > /dev/null 2>&1
+
+echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+echo "== RESULT (phase 10): $pass passed, $fail failed — run PHASE=8 for the final sweeps =="
+exit 0
+
+fi  # end the PHASE=10 R6 block
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -1347,7 +1431,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic spreadsheet chart-maker resume video-studio"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

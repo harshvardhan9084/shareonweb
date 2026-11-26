@@ -94,6 +94,10 @@ import { PaceTool } from '@/components/instant/pace-tool'
 import { OneRepMaxTool } from '@/components/instant/one-rep-max-tool'
 import { FractionTool } from '@/components/instant/fraction-tool'
 import { QuadraticTool } from '@/components/instant/quadratic-tool'
+import { SpreadsheetTool } from '@/components/instant/spreadsheet-tool'
+import { ChartMakerTool } from '@/components/instant/chart-maker-tool'
+import { ResumeTool } from '@/components/instant/resume-tool'
+import { VideoStudioTool } from '@/components/instant/video-studio-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -179,6 +183,10 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   'one-rep-max': OneRepMaxTool,
   fraction: FractionTool,
   quadratic: QuadraticTool,
+  spreadsheet: SpreadsheetTool,
+  'chart-maker': ChartMakerTool,
+  resume: ResumeTool,
+  'video-studio': VideoStudioTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

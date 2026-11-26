@@ -329,42 +329,37 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
   // --------------------------------------------------------------------- qr
   qr: {
     lede: [
-      'QR Generator makes a QR code for anything: a URL, plain text, your Wi\u00AD-Fi network so guests join without you reading the password aloud, or a contact card a phone camera saves straight into its address book.',
-      'Pick the size and error-correction level, and download a crisp PNG. The code is rendered on this device; whatever you encode never touches a server, which is the quiet difference between this page and every \u201Cfree QR generator\u201D that logs your links.',
+      'QR Studio takes codes from gimmick to production. Five payload types — links, plain text, Wi-Fi join codes, vCard 3.0 contact cards and UPI payment intents — plus the design controls that decide whether a code actually scans in the real world: error correction, quiet zone, contrast checking and an optional center logo with honest guidance.',
+      'Every code is drawn on this device, and the raw encoded payload is always visible before you print. That combination is the difference between a code that works at the cash counter and one that fails in front of a customer: you can verify exactly what is encoded, at exactly the size it will print.',
     ],
     sections: [
       {
-        heading: 'How a code is made',
+        heading: 'Payloads that follow the specs',
         paragraphs: [
-          'Choose the type and fill in the details. URL and plain text are immediate. Wi\u00AD-Fi mode builds the standard network string (name, password, security type) so a phone camera offers \u201Cjoin network\u201D on scan. vCard mode packs a name, number and email so the scan lands in contacts as a person, not a paragraph.',
-          'Error correction is a real choice, not jargon: higher levels survive a scratch, a glare or a printed poster\u2019s wear, at the cost of some capacity. For codes that will live on paper or a wall, take the higher level.',
-          'The PNG downloads at the size you picked, drawn crisply for print rather than screenshotted from a preview.',
+          'Wi-Fi mode builds the standard network string with proper escaping of semicolons, commas, colons and quotes — the characters that quietly break naive Wi-Fi codes on picky phone cameras. vCard 3.0 packs name, organization, title, phone, email, website, address and a note so the scan lands in contacts as a person, not a paragraph of mangled text.',
+          'UPI mode emits the standard upi://pay intent that GPay, PhonePe, Paytm and bank apps on both Android and iOS understand: payee VPA, display name, an optional fixed amount in INR, and a note that lands in the payment record. Shops print one code with the amount blank for counter payments, or fixed-amount codes for specific products.',
+          'Link mode adds the https:// scheme if you leave it out, because bare domains scan into some camera apps as plain text instead of opening a browser.',
         ],
       },
       {
-        heading: 'When a QR is the right bridge',
+        heading: 'The design controls that matter',
         paragraphs: [
-          'A QR is the shortest path from one screen to another, or from paper to a phone.',
-        ],
-        list: [
-          'Put the guest Wi\u00AD-Fi on a card, a wall or the fridge',
-          'Move a link from your computer to your phone in one scan',
-          'Share contact details at a desk, a stall or a conference table',
-          'Put a menu, a manual or a schedule on paper that phones can open',
+          'Error correction is a real choice: L survives 7% damage, M 15%, Q 25% and H 30%. A center logo covers modules, so the studio warns you when a logo is paired with L or M — the code may simply not scan — and offers the switch to H in one click.',
+          'Contrast is checked continuously against the WCAG luminance formula: below 3:1 you get a warning before the code goes to the printer, not after a customer shrugs at their phone. The quiet zone — the white border scanners rely on — is adjustable from 0 to 4 modules, with 2 as the safe default.',
+          'Transparent-background codes are supported for overlays on packaging and screens; the contrast check then assumes paper white, which is what a transparent PNG will print onto in practice.',
         ],
       },
       {
-        heading: 'What happens to the content',
+        heading: 'Batch export for real deployments',
         paragraphs: [
-          'The code is drawn locally from the data you entered. No redirect service sits behind it: this QR contains your actual URL or text, not a short link that someone else\u2019s server resolves, logs and can expire.',
-          'That is why these codes cannot die. A code built here will work as long as the thing it points to does, because it answers to nobody.',
+          'Table tent numbers, locker labels, order links, table menus: usually you need a hundred codes, not one. Batch mode takes one payload per line — links or text — renders each at your chosen size and settings, and hands you a ZIP of sequentially named PNGs. It runs at local renderer speed, capped at 200 codes per run, and nothing about the batch touches a server.',
         ],
       },
       {
-        heading: 'Details worth knowing',
+        heading: 'Verify before you print',
         paragraphs: [
-          'Static codes like these are permanent by construction. The \u201Ceditable\u201D QR codes on marketing sites are dynamic: they encode a redirect the vendor controls, and when the subscription lapses, the poster on your wall goes dark.',
-          'For Wi\u00AD-Fi codes, the password is embedded in the code itself, so print it where guests may read it and nowhere strangers may.',
+          'The raw payload string is shown under the preview at all times, with a copy button. For payment and Wi-Fi codes this matters: you can confirm the VPA, the amount and the note exactly as a phone will read them. The Scan tab (camera or image upload) decodes real-world codes too, so you can round-trip a printed sheet before ordering a thousand stickers.',
+          'Static codes like these are permanent by construction. The "editable" QR codes on marketing sites encode a redirect the vendor controls — when the subscription lapses, the poster goes dark. A code built here answers to nobody.',
         ],
       },
     ],
@@ -2975,6 +2970,129 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
         heading: 'The plot is the same math',
         paragraphs: [
           'The SVG samples 200 points of your actual coefficients and rescales both axes around the vertex — it is not a stock picture. Roots are drawn only when they are real, the vertex dot is the same (−b/2a, c − b²/4a) the card prints, and when the roots move because you typed new coefficients, the drawing moves with them. Everything is computed and drawn in this tab per keystroke.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------- spreadsheet
+  spreadsheet: {
+    lede: [
+      'Spreadsheet Studio is a working spreadsheet in a browser tab: open an .xlsx, .xls or .csv file — or start on the demo sheet — and edit cells with a formula bar, run real formulas, sort, pivot, find-and-replace, then export back to xlsx or csv.',
+      'The difference from every "online Excel viewer" is architectural: those sites receive your file on a server that parses it, renders it and remembers it. Here the file is read into the tab, parsed by SheetJS on your CPU, recalculated on every edit, and written back out as a download. There is no upload code on this page at all.',
+    ],
+    sections: [
+      {
+        heading: 'The formula engine, honestly labeled',
+        paragraphs: [
+          'This is a lite engine, not Excel: it evaluates cell references (A1), ranges (A1:B5), arithmetic with correct precedence and parentheses, and the functions SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, ROUND and ABS. That covers budgets, invoices, grade sheets, inventory tallies and most personal-finance math — which is exactly the honest scope the page states.',
+          'When something is wrong, the cell says so in Excel grammar: #REF! for a reference outside the sheet, #DIV/0! for division by zero, #VALUE! for text where a number was required, #CIRC! for a formula that references itself. Errors are information, not noise — they tell you which assumption broke.',
+          'Recalculation runs over the whole sheet on every commit. A 2000-row sheet recomputes in milliseconds, which is why there is no "recalculate" button to forget.',
+        ],
+      },
+      {
+        heading: 'The workflow tools around the grid',
+        paragraphs: [
+          'Sorting is numeric-aware (text sorts lexicographically, numbers by value) and one click per column letter — with the honest caveat printed on the page that formulas move with their rows but references are not rewritten, so re-sorting a sheet of cross-referencing formulas will not re-point them.',
+          'The pivot panel answers the question most spreadsheets are opened for: group rows by one column, aggregate another by sum, average, count, min or max. No drag-and-drop field choreography — two selects and the summary table appears.',
+          'Find and replace handles plain text or regular expressions with capture groups, reports how many cells changed, and matches raw stored content (a formula cell matches its formula, not its result).',
+        ],
+      },
+      {
+        heading: 'Files in, files out',
+        paragraphs: [
+          'Multi-sheet workbooks open as tabs with dimensions shown. Export writes a real .xlsx (which desktop Excel opens without complaint) or a .csv of the active sheet. The round-trip is the point: receive a workbook in email, fix three cells, send it back — on a borrowed laptop, a phone, or a work machine where installing software is not an option.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------- chart-maker
+  'chart-maker': {
+    lede: [
+      'Chart Maker turns a pasted table into a finished chart: grouped bars, lines, filled areas, pie, donut or scatter, with editable titles, axes, legend and grid — exported as PNG or SVG with no watermark and no account.',
+      'The chart is not a library component dropped in and themed; it is drawn by a hand-written SVG engine on this page — the same approach used by the parabola plotter and the pace projector. That means every bar, point and slice carries the real number behind it as its tooltip, and the export contains exactly what you see.',
+    ],
+    sections: [
+      {
+        heading: 'Data in, any shape',
+        paragraphs: [
+          'Paste from any spreadsheet: commas, tabs or semicolons are detected, the first column becomes the category axis, and every further column becomes a series you can show or hide independently. Percent signs and thousands separators are cleaned from numbers automatically, so pasted accounting formats just work.',
+          'The stats strip under the chart gives each series its n, sum, average and range — the sanity check that catches the one mistyped cell before it becomes the wrong slide in a board meeting.',
+        ],
+      },
+      {
+        heading: 'Picking the right chart',
+        paragraphs: [
+          'Bars compare categories against each other. Lines show a trend across ordered labels. Areas emphasize volume over time. Pie and donut show one series as parts of a whole — the donut prints its total in the middle, and slices under 4.5% hide their labels rather than overlap them. Scatter plots get real numeric axes on both dimensions with the first fully-numeric column as X.',
+          'Axis bounds are automatic by default, computed with a nice-ticks algorithm that lands on readable steps; when an exact scale matters — a percent axis pinned at 0–100, or matching two charts for comparison — type the bounds in and they are respected exactly.',
+        ],
+      },
+      {
+        heading: 'Export that holds up',
+        paragraphs: [
+          'PNG exports render at 2× for retina screens and slide decks; SVG exports are resolution-independent for print, posters and editing in any vector tool. Both come from the same drawing, so what you previewed is what ships. Everything renders in this tab — the data you paste never leaves the device.',
+        ],
+      },
+    ],
+  },
+
+  // ---------------------------------------------------------------- resume
+  resume: {
+    lede: [
+      'Resume Builder is a full editor with a live A4 preview: header and contacts, summary, experience with reorderable bullets, education, skills and projects — themed, autosaved to your browser, and exported through your own browser\u2019s print pipeline to a pixel-perfect PDF.',
+      'The privacy model is the product: nothing uploads, ever. Resumes are the most sensitive documents people casually paste into websites, and every "free resume builder" that harvests them knows it. Here the draft lives in localStorage, the PDF is made by the browser you are reading this in, and there is no account to delete because there was never an account.',
+    ],
+    sections: [
+      {
+        heading: 'Why the preview is real A4',
+        paragraphs: [
+          'The preview is a genuine 210×297 mm document scaled to fit the screen — not an approximation of a page. Margins, heading rules, date alignment and bullet indents are laid out in print units, so the PDF your browser prints is what you proofread, not a surprise reflow.',
+          'Reordering is built for the two edits resumes actually need: promote a bullet up, demote one down, move a job above another. Every entry type — experience, education, projects, contact rows — has add, remove and reorder controls.',
+        ],
+      },
+      {
+        heading: 'ATS-friendly by construction',
+        paragraphs: [
+          'Applicant tracking systems parse text, and they are clumsy. This builder deliberately ships single-column layouts, standard section headings, no tables for structure, no images of text, and real selectable characters — the exact checklist recruiters repeat. A soft counter nudges the summary under 600 characters because wall-of-text summaries read badly in both contexts: human and parser.',
+          'Three themes (serif classic, modern sans, compact) with four accent colors change presentation without touching structure — the parse-safe skeleton stays constant underneath.',
+        ],
+      },
+      {
+        heading: 'Export and drafts',
+        paragraphs: [
+          'Print uses a dedicated print stylesheet: the page hides everything except the sheet, removes the screen scaling, and prints at 100% on A4 with entries kept from breaking across pages. The "Download HTML" export writes a self-contained file with those rules baked in, for archiving or printing elsewhere.',
+          'Autosave writes the draft to localStorage about half a second after you stop typing, with a status line that says what actually happened: Saving…, Saved locally at HH:MM, Draft restored. The reset button restores the sample and clears the stored draft — the data was only ever in this browser.',
+        ],
+      },
+    ],
+  },
+
+  // ----------------------------------------------------------- video-studio
+  'video-studio': {
+    lede: [
+      'Video Studio runs real ffmpeg on your own CPU, inside the tab: compress a video to a target quality, or trim it to an exact range — without uploading, without a queue, without a watermark, and without the file-size ceilings that free upload-based compressors enforce to protect their bandwidth bill.',
+      'The engine is ffmpeg.wasm, self-hosted from this site: about 32 MB fetched once, cached by the browser after that. From the second visit the page needs no network at all — which is also why it is the honest answer for sensitive footage that should not travel to somebody else\u2019s transcoder.',
+    ],
+    sections: [
+      {
+        heading: 'Compression that means something',
+        paragraphs: [
+          'Quality is controlled with CRF, the same constant-rate-factor scale ffmpeg experts use by hand: 18–20 visually transparent, 23 a sensible default, 28 for a small file that still looks fine. A custom slider exposes the full 18–34 range. Resolution caps (1080p, 720p, 480p), frame-rate limits and audio handling (re-encode to 128k AAC, copy untouched, or remove for silent output) compose freely.',
+          'CRF is quality-based, and the page says so plainly: the final size depends on the footage. A static talking-head clip compresses dramatically; fast motion with grain barely shrinks at the same CRF. Anyone who promises a fixed "50% smaller" is hiding this physics from you.',
+        ],
+      },
+      {
+        heading: 'Trimming: fast versus precise',
+        paragraphs: [
+          'The trim preview plays your file locally; buttons stamp the playhead into start or end, or you type exact seconds. The fast cut re-muxes without re-encoding — instant, even on gigabyte files — but must snap to the nearest keyframe, so the boundary can land a second or two from your pick. The precise cut re-encodes the kept section at CRF 20 and lands exactly where you pointed. Both are honest about the trade-off; you choose per job.',
+        ],
+      },
+      {
+        heading: 'What runs where, and how long',
+        paragraphs: [
+          'All decoding and encoding happens on this device\u2019s CPU via the single-threaded wasm build — no SharedArrayBuffer requirements, no special headers, no cross-origin isolation games. The cost of that portability is speed: expect real time on long clips, which is exactly what the live progress bar shows rather than hiding behind a fake spinner.',
+          'Output is standard MP4 with H.264 video and AAC audio, faststart-flagged so it begins playing before it finishes downloading — playable by every phone, browser and messaging app. Files never leave the tab; the only network request the page ever makes is fetching the engine itself, from this same site, once.',
         ],
       },
     ],

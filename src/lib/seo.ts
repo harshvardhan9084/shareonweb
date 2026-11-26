@@ -24,7 +24,7 @@ const SEO_TITLES: Record<string, string> = {
   json: 'JSON Formatter — format, validate and minify with error positions',
   text: 'Text Kit — word counter, case converter, line cleanup',
   password: 'Password Generator — strong, random, built in your browser',
-  qr: 'QR Generator — links, text, Wi-Fi and contact cards as QR codes',
+  qr: 'QR Studio — link, Wi-Fi, vCard and UPI QR codes with logos, contrast checks and batch export',
   call: 'Call — video and voice rooms with a link, no accounts',
   screen: 'Screen — share your screen live, or see theirs, from the browser',
   camera: 'Camera — live camera sharing, phone webcam, baby monitor',
@@ -110,6 +110,10 @@ const SEO_TITLES: Record<string, string> = {
   'one-rep-max': 'One Rep Max Calculator — 1RM via Epley, Brzycki, Lander and Lombardi plus the training table',
   fraction: 'Fraction Calculator — add, subtract, multiply and divide fractions with every step shown',
   quadratic: 'Quadratic Formula Calculator — roots, discriminant, vertex, factored form, steps and a live plot',
+  spreadsheet: 'Spreadsheet Studio — open and edit xlsx & CSV online with formulas, pivot, sort and export',
+  'chart-maker': 'Chart Maker — bar, line, area, pie, donut and scatter charts from pasted data, PNG & SVG',
+  resume: 'Resume Builder — live A4 preview, ATS-friendly, themes, print-perfect PDF, nothing uploads',
+  'video-studio': 'Video Studio — compress and trim video on your own CPU with a real ffmpeg engine',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -131,7 +135,7 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
   password:
     'Generate strong passwords and memorable passphrases with real browser randomness — length, symbols and look-alike controls, entropy shown.',
   qr:
-    'Create QR codes for links, text, Wi-Fi networks and contact cards. Pick size and error correction, download a crisp PNG. Rendered locally.',
+    'Create QR codes for links, text, Wi-Fi networks, contact cards and UPI payments. Center logos, contrast checks, quiet zones and batch ZIP export — the raw payload always shown, rendered locally.',
   call:
     'One-click video or voice rooms for two people or a small group: meetings, interviews, classrooms, webinars. Everyone joins from a browser. Nothing recorded.',
   screen:
@@ -302,6 +306,14 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Add, subtract, multiply and divide fractions with the full worked steps — LCD rewriting, cross products, keep-change-flip, GCD reduction — plus fraction ↔ decimal conversion with repeating cycles detected and parenthesised.',
   quadratic:
     'Solve ax² + bx + c = 0: discriminant, real or complex roots, vertex and axis of symmetry, factored form when it prints cleanly — worked steps with your numbers, and an SVG parabola that rescales around the vertex.',
+  spreadsheet:
+    'Open .xlsx, .xls and .csv in your browser tab: edit cells with a formula bar, run SUM/AVERAGE-style formulas, sort, pivot, find-and-replace, then export back to xlsx or csv. Nothing uploads.',
+  'chart-maker':
+    'Paste any table and get publication-ready bar, line, area, pie, donut or scatter charts — editable titles, axes and legend, PNG and SVG export, drawn entirely on this device.',
+  resume:
+    'Build an ATS-friendly resume with a live true-scale A4 preview, three themes and reorderable bullets. Print a pixel-perfect PDF from your own browser; drafts autosave locally and never upload.',
+  'video-studio':
+    'Compress video with CRF quality control and trim with fast keyframe cuts or frame-exact re-encodes — a real ffmpeg engine on your own CPU, no upload, no watermark, standard MP4 output.',
 }
 
 /**
@@ -569,12 +581,16 @@ export const APP_FAQS: Record<string, Faq[]> = {
       a: 'Never. The code is rendered on your device and encodes your content directly — it works offline, forever, and you download the PNG.',
     },
     {
-      q: 'Can guests join my Wi-Fi without me reading out the password?',
-      a: 'Yes — Wi-Fi mode encodes the network name and password; a phone camera scan offers to join the network.',
+      q: 'Can I make a UPI payment QR code?',
+      a: 'Yes — the UPI tab builds the standard upi://pay intent (payee ID, display name, optional fixed amount, note) that GPay, PhonePe, Paytm and bank apps open directly. The raw payload is always shown so you can verify the ID before printing.',
     },
     {
-      q: 'What can I put in a QR code here?',
-      a: 'A link, plain text, a Wi-Fi network, or a contact card (vCard) that a phone camera saves straight into contacts.',
+      q: 'Can I put my logo inside the code?',
+      a: 'Yes — pick any image and it is drawn into the center with a padded box. The studio recommends error correction Q or H when a logo covers modules, because the code must still scan; L or M with a logo triggers a warning.',
+    },
+    {
+      q: 'Can I generate many codes at once?',
+      a: 'Batch mode takes one link or line of text per row (up to 200), renders each at your chosen size and settings, and downloads a ZIP of sequentially named PNGs — all rendered locally.',
     },
     {
       q: 'Can this page read a QR code too, not just draw one?',
@@ -1943,6 +1959,86 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What if a = 0?',
       a: 'Then the equation is linear (bx + c = 0), not quadratic, and the tool says so instead of dividing by zero. Set a to any non-zero value to get the full solve — the nature of the discriminant, the roots, the vertex and the plot all follow from that one constraint.',
+    },
+  ],
+
+  // ------------------------------------------------------------ spreadsheet
+  spreadsheet: [
+    {
+      q: 'Can I open an Excel file without installing Excel?',
+      a: 'Yes — drop the .xlsx (or .xls, or .csv) on the page and it opens as editable tabs. SheetJS parses the workbook on your device; multi-sheet workbooks open every sheet with its dimensions shown.',
+    },
+    {
+      q: 'Which formulas are supported?',
+      a: 'The lite engine covers SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, ROUND and ABS plus cell references, ranges and arithmetic with proper precedence — the functions behind most budgets, invoices and grade sheets. The page states this scope honestly rather than pretending to be a full Excel clone.',
+    },
+    {
+      q: 'Is my spreadsheet uploaded anywhere?',
+      a: 'No. Parsing, recalculation, pivoting and export all run in this tab. You can watch the network panel: nothing is sent, because there is nothing to send it to.',
+    },
+    {
+      q: 'What can I export?',
+      a: 'A real .xlsx file that desktop Excel opens without complaint, or a .csv of the active sheet. Edits, formulas, sorts and pivots all round-trip.',
+    },
+  ],
+
+  // ------------------------------------------------------------ chart-maker
+  'chart-maker': [
+    {
+      q: 'What data format does it accept?',
+      a: 'Paste any table separated by commas, tabs or semicolons — straight from Excel, Google Sheets or a text file. The first column becomes the category labels, every further column becomes a series. Percent signs and thousands separators are cleaned automatically.',
+    },
+    {
+      q: 'Which chart types can I make?',
+      a: 'Grouped bars, lines, filled areas, pie, donut (with the total in the middle) and scatter plots with real numeric axes on both dimensions. Series can be toggled individually, and the stats strip shows n, sum, average and range per series.',
+    },
+    {
+      q: 'Should I export PNG or SVG?',
+      a: 'PNG renders at 2× for slides and retina screens; SVG is vector, so it stays sharp at any size and can be edited in design tools or printed on a poster. Both come from the same drawing, so the export matches the preview exactly.',
+    },
+    {
+      q: 'Are the axis scales fixed or automatic?',
+      a: 'Automatic by default, computed with a nice-ticks algorithm that lands on readable round steps. Type a minimum or maximum in and the axis respects it exactly — useful for percent scales pinned at 0–100 or matching two charts for comparison.',
+    },
+  ],
+
+  // ---------------------------------------------------------------- resume
+  resume: [
+    {
+      q: 'Is the PDF really free and watermark-free?',
+      a: 'Yes — the PDF is produced by your own browser\u2019s print pipeline from a dedicated print stylesheet, so there is no export paywall and no watermark. What you proofread on screen is what prints.',
+    },
+    {
+      q: 'Will applicant tracking systems parse this resume?',
+      a: 'The structure is deliberately ATS-safe: single column, standard section headings, no layout tables, no text baked into images, real selectable characters. Themes change presentation without touching that skeleton.',
+    },
+    {
+      q: 'Where is my resume stored?',
+      a: 'In this browser\u2019s localStorage, autosaved about half a second after you stop typing with a visible status line. It never uploads — there is no account, and clearing the site data (or pressing Reset) erases it completely.',
+    },
+    {
+      q: 'Can I reorder jobs and bullet points?',
+      a: 'Yes — every experience, education, project and contact entry has add, remove and move up/down controls, because promoting one bullet or one role is the edit resumes actually need.',
+    },
+  ],
+
+  // ----------------------------------------------------------- video-studio
+  'video-studio': [
+    {
+      q: 'How much smaller will my video get?',
+      a: 'It depends on the footage, and the page says so instead of promising a magic percentage: CRF is quality-based, so static talking-head clips shrink dramatically while fast motion with grain barely compresses. Lower CRF means better quality and a bigger file; try 23 first, 28 for a small file.',
+    },
+    {
+      q: 'Is my video uploaded to a server?',
+      a: 'No. The ffmpeg engine runs on your CPU inside the tab. The only network request is fetching the ~32 MB engine itself from this site, once — after that it is cached, and your file never leaves the device.',
+    },
+    {
+      q: 'Why does the first compression take longer?',
+      a: 'The engine loads and initializes on first use (~32 MB), which takes a few seconds. Subsequent runs start instantly. Processing speed itself is single-threaded wasm — real time on long clips, shown honestly in the progress bar.',
+    },
+    {
+      q: 'What is the difference between the fast and precise trim?',
+      a: 'Fast re-muxes without re-encoding — instant even on huge files, but the cut snaps to the nearest keyframe (usually within a second or two). Precise re-encodes the kept section and lands exactly where you pointed. You pick per job; both state the trade-off.',
     },
   ],
 
