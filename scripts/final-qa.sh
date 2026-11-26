@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|4b|4c|5|6|9|10|11)
+  4|4b|4c|5|6|9|10|11|12)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -58,7 +58,7 @@ case "$PHASE" in
              "/sound-tools" "/tts" "/fuel-cost" "/salary" "/sleep" \
              "/pace" "/one-rep-max" "/fraction" "/quadratic" \
              "/spreadsheet" "/chart-maker" "/resume" "/video-studio" \
-             "/bg-remove" \
+             "/bg-remove" "/speed-test" \
              "/beam" "/call"; do
       printf "  %-14s %s\n" "$p" "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81$p")"
     done
@@ -66,7 +66,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ] || [ "$PHASE" = "11" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ] || [ "$PHASE" = "11" ] || [ "$PHASE" = "12" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -369,7 +369,7 @@ if [ "$PHASE" != "7" ]; then
 # PHASE=8 skips the (already verified in this run) 11g→R4 browser region and
 # runs only the ALL_LIVE JSON-LD sweep, the instant-body check, the sw mirror
 # and the final landing + console sweep, so the sweeps fit one invocation.
-if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ] && [ "$PHASE" != "11" ]; then
+if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ] && [ "$PHASE" != "11" ] && [ "$PHASE" != "12" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -1412,6 +1412,33 @@ exit 0
 
 fi  # end the PHASE=11 R6b block
 
+# 12b. PHASE=12 — R7: /speed-test (a real measurement through Cloudflare's
+#      public endpoints — the state machine, honest transfer note, live
+#      numbers and the capacity table)
+if [ "$PHASE" = "12" ]; then
+
+open_page "http://localhost:81/speed-test"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+spTop=$(agent-browser eval "(() => { const s = document.querySelector('[data-testid=speed-start]'); const t = document.querySelector('[data-testid=speed-stage]'); const note = document.body.textContent.includes('48 MB down'); return s && t && note ? 'yes' : 'missing' })()" 2>/dev/null)
+echo "$spTop" | rg -q 'yes' && ok "/speed-test renders the stage, start button and transfer-honesty note" || bad "/speed-test top: $spTop"
+
+spRun=$(agent-browser eval "(() => { const b = document.querySelector('[data-testid=speed-start]'); if (!b) return 'no-btn'; b.click(); return 'clicked' })()" 2>/dev/null)
+# The full run takes ~15 s; wait for either the result card or an honest error.
+agent-browser wait --fn "(() => { return !!(document.querySelector('[data-testid=speed-results]') || document.querySelector('[data-testid=speed-error]')) })()" --timeout 90000 > /dev/null 2>&1
+spNum=$(agent-browser eval "(() => { const d = document.querySelector('[data-testid=speed-down]'); const u = document.querySelector('[data-testid=speed-up]'); if (!d || !u) return document.querySelector('[data-testid=speed-error]') ? 'error-shown' : 'no-results'; const m = (s) => { const x = (s.textContent.match(/([\\d.]+)/) || [])[1]; return x ? parseFloat(x) : 0 }; return m(d) > 0 && m(u) >= 0 ? 'yes:' + m(d) + '/' + m(u) : 'zero' })()" 2>/dev/null)
+echo "$spNum" | rg -q 'yes:' && ok "/speed-test measures real down/up through the live endpoints ($spNum)" || bad "/speed-test run: $spRun / $spNum"
+spT=$(agent-browser eval "(() => { const t = document.querySelector('[data-testid=speed-transfer]'); return t && t.textContent.includes('MB') && t.textContent.includes('transferred') ? 'yes' : (t ? 'thin' : 'no-el') })()" 2>/dev/null)
+echo "$spT" | rg -q 'yes' && ok "/speed-test prints the exact transfer volumes" || bad "/speed-test transfer note: $spT"
+spC=$(agent-browser eval "(() => { const c = document.querySelector('[data-testid=speed-capacity]'); const n = c ? c.querySelectorAll('li').length : 0; return n >= 4 ? 'yes:' + n : 'thin:' + n })()" 2>/dev/null)
+echo "$spC" | rg -q 'yes:' && ok "/speed-test capacity table computes from the measurement" || bad "/speed-test capacity: $spC"
+agent-browser close > /dev/null 2>&1
+
+echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+echo "== RESULT (phase 12): $pass passed, $fail failed — run PHASE=8 for the final sweeps =="
+exit 0
+
+fi  # end the PHASE=12 R7 block
+
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")
 if [ "$r" = "307 http://localhost:81/share" ]; then ok "/beam 307 -> /share"; else bad "/beam redirect: $r"; fi
@@ -1466,7 +1493,7 @@ echo "$h" | rg -q '"@type":"FAQPage"' && ok "home FAQPage JSON-LD" || bad "home 
 
 # 18. every live tool page: title, WebApplication + HowTo + FAQPage JSON-LD,
 #     no old brand. Instant pages also render the written page below the tool.
-ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic spreadsheet chart-maker resume video-studio bg-remove"
+ALL_LIVE="share call screen camera voice notepad present canvas roundtable co-browse location-share live-captions zip image hash encode json text password qr pdf pdf-view pdf-text images-to-pdf office-view epub-view audio gif frame-grab recorder upscaler archive file-tools encrypt meta-scrub jwt hash-file-batch cron diff uuid convert-units lorem fake-data css-tools meta-tags barcode calculator percentage date-calculator bmi loan timer picker regex csv color signature invoice timezone pdf-to-image device-test beautify favicon watermark typing-test markdown stats number-to-words morse font-changer emoji json-to-ts compress-pdf time-card grade todo meme svg-convert cipher due-date word-frequency vcard calendar-link px-rem binary sound-tools tts fuel-cost salary sleep pace one-rep-max fraction quadratic spreadsheet chart-maker resume video-studio bg-remove speed-test"
 for p in $ALL_LIVE; do
   h=$(curl -s "http://localhost:81/$p")
   t=$(echo "$h" | rg -o '<title>[^<]*</title>' | head -1)

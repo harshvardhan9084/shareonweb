@@ -9,7 +9,7 @@
 //
 // Bump VERSION whenever the precache list or a strategy changes; activation
 // deletes every older cache.
-const VERSION = 'sow-shell-v12'
+const VERSION = 'sow-shell-v13'
 
 // Instant tools open and run entirely in the browser, so their page shells
 // (the server HTML plus every /_next/static asset the HTML references) are
@@ -37,7 +37,7 @@ const INSTANT_TOOLS = [
   '/sound-tools', '/tts', '/fuel-cost', '/salary', '/sleep',
   '/pace', '/one-rep-max', '/fraction', '/quadratic',
   '/spreadsheet', '/chart-maker', '/resume', '/video-studio',
-  '/bg-remove',
+  '/bg-remove', '/speed-test',
 ]
 
 const SHELL_ASSETS = [

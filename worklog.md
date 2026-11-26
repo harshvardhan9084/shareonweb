@@ -1265,3 +1265,75 @@ honesty lines) — no model download or inference ran in QA, deliberately, on a
 Push: 2f1ef31 committed as harshvardhan9084 and pushed with the stored PAT;
 remote tip verified, tree clean. §13 remains complete; R6 + R6b close out the
 owner's real-work directive.
+
+## 21. Batch R7 — /speed-test (the 100th tool), real links, and scroll memory (this run, 2026-11-26)
+
+Owner directive on this fire, three asks plus one question: add "the last one"
+about internet speed and related things; make the catalog cards expose their
+URLs (hover + right-click open-in-new-tab — "that is the important thing");
+stop the back-navigation from dumping the person at the very top of home; and
+explain the 32 MB ffmpeg / 80 MB bg-remove downloads. The count expectation
+was 100 after this round — registry verified at exactly 99 live entries
+before, so /speed-test lands the catalog at 100, and the home hero count
+renders "100 tools" from `getLiveApps().length` automatically.
+
+Cards are real anchors now. The directory cards (one per tool per category),
+the search-suggestion rows and the detour "Open X" links all render as
+`<a href="/<id>">` with the SPA click preserved via preventDefault and a
+modifier-key guard — cmd/ctrl/shift/alt and middle clicks fall through to the
+browser's native open-in-new-tab, plain clicks stay client-side. Verified
+in-browser: 100 anchors inside the tools section, firstHref /share; planned
+tools stay buttons since they have no real path. Left-click through /zip
+still navigates the SPA (path /zip, scroll 0).
+
+Back/forward scroll memory. The shell had `history.scrollRestoration = 'manual'`
+plus a blind `toTop()` on every popstate — that pair was the bug. The store
+now keeps a per-view `scrollMemory` map (keyed home / app:<id> /
+session:<code>, LRU-capped at 48): `navigate()` and `openApp()` remember the
+outgoing view's offset before scrolling to top, and app-shell marks a
+`pendingRestoreRef` on popstate, consumed by an isomorphic layout effect
+right after the restored view commits — before paint, so no top-flash.
+Verified end-to-end in the browser: home scrolled to 3200 → card click →
+/zip at top → history.back() → home at scroll 3200.
+
+/speed-test — a measurement, not a toy gauge. Latency: 8 zero-byte probes to
+Cloudflare's public speed endpoints; the first pays the TCP/TLS handshake and
+is discarded (it doubles as the server-label probe — the result names the
+edge city/colo via the CORS-exposed cf-meta headers); median is the ping,
+mean consecutive delta is the jitter. Download: up to 4 parallel streams read
+through ReadableStream readers, bytes counted live, stopping at 7 s or 48 MB.
+Upload: rounds of 3 parallel POSTs of a random 3 MB incompressible payload,
+capped at 12 MB / 5 s, carried as text/plain on purpose — a CORS-simple
+request, so no preflight round-trip contaminates the timing. While the
+download saturates the line, a probe every 1.2 s measures loaded latency:
+the loaded-vs-idle delta is graded A–F as the bufferbloat verdict. The
+capacity table translates the numbers (SD/HD/4K, cloud gaming, HD calls,
+backups) with 25% headroom per pass, plus 10 GB-down / 500 MB-up time
+estimates. Stop yields honestly-labeled partials. Two bugs caught during
+writing: the latency loop initially had dead branches, and the upload phase
+inherited the download's already-aborted AbortController at the byte cap —
+which would have counted 9 MB of nothing per round; each phase now rotates
+its own controller and only fulfilled POSTs add bytes.
+
+Full pipeline: registry entry (9 intents, gauge icon), SpeedTestTool
+component, instant-surface mount, 5-section article, SEO title/description/
+4 FAQs, app-icon Gauge, sw v13 with /speed-test precached, final-qa.sh
+PHASE=12 block + warm list + ALL_LIVE + skip plumbing. The 32/80 MB answer
+is now also in the UI: the bg-remove AI status line discloses the one-time
+~80 MB vendor-CDN model fetch explicitly (PHASE=11's "Model not loaded"
+assertion still passes).
+
+QA: PHASE=12 4/0 — including a real end-to-end measurement through the live
+endpoints (885 Mbps down / 499 up from this box; endpoint reachability and
+`Access-Control-Allow-Origin: *` were curl-verified before writing the
+tool). PHASE=1 22/0, PHASE=11 27/0 after the disclosure edit, PHASE=8 final
+sweep 147/0 (all 100 live pages with title + 3 JSON-LD graphs, sw mirror
+clean, console clean). lint clean.
+
+Honest limits: on very fast lines the 48 MB transfer cap can make download
+read slightly low while TCP ramps up — stated in the FAQ rather than hidden;
+the upload figures rely on completed POSTs only (partial aborts count zero,
+by design). QA runs the real measurement once per run; if Cloudflare's
+endpoints are ever unreachable from a runner, that check fails honestly
+instead of asserting a fake number. Push: committed as harshvardhan9084 and
+pushed with the stored PAT; remote tip verified, tree clean.

@@ -99,6 +99,7 @@ import { ChartMakerTool } from '@/components/instant/chart-maker-tool'
 import { ResumeTool } from '@/components/instant/resume-tool'
 import { VideoStudioTool } from '@/components/instant/video-studio-tool'
 import { BgRemoveTool } from '@/components/instant/bg-remove-tool'
+import { SpeedTestTool } from '@/components/instant/speed-test-tool'
 import { Check, ShieldCheck } from 'lucide-react'
 
 const TOOLS: Record<string, () => React.ReactElement> = {
@@ -189,6 +190,7 @@ const TOOLS: Record<string, () => React.ReactElement> = {
   resume: ResumeTool,
   'video-studio': VideoStudioTool,
   'bg-remove': BgRemoveTool,
+  'speed-test': SpeedTestTool,
 }
 
 function ToolHeader({ app }: { app: AppDef }) {

@@ -31,7 +31,7 @@ type Mode = 'ai' | 'key'
 type Phase = 'idle' | 'engine' | 'processing' | 'done' | 'error'
 
 const IDLE_STATUS: Record<Mode, string> = {
-  ai: 'Model not loaded — it fetches on first use (one-time download, then cached by the browser).',
+  ai: 'Model not loaded — it fetches on first use (~80 MB one-time from the vendor CDN, then cached by the browser).',
   key: 'Pick or auto-sample the key color, set the tolerance, then apply.',
 }
 

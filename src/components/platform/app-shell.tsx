@@ -7,9 +7,15 @@
 // paths (/K7T29Q) hydrate against the session API and fail into an honest
 // "not available" state instead of a silent redirect. Doctrine: DESIGN.md.
 
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useEffect, useRef, useState } from 'react'
 import nextDynamic from 'next/dynamic'
-import { usePlatform, parsePath, replaceUrlForView, syncTitle } from '@/lib/store'
+import {
+  usePlatform,
+  parsePath,
+  replaceUrlForView,
+  syncTitle,
+  recallScroll,
+} from '@/lib/store'
 import { fetchSession } from '@/lib/api'
 import { normalizeCode } from '@/lib/code'
 import { warmRelay } from '@/lib/relay-endpoint'
@@ -32,6 +38,11 @@ const SessionView = nextDynamic(
   () => import('@/components/platform/session-view').then((m) => m.SessionView),
   { ssr: false, loading: () => <SessionGate label="Loading the session" /> },
 )
+
+// Scroll restore after back/forward must run before paint (no top-flash); on
+// the server there is nothing to restore, so the alias sidesteps the SSR
+// layout-effect warning.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 const MySessionsView = nextDynamic(
   () => import('@/components/platform/my-sessions-view').then((m) => m.MySessionsView),
   { ssr: false },
@@ -59,6 +70,9 @@ export function AppShell({ initialView }: { initialView?: View }) {
   const navigate = usePlatform((s) => s.navigate)
   const [hydratingSession, setHydratingSession] = useState(false)
   const [failedCode, setFailedCode] = useState<string | null>(null)
+  // Set right before a popstate-driven URL application; the layout effect
+  // below consumes it once the restored view has committed.
+  const pendingRestoreRef = useRef(false)
 
   // Boot view: with a tool path (/beam) the server already rendered this
   // tool's landing view. Keep showing it on the first client render so
@@ -211,12 +225,27 @@ export function AppShell({ initialView }: { initialView?: View }) {
         setBootView(null)
       })
     const onPop = () => {
-      toTop()
+      // Back/forward: do NOT drop the person at the very top. Mark a pending
+      // restore; after the URL-driven view commits, the layout effect below
+      // puts the scroll back where this view was last left.
+      pendingRestoreRef.current = true
       void applyFromUrl()
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+
+  // Back/forward scroll restoration. applyFromUrl lands every URL-driven
+  // view at the top by default (forward navigation wants that); when the
+  // navigation came from history, this runs right after the restored view
+  // commits and restores the remembered offset instead.
+  useIsoLayoutEffect(() => {
+    if (bootView) return
+    if (!pendingRestoreRef.current) return
+    pendingRestoreRef.current = false
+    const saved = recallScroll(view)
+    window.scrollTo(0, saved ?? 0)
+  }, [view, bootView])
 
   return (
     <div className="flex min-h-screen flex-col">

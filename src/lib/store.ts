@@ -63,6 +63,42 @@ function scrollTop() {
   if (typeof window !== 'undefined') window.scrollTo(0, 0)
 }
 
+/**
+ * Per-view scroll memory: the offset each view was left at, remembered when
+ * the person navigates forward. Back/forward (popstate) restores it — someone
+ * trying ten tools out of curiosity should not lose their place in the
+ * catalog every single time they come back home. The map lives for the
+ * lifetime of the tab; a fresh load starts clean at the top.
+ */
+const scrollMemory = new Map<string, number>()
+const SCROLL_MEMORY_MAX = 48
+
+/** Stable key for a view: home, app:<id>, session:<code>, sessions, help. */
+export function viewKey(v: View): string {
+  if (v.name === 'home') return 'home'
+  if (v.name === 'app') return `app:${v.appId}`
+  if (v.name === 'session') return `session:${v.code}`
+  return v.name
+}
+
+function rememberScroll(v: View, y: number) {
+  if (typeof window === 'undefined') return
+  const key = viewKey(v)
+  scrollMemory.delete(key)
+  scrollMemory.set(key, Math.max(0, Math.round(y)))
+  if (scrollMemory.size > SCROLL_MEMORY_MAX) {
+    const oldest = scrollMemory.keys().next().value
+    if (oldest !== undefined) scrollMemory.delete(oldest)
+  }
+}
+
+/** The offset a view should be restored to after back/forward, or null. */
+export function recallScroll(v: View): number | null {
+  if (typeof window === 'undefined') return null
+  const hit = scrollMemory.get(viewKey(v))
+  return typeof hit === 'number' ? hit : null
+}
+
 /** The tab title always matches what the URL would have served server-side. */
 export function syncTitle(v: View) {
   if (typeof document === 'undefined') return
@@ -162,6 +198,10 @@ export const usePlatform = create<PlatformStore>((set, get) => ({
   recent: [],
 
   navigate: (v) => {
+    // Leaving this view: remember where it was scrolled to, so a later
+    // back/forward can put the person exactly where they were. Forward
+    // navigation itself still lands at the top.
+    if (typeof window !== 'undefined') rememberScroll(get().view, window.scrollY)
     set({ view: v })
     if (typeof window !== 'undefined') {
       window.history.pushState(null, '', urlForView(v))
@@ -173,6 +213,7 @@ export const usePlatform = create<PlatformStore>((set, get) => ({
   openApp: (appId) => {
     // Variant ids ('drop', 'video-call') land on the merged tool's page.
     const id = resolveAppId(appId) ?? appId
+    if (typeof window !== 'undefined') rememberScroll(get().view, window.scrollY)
     set({ activeAppId: id, view: { name: 'app', appId: id } })
     if (typeof window !== 'undefined') {
       window.history.pushState(null, '', `/${id}`)

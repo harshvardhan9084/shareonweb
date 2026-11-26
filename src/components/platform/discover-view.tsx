@@ -206,16 +206,9 @@ export function DiscoverView() {
                   role="listbox"
                   aria-label="Matching tools"
                 >
-                  {results.map((app) => (
-                    <li key={app.id} role="option" aria-selected={false}>
-                      <button
-                        onClick={() => {
-                          openApp(app.id)
-                          setQuery('')
-                          setFocused(false)
-                        }}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-accent active:bg-muted motion-reduce:transition-none"
-                      >
+                  {results.map((app) => {
+                    const inner = (
+                      <>
                         <AppIcon
                           name={app.icon}
                           className={cn(
@@ -236,9 +229,45 @@ export function DiscoverView() {
                             {app.tagline}
                           </span>
                         </span>
-                      </button>
-                    </li>
-                  ))}
+                      </>
+                    )
+                    const itemClass =
+                      'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-accent active:bg-muted motion-reduce:transition-none'
+                    return (
+                      <li key={app.id} role="option" aria-selected={false}>
+                        {app.status === 'live' ? (
+                          // A real href: the browser shows the URL on hover and
+                          // offers "open in new tab" on right/middle click. A
+                          // plain click stays in the SPA; modifier clicks pass
+                          // through to the browser untouched.
+                          <a
+                            href={`/${app.id}`}
+                            onClick={(e) => {
+                              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                              e.preventDefault()
+                              openApp(app.id)
+                              setQuery('')
+                              setFocused(false)
+                            }}
+                            className={itemClass}
+                          >
+                            {inner}
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              openApp(app.id)
+                              setQuery('')
+                              setFocused(false)
+                            }}
+                            className={itemClass}
+                          >
+                            {inner}
+                          </button>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               {focused && query.trim() && results.length === 0 && (
@@ -345,12 +374,17 @@ export function DiscoverView() {
                   />
                   {d.fix}
                 </p>
-                <button
-                  onClick={() => openApp(d.appId)}
+                <a
+                  href={`/${d.appId}`}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                    e.preventDefault()
+                    openApp(d.appId)
+                  }}
                   className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   Open {getApp(d.appId)?.name}
-                </button>
+                </a>
               </li>
             ))}
           </ul>
@@ -418,68 +452,90 @@ export function DiscoverView() {
                   <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:block">
                     {apps.map((app, i) => {
                       const live = app.status === 'live'
-                      return (
-                        <li key={app.id} className={cn(i > 0 && 'lg:border-t lg:border-border')}>
-                          <button
-                            onClick={() => openApp(app.id)}
-                            aria-label={
-                              live
-                                ? `Open ${app.name}: ${app.tagline}`
-                                : `${app.name}: ${app.tagline} (planned)`
-                            }
+                      const cardClass = cn(
+                        'group flex h-full w-full flex-col gap-2 rounded-lg border bg-card p-3.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none',
+                        'hover:border-foreground/25 active:bg-muted',
+                        'lg:-mx-3 lg:w-[calc(100%+1.5rem)] lg:flex-row lg:items-center lg:gap-4 lg:rounded-md lg:border-0 lg:bg-transparent lg:px-3 lg:py-3',
+                        'lg:hover:bg-accent lg:active:bg-muted',
+                        !live && 'lg:text-muted-foreground',
+                      )
+                      const body = (
+                        <>
+                          <AppIcon
+                            name={app.icon}
                             className={cn(
-                              'group flex h-full w-full flex-col gap-2 rounded-lg border bg-card p-3.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none',
-                              'hover:border-foreground/25 active:bg-muted',
-                              'lg:-mx-3 lg:w-[calc(100%+1.5rem)] lg:flex-row lg:items-center lg:gap-4 lg:rounded-md lg:border-0 lg:bg-transparent lg:px-3 lg:py-3',
-                              'lg:hover:bg-accent lg:active:bg-muted',
-                              !live && 'lg:text-muted-foreground',
+                              'size-5 shrink-0',
+                              live ? 'text-primary' : 'text-muted-foreground',
                             )}
-                          >
-                            <AppIcon
-                              name={app.icon}
-                              className={cn(
-                                'size-5 shrink-0',
-                                live ? 'text-primary' : 'text-muted-foreground',
-                              )}
-                              aria-hidden="true"
-                            />
-                            <span className="min-w-0">
-                              <span
-                                className={cn(
-                                  'block text-[15px] font-medium',
-                                  !live && 'text-muted-foreground',
-                                )}
-                              >
-                                {app.name}
-                              </span>
-                              <span className="mt-0.5 line-clamp-2 block text-sm text-muted-foreground lg:mt-0 lg:truncate lg:line-clamp-none">
-                                {app.tagline}
-                              </span>
-                              {app.variants && app.variants.length > 1 && (
-                                <span className="mt-0.5 block text-[11px] text-muted-foreground/80 lg:mt-0.5">
-                                  {app.variants.map((v) => v.name).join(' · ')}
-                                </span>
-                              )}
-                            </span>
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0">
                             <span
                               className={cn(
-                                'mt-auto flex shrink-0 items-center gap-1 text-sm lg:mt-0 lg:ml-auto',
-                                live ? 'text-muted-foreground' : 'text-muted-foreground/70',
+                                'block text-[15px] font-medium',
+                                !live && 'text-muted-foreground',
                               )}
                             >
-                              {live ? (
-                                <>
-                                  <span className="hidden sm:inline">open</span>
-                                  <ArrowRight
-                                    className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-                                    aria-hidden="true"
-                                  />
-                                </>
-                              ) : (
-                                'planned'
-                              )}
+                              {app.name}
                             </span>
-                          </button>
+                            <span className="mt-0.5 line-clamp-2 block text-sm text-muted-foreground lg:mt-0 lg:truncate lg:line-clamp-none">
+                              {app.tagline}
+                            </span>
+                            {app.variants && app.variants.length > 1 && (
+                              <span className="mt-0.5 block text-[11px] text-muted-foreground/80 lg:mt-0.5">
+                                {app.variants.map((v) => v.name).join(' · ')}
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            className={cn(
+                              'mt-auto flex shrink-0 items-center gap-1 text-sm lg:mt-0 lg:ml-auto',
+                              live ? 'text-muted-foreground' : 'text-muted-foreground/70',
+                            )}
+                          >
+                            {live ? (
+                              <>
+                                <span className="hidden sm:inline">open</span>
+                                <ArrowRight
+                                  className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                                  aria-hidden="true"
+                                />
+                              </>
+                            ) : (
+                              'planned'
+                            )}
+                          </span>
+                        </>
+                      )
+                      return (
+                        <li key={app.id} className={cn(i > 0 && 'lg:border-t lg:border-border')}>
+                          {live ? (
+                            // A real anchor with the tool's own path: the URL
+                            // shows in the status bar on hover and the browser
+                            // context menu offers "open in new tab". Modifier
+                            // clicks keep their native behavior; a plain click
+                            // stays inside the SPA.
+                            <a
+                              href={`/${app.id}`}
+                              onClick={(e) => {
+                                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                                e.preventDefault()
+                                openApp(app.id)
+                              }}
+                              aria-label={`Open ${app.name}: ${app.tagline}`}
+                              className={cardClass}
+                            >
+                              {body}
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => openApp(app.id)}
+                              aria-label={`${app.name}: ${app.tagline} (planned)`}
+                              className={cardClass}
+                            >
+                              {body}
+                            </button>
+                          )}
                         </li>
                       )
                     })}

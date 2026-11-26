@@ -3880,6 +3880,41 @@ export const APPS: AppDef[] = [
       'Drag the compare slider to inspect the edges, then download the transparent PNG',
     ],
   },
+  {
+    id: 'speed-test',
+    name: 'Speed Test',
+    kind: 'instant',
+    category: 'instant',
+    status: 'live',
+    tagline: 'Real download, upload, ping, jitter and bufferbloat measured in this tab — plus what your line can actually carry, with no app and nothing stored.',
+    description:
+      'A connection test with no theater. Parallel streams measure real throughput, tiny probes measure latency and jitter, a probe running during the download exposes bufferbloat, and the whole run is capped at roughly 48 MB down and 12 MB up — with the exact volumes printed in the result. Measurement rides Cloudflare\'s public speed endpoints straight from this browser: no app install, no account, no result stored anywhere, and no Kontivo server in the path. The capacity table turns the numbers into answers: whether 4K streaming, cloud gaming, HD video calls and cloud backups fit on the line that was just measured.',
+    icon: 'gauge',
+    intents: [
+      'internet speed test',
+      'check my internet speed',
+      'download and upload speed test',
+      'wifi speed test online free',
+      'measure network latency and jitter',
+      'what internet speed do i need for streaming',
+      'speed test without app install',
+      'bufferbloat test in browser',
+      'test connection speed no download',
+    ],
+    features: [
+      'Parallel-stream download and upload measurement with a live Mbps readout',
+      'Median ping and jitter from eight tiny probes, warm-up discarded honestly',
+      'Bufferbloat check: latency re-measured under full download load, graded A–F',
+      'Capacity table: 4K streaming, cloud gaming, HD calls and backups vs your numbers',
+      'Transfer volumes shown in the result — capped at ~48 MB down / 12 MB up',
+      'Nothing stored, no account: the test talks to Cloudflare\'s public endpoints directly',
+    ],
+    howItWorks: [
+      'Press start: ping first, then download streams, then upload payloads',
+      'A probe runs while the download saturates the line to expose bufferbloat',
+      'Read the numbers, the load grade and the capacity table — or stop early for partials',
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------

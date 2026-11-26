@@ -3132,4 +3132,55 @@ export const INSTANT_ARTICLES: Record<string, AppArticle> = {
       },
     ],
   },
+
+  // ------------------------------------------------------------- speed-test
+  'speed-test': {
+    lede: [
+      'Speed Test measures what your connection actually does, in this tab, in about fifteen seconds: download, upload, ping, jitter, and the one number the big apps hide — how much your latency degrades while the line is busy. It then turns those numbers into answers, with a capacity table that says plainly whether 4K streaming, cloud gaming, HD group calls and cloud backups fit on the line you just measured.',
+      'There is no app to install and no account behind a paywall, and nothing is stored — the probes go from this browser straight to Cloudflare\u2019s public speed endpoints, and the run is capped at roughly 48 MB down and 12 MB up, with the exact volumes printed in the result. A test that secretly drained a data plan would betray the same person it measures.',
+    ],
+    sections: [
+      {
+        heading: 'What the numbers actually mean',
+        paragraphs: [
+          'Download and upload are throughput: how many bits per second the line can carry, measured with parallel streams because a single request never saturates a modern connection. Ping is round-trip reaction time — the difference between a call that feels live and one where people talk over each other. Jitter is the wobble in that reaction time; a line can have great throughput and still be useless for voice if the timing jitters.',
+          'Bufferbloat is the sneaky one: latency measured again while the download is running. On a bloated line, a background backup or a family member\u2019s video dump adds hundreds of milliseconds to every packet, and suddenly the call freezes every time someone uploads photos. The test grades it A through F so there is a word for the problem, not just a number.',
+        ],
+      },
+      {
+        heading: 'How to run a test that means something',
+        paragraphs: [
+          'Run it the way you actually use the connection. Wi-Fi adds its own variability — walls, distance, a microwave mid-cycle — so if the router is the suspect, test near it and test far from it and compare. Pause big background transfers first, or the test will measure your backup instead of your line. Run it twice; if the numbers disagree wildly, the third run tells you which one was the fluke.',
+          'The stop button is not a failure state: stop mid-run and the page keeps the partial results, honestly labeled. That matters on metered connections, where the point is to spend the least data that still yields a number.',
+        ],
+      },
+      {
+        heading: 'What your speed can carry',
+        paragraphs: [
+          'Raw megabits answer nothing by themselves; the capacity table translates them. Each row — a 4K stream, a cloud gaming session, an HD group call, a photo backup running while you work — carries a requirement plus 25% headroom, because a connection that exactly matches its workload drops the moment anything else starts. Passes are green, marginal rows are the ones that work alone and fail together, and fails are the reason the video call is the thing that breaks first.',
+          'The two time estimates at the bottom — a 10 GB download, a 500 MB upload — answer the question people actually ask: not \u201chow fast is my line\u201d but \u201chow long will this take\u201d. Both are computed from the measurement just taken, never from assumptions about your plan.',
+        ],
+      },
+      {
+        heading: 'Why a browser test and not an app',
+        paragraphs: [
+          'The app-store speed tests are fine tools wrapped in ads, upsells and analytics. This page has none of that: no install, no account, no result database. The same physics runs underneath — parallel streams, timed probes — pointed at Cloudflare\u2019s public measurement endpoints, which exist precisely so web pages can measure honestly without a proprietary server.',
+        ],
+        list: [
+          'Router shopping — test before and after the swap, same spot, same time of day',
+          'Call quality disputes — the bufferbloat grade names what the complaint feels like',
+          'Work-from-home checks — HD call rows are the pass line, not raw megabits',
+          'Mobile data budgets — the transfer cap and printed volumes keep the test cheap',
+          'Landlord or ISP arguments — numbers from a neutral endpoint, not an ad-funded one',
+        ],
+      },
+      {
+        heading: 'What happens during the test, precisely',
+        paragraphs: [
+          'Phase one sends eight zero-byte requests; the first pays the TCP and TLS setup and is discarded rather than counted, the median of the rest is your ping, and the mean difference between consecutive samples is your jitter. Phase two opens up to four parallel download streams and counts bytes live until seven seconds pass or 48 MB moves. While those streams run, a small probe every 1.2 seconds times the loaded latency — that is the bufferbloat measurement. Phase three posts random incompressible payloads in parallel until five seconds pass or 12 MB goes out; the payload is deliberately marked as plain text so no preflight handshake contaminates the timing.',
+          'Every phase prints what it moved. If an endpoint is unreachable — a VPN, a firewall, an aggressive ad blocker — the page says so instead of showing a fake number, because a speed test that always says 100 Mbps is worse than no speed test at all.',
+        ],
+      },
+    ],
+  },
 }

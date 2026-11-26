@@ -115,6 +115,7 @@ const SEO_TITLES: Record<string, string> = {
   resume: 'Resume Builder — live A4 preview, ATS-friendly, themes, print-perfect PDF, nothing uploads',
   'video-studio': 'Video Studio — compress and trim video on your own CPU with a real ffmpeg engine',
   'bg-remove': 'Background Remover — AI cutouts and solid keys, computed on this device',
+  'speed-test': 'Internet Speed Test — download, upload, ping, jitter and what your line can carry',
 }
 
 /** Hand-tuned meta descriptions (the snippet) — honest, specific, ~150 chars. */
@@ -317,6 +318,8 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     'Compress video with CRF quality control and trim with fast keyframe cuts or frame-exact re-encodes — a real ffmpeg engine on your own CPU, no upload, no watermark, standard MP4 output.',
   'bg-remove':
     'AI cutouts and solid-color background keys computed in this tab — transparent PNG out, checkerboard compare slider, and your photo never leaves the device.',
+  'speed-test':
+    'Measure real download, upload, ping, jitter and bufferbloat right in this tab — then see what your line can carry, from 4K streaming to HD calls. No app, nothing stored.',
 }
 
 /**
@@ -2060,6 +2063,26 @@ export const APP_FAQS: Record<string, Faq[]> = {
     {
       q: 'What format is the download and why PNG?',
       a: 'Always PNG, because it is the format that carries the alpha channel transparency requires — JPEG has no alpha and would flatten the cutout onto black. The result card prints the before/after sizes honestly, since a transparent PNG can be larger than the compressed JPEG you started with.',
+    },
+  ],
+
+  // ------------------------------------------------------------- speed-test
+  'speed-test': [
+    {
+      q: 'How accurate is a browser speed test compared to the app ones?',
+      a: 'Close enough to trust, different enough to expect. This test pulls up to four parallel streams through Cloudflare\u2019s public endpoints and caps the transfer, so on very fast lines (hundreds of Mbps) the number can read slightly low while the TCP ramp-up finishes. For the decisions that matter — did the router change help, is the upload good enough for calls — it is the same answer the big apps give, without installing anything.',
+    },
+    {
+      q: 'What do ping, jitter and bufferbloat actually mean?',
+      a: 'Ping is the round-trip time of a tiny request — how fast the line reacts. Jitter is how much that time wobbles between probes; high jitter breaks real-time audio even on fast lines. Bufferbloat is the latency added when the line is saturated: if a big download adds hundreds of milliseconds, every call stutters while it runs. The test measures all three and grades the last one from A to F.',
+    },
+    {
+      q: 'Why does the test transfer real data, and how much?',
+      a: 'Speed is bytes over time — nothing can be measured without moving some bytes. The run is capped at roughly 48 MB down and 12 MB up, stops early on slow connections, and the exact volumes are printed in the result card, because a test that secretly eats a data plan would be a bad deal on mobile.',
+    },
+    {
+      q: 'Is anything about my connection stored or shared?',
+      a: 'No. The probes go from this browser tab straight to Cloudflare\u2019s public speed endpoints; Kontivo\u2019s servers are never in the path and there is no result to store, log or share. Closing the tab erases everything, because there is nothing anywhere else to erase.',
     },
   ],
 
