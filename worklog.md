@@ -1219,3 +1219,49 @@ converting the geometry memo to a tagged union (pie/scatter/bar/line/area).
 Push: committed as harshvardhan9084 and pushed with the owner-supplied PAT
 from the R5 resolution (credentials live in ~/.git-credentials outside the
 repo).
+
+## 20. Batch R6b — the unparked sixth tool: /bg-remove (this run, 2026-11-26)
+
+Owner directive on this fire: build items 1/5/6 "wider and deeper", QR Studio
+for real use cases, video compression, and "that another one too which was
+stopped with it" (AI background removal) — right now, then push. A concurrent
+session had already shipped five of the six (acf174b: spreadsheet, chart
+maker, resume, video-studio with self-hosted ffmpeg compress + trim, /qr
+rebuilt as QR Studio with UPI/batch/logo; sw v11, PHASE=10, worklog §19,
+pushed). This run verified those claims against actual code — files present,
+registry intents, seo/articles/icon entries, sw precache, PHASE=10 block —
+and found the sixth item genuinely missing: no bg-remove component, no
+registry entry, nothing. So this run built exactly that, nothing else touched.
+
+/bg-remove ships two honest engines on one page. AI cutout: @imgly/background-
+removal 1.7.0 (new dependency, wrapper only — model data comes from the
+vendor CDN), lazy-imported inside the click handler, ISNet fp16, live
+progress mapped to download/segment phases, honest "Model not loaded" line
+and a failure message that points at the no-download mode. Solid-color key:
+pure canvas — corner patches auto-sample the key color, a tolerance slider
+drives a two-threshold soft alpha ramp so anti-aliased edges blend instead of
+shredding. Compare slider overlays cutout over original on a checkerboard;
+transparent PNG download keeps alpha; clipboard paste supported. SSR rules
+respected (engine import in handlers only); lint + tsc clean on touched files.
+
+QA engineering: PHASE=11 added (R6b block, warm-skip + counter-restore
+extended) and the two negative gates (the 8/10 skip and the 9/4c skip) now
+also exclude 11 — without that, phase 11 re-runs the entire generic browser
+pile and times out, which is exactly what the first two invocations did. One
+of this run's own checks then failed on the documented eval-quote-wrap trap
+("^yes:" never matches "yes:8000/1600") — the worklog warned about this
+pattern and it still got written; anchor fixed, check re-run.
+
+QA: PHASE=11 5/0 clean — including the end-to-end solid-key check that builds
+a red-field/green-square PNG in-page, keys it, and pixel-counts the result
+(8000 alpha-0 pixels out, 1600 fully-kept: exactly the synthetic geometry).
+PHASE=8 final sweep 124/0 (89 live pages with JSON-LD incl. /bg-remove, sw
+mirror asserts precache == instant list, /beam redirect, console clean). sw.js
+bumped to sow-shell-v12 with /bg-remove precached.
+
+Honest limits: the AI path is asserted at the UI level only (tabs, status,
+honesty lines) — no model download or inference ran in QA, deliberately, on a
+4 GB box; the pixel-verified end-to-end covers the solid-key engine fully.
+Push: 2f1ef31 committed as harshvardhan9084 and pushed with the stored PAT;
+remote tip verified, tree clean. §13 remains complete; R6 + R6b close out the
+owner's real-work directive.
