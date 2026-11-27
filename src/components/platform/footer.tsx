@@ -1,12 +1,26 @@
 'use client'
 
 import { BrandMark } from '@/components/platform/app-icon'
+import { spaAnchorProps } from '@/components/platform/spa-anchor'
 import { usePlatform } from '@/lib/store'
 import { CATEGORIES } from '@/lib/registry'
 
 export function Footer() {
   const navigate = usePlatform((s) => s.navigate)
   const openJoin = usePlatform((s) => s.openJoin)
+
+  // Footer categories deep-link into the catalog section: the anchor carries
+  // /#cat-<id> (fresh loads and right-click → open in new tab land on the
+  // section; discover-view honors the hash), plain clicks stay in the SPA and
+  // scroll there after the view change.
+  const goCategory = (id: string) => {
+    navigate({ name: 'home' })
+    window.setTimeout(() => {
+      document
+        .getElementById(`cat-${id}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
 
   return (
     <footer className="mt-auto border-t bg-muted/40 pb-[env(safe-area-inset-bottom)]">
@@ -35,28 +49,28 @@ export function Footer() {
             <p className="font-medium">Explore</p>
             <ul className="space-y-2 text-muted-foreground">
               <li>
-                <button
+                <a
+                  {...spaAnchorProps('/', () => navigate({ name: 'home' }))}
                   className="transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                  onClick={() => navigate({ name: 'home' })}
                 >
                   Discover tools
-                </button>
+                </a>
               </li>
               <li>
-                <button
+                <a
+                  {...spaAnchorProps('/sessions', () => navigate({ name: 'sessions' }))}
                   className="transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                  onClick={() => navigate({ name: 'sessions' })}
                 >
                   My Sessions
-                </button>
+                </a>
               </li>
               <li>
-                <button
+                <a
+                  {...spaAnchorProps('/help', () => navigate({ name: 'help' }))}
                   className="transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                  onClick={() => navigate({ name: 'help' })}
                 >
                   Help Center
-                </button>
+                </a>
               </li>
             </ul>
           </nav>
@@ -66,12 +80,12 @@ export function Footer() {
             <ul className="space-y-2 text-muted-foreground">
               {CATEGORIES.map((c) => (
                 <li key={c.id}>
-                  <button
+                  <a
+                    {...spaAnchorProps(`/#cat-${c.id}`, () => goCategory(c.id))}
                     className="transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                    onClick={() => navigate({ name: 'home' })}
                   >
                     {c.label}
-                  </button>
+                  </a>
                 </li>
               ))}
             </ul>

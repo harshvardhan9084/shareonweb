@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { usePlatform } from '@/lib/store'
+import { spaAnchorProps } from '@/components/platform/spa-anchor'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 const TROUBLESHOOTING = [
@@ -197,18 +198,18 @@ export function HelpView() {
           session yourself any time from its toolbar.
         </p>
         <div className="flex items-center gap-4 text-sm">
-          <button
+          <a
+            {...spaAnchorProps('/sessions', () => navigate({ name: 'sessions' }))}
             className="font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-            onClick={() => navigate({ name: 'sessions' })}
           >
             My Sessions
-          </button>
-          <button
+          </a>
+          <a
+            {...spaAnchorProps('/', () => navigate({ name: 'home' }))}
             className="font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-            onClick={() => navigate({ name: 'home' })}
           >
             Discover
-          </button>
+          </a>
         </div>
       </div>
 

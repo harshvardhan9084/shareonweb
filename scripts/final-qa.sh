@@ -37,7 +37,7 @@ echo "dev ready: HTTP $code"
 
 echo "== warming routes (curl) =="
 case "$PHASE" in
-  4|4b|4c|5|6|9|10|11|12)
+  4|4b|4c|5|6|9|10|11|12|13)
     echo "  (skipped — the warm list was printed by the earlier phase of this run)"
     ;;
   *)
@@ -66,7 +66,7 @@ case "$PHASE" in
 esac
 
 pass=0; fail=0
-if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ] || [ "$PHASE" = "11" ] || [ "$PHASE" = "12" ]; } && [ -f /tmp/qa-pass ]; then
+if { [ "$PHASE" = "2" ] || [ "$PHASE" = "4" ] || [ "$PHASE" = "4b" ] || [ "$PHASE" = "4c" ] || [ "$PHASE" = "5" ] || [ "$PHASE" = "6" ] || [ "$PHASE" = "8" ] || [ "$PHASE" = "9" ] || [ "$PHASE" = "10" ] || [ "$PHASE" = "11" ] || [ "$PHASE" = "12" ] || [ "$PHASE" = "13" ]; } && [ -f /tmp/qa-pass ]; then
   pass=$(cat /tmp/qa-pass); fail=$(cat /tmp/qa-fail)
 fi
 ok()   { echo "  PASS $1"; pass=$((pass+1)); }
@@ -369,7 +369,7 @@ if [ "$PHASE" != "7" ]; then
 # PHASE=8 skips the (already verified in this run) 11g→R4 browser region and
 # runs only the ALL_LIVE JSON-LD sweep, the instant-body check, the sw mirror
 # and the final landing + console sweep, so the sweeps fit one invocation.
-if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ] && [ "$PHASE" != "11" ] && [ "$PHASE" != "12" ]; then
+if [ "$PHASE" != "8" ] && [ "$PHASE" != "10" ] && [ "$PHASE" != "11" ] && [ "$PHASE" != "12" ] && [ "$PHASE" != "13" ]; then
 
 # 11g. /archive: real tar.gz -> entries listed -> ZIP extraction ready
 open_page "http://localhost:81/archive"
@@ -896,7 +896,7 @@ fi
 # PHASE=4b skips the R3 block, PHASE=4c skips the R4 block, and PHASE=9
 # skips R3+R4 — so each batch block can run alone on a memory-tight box
 # without blowing the invocation timeout.
-if [ "$PHASE" != "4b" ] && [ "$PHASE" != "9" ]; then
+if [ "$PHASE" != "4b" ] && [ "$PHASE" != "9" ] && [ "$PHASE" != "13" ]; then
 
 # 11u5. Batch R3 — data & text utilities (one real interaction per tool)
 
@@ -1019,7 +1019,7 @@ fi  # end the PHASE=4b/9 skip wrapper around the R3 block
 
 # 11u6. Batch R4 — image & format utilities (one real interaction per tool)
 
-if [ "$PHASE" != "9" ] && [ "$PHASE" != "4c" ] && [ "$PHASE" != "11" ]; then
+if [ "$PHASE" != "9" ] && [ "$PHASE" != "4c" ] && [ "$PHASE" != "11" ] && [ "$PHASE" != "13" ]; then
 
 # /cipher: ROT13 default encodes hello → uryyb; Atbash flips to svool; brute panel has 25 rows
 open_page "http://localhost:81/cipher"
@@ -1438,6 +1438,65 @@ echo "== RESULT (phase 12): $pass passed, $fail failed — run PHASE=8 for the f
 exit 0
 
 fi  # end the PHASE=12 R7 block
+
+# 13b. PHASE=13 — R7b: real link semantics everywhere. The owner directive
+#      started with the tool cards ("the urls of cards are not showing url on
+#      hover and 'open in new tab' on 'right click'! that is the important
+#      thing to be there") — R7 covered the catalog; this phase pins the rest
+#      of the chrome: header logo + main nav, footer Explore + Sections (with
+#      /#cat-<id> deep links), the help page's links, and that plain clicks
+#      still navigate the SPA.
+if [ "$PHASE" = "13" ]; then
+
+open_page "http://localhost:81/"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+
+hl=$(agent-browser eval "(() => { const logo = document.querySelector('header a[aria-label=\"Kontivo home\"]'); if (!logo || logo.getAttribute('href') !== '/') return 'logo:' + (logo ? logo.getAttribute('href') : 'missing'); const navs = Array.from(document.querySelectorAll('header nav[aria-label=\"Main navigation\"] a')).map(function(a){return a.getAttribute('href')}); const want = ['/', '/sessions', '/help']; return want.every(function(h){return navs.indexOf(h) >= 0}) ? 'yes' : 'nav:' + navs.join(',') })()" 2>/dev/null)
+echo "$hl" | rg -q 'yes' && ok "header logo + main nav are real anchors (/, /sessions, /help)" || bad "header anchors: $hl"
+
+fe=$(agent-browser eval "(() => { const nav = document.querySelector('footer nav[aria-label=\"Footer navigation\"]'); if (!nav) return 'no-footer-nav'; const hrefs = Array.from(nav.querySelectorAll('a')).map(function(a){return a.getAttribute('href')}); const want = ['/', '/sessions', '/help']; if (!want.every(function(h){return hrefs.indexOf(h) >= 0})) return 'explore:' + hrefs.join(','); const cats = Array.from(document.querySelectorAll('footer nav[aria-label=\"Categories\"] a')).map(function(a){return a.getAttribute('href')}); return cats.length >= 6 && cats.every(function(h){return h.indexOf('/#cat-') === 0}) ? 'yes' : 'cats:' + cats.join(',') })()" 2>/dev/null)
+echo "$fe" | rg -q 'yes' && ok "footer Explore + Sections are real anchors, categories carry /#cat-<id>" || bad "footer anchors: $fe"
+
+cs=$(agent-browser eval "(() => { const ids = ['share','communicate','collaborate','remote','utilities','instant']; const missing = ids.filter(function(id){return !document.getElementById('cat-' + id)}); return missing.length ? 'missing:' + missing.join(',') : 'yes' })()" 2>/dev/null)
+echo "$cs" | rg -q 'yes' && ok "all 6 catalog category sections expose id=cat-<id>" || bad "category ids: $cs"
+
+# Plain click on a footer category keeps the SPA and scrolls to the section.
+agent-browser eval "window.scrollTo(0, 0)" > /dev/null 2>&1
+cscroll=$(agent-browser eval "(() => { const a = document.querySelector('footer nav[aria-label=\"Categories\"] a[href=\"/#cat-instant\"]'); if (!a) return 'no-anchor'; a.click(); return 'clicked' })()" 2>/dev/null)
+sleep 1.5
+cy=$(agent-browser eval "String(Math.round(window.scrollY))" 2>/dev/null)
+echo "$cy" | rg -q '[0-9]{3,}' && ok "footer category click stays SPA and lands on the section (scrollY $cy)" || bad "category click scroll: $cscroll / $cy"
+
+# A fresh load of /#cat-instant honors the hash — lands on the section.
+open_page "http://localhost:81/#cat-instant"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+sleep 1.8
+hy=$(agent-browser eval "String(Math.round(window.scrollY))" 2>/dev/null)
+echo "$hy" | rg -q '[0-9]{3,}' && ok "fresh load of /#cat-instant scrolls to the section (scrollY $hy)" || bad "hash deep-link scroll: $hy"
+
+open_page "http://localhost:81/help"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+# The shell commits home first and swaps to the URL's view one render later,
+# so wait for the help view's own links, not just the hydration flag.
+agent-browser wait --fn "Array.from(document.querySelectorAll('main a')).some(function(a){return a.textContent.trim() === 'My Sessions'})" --timeout 15000 > /dev/null 2>&1
+hlp=$(agent-browser eval "(() => { const as = Array.from(document.querySelectorAll('main a')).filter(function(a){return a.textContent.trim() === 'My Sessions' || a.textContent.trim() === 'Discover'}); const hrefs = as.map(function(a){return a.getAttribute('href')}); return hrefs.indexOf('/sessions') >= 0 && hrefs.indexOf('/') >= 0 ? 'yes' : 'got:' + hrefs.join(',') })()" 2>/dev/null)
+echo "$hlp" | rg -q 'yes' && ok "/help footer links are real anchors" || bad "/help anchors: $hlp"
+
+# Left-click through a header nav anchor still navigates the SPA.
+open_page "http://localhost:81/"
+agent-browser wait --fn "document.documentElement.dataset.hydrated === '1'" --timeout 40000 > /dev/null 2>&1
+hnav=$(agent-browser eval "(() => { const as = Array.from(document.querySelectorAll('header nav[aria-label=\"Main navigation\"] a')); const a = as.find(function(x){return x.getAttribute('href') === '/help'}); if (!a) return 'no-anchor'; a.click(); return 'clicked' })()" 2>/dev/null)
+agent-browser wait --fn "location.pathname === '/help'" --timeout 15000 > /dev/null 2>&1
+hpath=$(agent-browser eval "location.pathname" 2>/dev/null)
+echo "$hpath" | rg -q '/help' && ok "header anchor left-click navigates the SPA (path $hpath)" || bad "header SPA nav: $hnav / $hpath"
+
+agent-browser close > /dev/null 2>&1
+
+echo "$pass" > /tmp/qa-pass; echo "$fail" > /tmp/qa-fail
+echo "== RESULT (phase 13): $pass passed, $fail failed — run PHASE=8 for the final sweeps =="
+exit 0
+
+fi  # end the PHASE=13 links block
 
 # 12. legacy /beam redirects to /share
 r=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "http://localhost:81/beam")

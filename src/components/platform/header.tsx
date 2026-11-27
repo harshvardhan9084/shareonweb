@@ -20,6 +20,7 @@ import {
 import { Menu, Plus, ChevronDown, Command, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { spaAnchorProps } from '@/components/platform/spa-anchor'
 
 export function Header() {
   const navigate = usePlatform((s) => s.navigate)
@@ -33,10 +34,12 @@ export function Header() {
   const current =
     view.name === 'sessions' ? 'sessions' : view.name === 'help' ? 'help' : 'home'
 
+  // Nav items carry real paths: hover shows the URL, right-click offers
+  // open-in-new-tab, direct loads work — plain clicks stay in the SPA.
   const nav = [
-    { key: 'home', label: 'Discover', action: () => navigate({ name: 'home' }) },
-    { key: 'sessions', label: 'My Sessions', action: () => navigate({ name: 'sessions' }) },
-    { key: 'help', label: 'Help Center', action: () => navigate({ name: 'help' }) },
+    { key: 'home', label: 'Discover', href: '/', action: () => navigate({ name: 'home' }) },
+    { key: 'sessions', label: 'My Sessions', href: '/sessions', action: () => navigate({ name: 'sessions' }) },
+    { key: 'help', label: 'Help Center', href: '/help', action: () => navigate({ name: 'help' }) },
   ]
 
   const goHome = () => {
@@ -55,20 +58,20 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-4 sm:gap-4">
-        <button
-          onClick={goHome}
+        <a
+          {...spaAnchorProps('/', goHome)}
           className="flex items-center gap-2 rounded-md py-1 pr-2 focus-visible:outline-2 focus-visible:outline-ring"
           aria-label="Kontivo home"
         >
           <BrandMark className="size-7" />
           <span className="font-display text-lg font-semibold tracking-[-0.01em]">Kontivo</span>
-        </button>
+        </a>
 
         <nav className="ml-3 hidden items-center gap-0.5 sm:flex" aria-label="Main navigation">
           {nav.map((item) => (
-            <button
+            <a
               key={item.key}
-              onClick={item.action}
+              {...spaAnchorProps(item.href, item.action)}
               aria-current={current === item.key ? 'page' : undefined}
               className={cn(
                 'rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-accent/60 hover:text-foreground active:bg-accent focus-visible:outline-2 focus-visible:outline-ring motion-reduce:transition-none',
@@ -78,7 +81,7 @@ export function Header() {
               )}
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </nav>
 

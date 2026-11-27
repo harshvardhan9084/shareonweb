@@ -97,7 +97,11 @@ code covers all of them.* Implemented via family panels
 | **Batch 5 tail + QR scanner: lorem, fake-data, css-tools, meta-tags, barcode, /qr Scan tab** | DONE (this run), QA-verified per tool |
 | **Relay session GC on wake (expired sessions + stale rooms swept at boot)** | DONE (this run), verified with a seeded store harness |
 | **PWA offline instant shells (sw.js v5 precaches 35 tool pages + assets)** | DONE (this run), production-only, mirror-checked |
-| **§13 Recommended-tools expansion: 50 Google-search tools in 5 batches (owner directive)** | IN PROGRESS — Batch R1 DONE this run (10 tools, QA-verified) |
+| **§13 Recommended-tools expansion: 50 Google-search tools in 5 batches (owner directive)** | DONE — all 5 batches shipped and QA-verified (see §14–§18; this row was left "IN PROGRESS / R1" by earlier runs and corrected in the R7b run) |
+| **Batch R6 — real-work tools by owner directive (spreadsheet, chart maker, resume, video studio, QR Studio)** | DONE (§19), QA-verified |
+| **Batch R6b — /bg-remove, the unparked sixth tool** | DONE (§20), QA-verified |
+| **Batch R7 — /speed-test as the 100th tool; real anchors on cards; back/forward scroll memory** | DONE (§21), QA-verified |
+| **Batch R7b — real link semantics across the chrome (header, footer, categories deep-link, help)** | DONE (§22), QA-verified |
 
 
 ## 4. THE CHECKLIST (extracted from the owner's list + ChatGPT plan)
@@ -1337,3 +1341,58 @@ by design). QA runs the real measurement once per run; if Cloudflare's
 endpoints are ever unreachable from a runner, that check fails honestly
 instead of asserting a fake number. Push: committed as harshvardhan9084 and
 pushed with the stored PAT; remote tip verified, tree clean.
+
+
+## 22. Batch R7b — real link semantics across the whole chrome (this run, 2026-11-27)
+
+Cold-start verification run. The cron pointer claimed "Batch R3 is the
+target" — stale by four batches. Ground truth checked before touching
+anything: git log shows R1–R5 (the §13 50-tool checklist), R6, R6b and R7
+all committed; `getLiveApps().length` is exactly 100 with speed-test last;
+discover-view's cards/suggestions/detours render real `<a href>` with the
+modifier-key guard; store.ts has the per-view scrollMemory; sw.js is v13
+with /speed-test precached; R7 was pushed (origin tip d8b6774, tree clean).
+Nothing from the owner's last directive was left unfinished — the honest
+finding is "everything already shipped", not new scope.
+
+What this run DID add: R7 made the catalog cards real anchors, but the rest
+of the chrome was still doing link work with buttons — the same defect the
+owner called out ("the urls of cards are not showing url on hover and 'open
+in new tab' on right click"). Fixed at every remaining navigation surface:
+
+- header: the Kontivo logo and the three main-nav items (Discover, My
+  Sessions, Help Center) are now real `<a href>` to /, /sessions, /help.
+- footer: the Explore column (Discover tools, My Sessions, Help Center) and
+  the whole Sections column are real anchors.
+- footer Sections go further: each category carries /#cat-<id> (share,
+  communicate, collaborate, remote, utilities, instant) — discover-view now
+  stamps `id="cat-<id>"` + scroll-mt on every catalog section and honors the
+  hash on a fresh load, so right-click → open in new tab lands on that
+  category, not at the top of home. Plain clicks still navigate the SPA and
+  smooth-scroll to the section (same pattern as the existing #the-tools
+  browse button).
+- help: the bottom My Sessions / Discover text links are real anchors.
+
+Implementation: one shared helper `spaAnchorProps(href, go)` in
+src/components/platform/spa-anchor.ts returns the href + guarded onClick
+(modifier keys pass through, plain clicks preventDefault and call go) — the
+exact doctrine the R7 cards use, now reused instead of re-inlined.
+
+QA: the script gained PHASE=13 (also wired into the warm-skip, tally-resume
+and three skip-wrappers): 7 checks — header logo+nav anchors, footer
+explore+category anchors, all six cat- ids present, footer category click
+stays SPA and lands on the section (scrollY 2373), a fresh load of
+/#cat-instant scrolls there (2373), /help's own links are anchors (scoped to
+`main` — the earlier unscoped version false-passed off the header; the shell
+commits home first and swaps views a render later, so the check waits for
+the help view's links, not just the hydration flag), and a header anchor
+left-click still navigates the SPA to /help. Two first-run flakes fixed
+honestly: eval output arrives JSON-quoted, so anchored ^yes$ patterns never
+matched (values were correct underneath). Result: PHASE=13 7/0, PHASE=8
+final sweep 125/0 (one wedged-server 502 storm re-run after pkill — the
+known failure mode, not a product defect), PHASE=1 core 22/0, lint clean.
+sw stays v13 — no precache or strategy change.
+
+Milestones housekeeping: §3's expansion row still read "IN PROGRESS — Batch
+R1 DONE" from an old run; corrected to DONE with a pointer to §14–§18, and
+R6/R6b/R7/R7b rows added.

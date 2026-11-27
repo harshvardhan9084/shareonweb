@@ -116,6 +116,21 @@ export function DiscoverView() {
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
+  // A fresh load of /#cat-<id> — right-click a footer section link, "open in
+  // new tab" — should land on that catalog section, not at the top of the
+  // page. Plain SPA clicks scroll there themselves (footer goCategory); this
+  // covers the URL-is-the-truth case where the section id arrived in the bar.
+  useEffect(() => {
+    const m = window.location.hash.match(/^#cat-([a-z-]+)$/)
+    if (!m) return
+    const t = window.setTimeout(() => {
+      document
+        .getElementById(`cat-${m[1]}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [])
+
   const startApps = INSTANT_START_APPS.slice(0, 3)
 
   async function joinSession(raw?: string) {
@@ -441,7 +456,8 @@ export function DiscoverView() {
               return (
                 <div
                   key={cat.id}
-                  className="grid gap-3 lg:grid-cols-[210px_1fr] lg:gap-x-10"
+                  id={`cat-${cat.id}`}
+                  className="grid scroll-mt-20 gap-3 lg:grid-cols-[210px_1fr] lg:gap-x-10"
                 >
                   <div>
                     <h3 className="font-medium">{cat.label}</h3>
