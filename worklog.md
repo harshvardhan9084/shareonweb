@@ -1396,3 +1396,9 @@ sw stays v13 — no precache or strategy change.
 Milestones housekeeping: §3's expansion row still read "IN PROGRESS — Batch
 R1 DONE" from an old run; corrected to DONE with a pointer to §14–§18, and
 R6/R6b/R7/R7b rows added.
+
+Ops (same run, later): the push from this run was initially blocked —
+~/.git-credentials was wiped by the sandbox recycle and no restore source
+existed locally. The owner supplied a fresh fine-grained PAT in chat; the
+file was rewritten (URL-style line, chmod 600) and both 9f25050 and this
+note pushed (d8b6774..9f25050 verified at origin, then the follow-up).
